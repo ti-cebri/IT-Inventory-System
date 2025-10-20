@@ -27,7 +27,7 @@
             <i class="fas fa-plus-circle"></i> Cadastro
           </button>
           <button class="tab-btn" data-tab="lista">
-            <i class="fas fa-list"></i> Lista de Equipamentos
+            <i class="fas fa-list"></i> Equipamentos
           </button>
           <button class="tab-btn" data-tab="impressoras">
             <i class="fas fa-print"></i> Impressoras
@@ -51,14 +51,14 @@
 
         <div class="global-actions">
           <button class="btn btn--secondary" onclick="carregarDadosCompletos()">
-            <i class="fas fa-upload"></i> Carregar Dados
+            <i class="fas fa-upload"></i> Carregar
           </button>
           <button
             class="btn btn--primary"
             id="btn-exportar-csv"
             onclick="salvarDadosCompletos()"
           >
-            <i class="fas fa-download"></i> Salvar Alterações em CSV
+            <i class="fas fa-download"></i> Salvar CSV
           </button>
         </div>
       </div>
@@ -233,7 +233,7 @@
                     id="modelo"
                     name="modelo"
                     class="form-control"
-                    placeholder="Ex: Latitude 5420, LaserJet Pro M404"
+                    placeholder="Ex: ProBook 445 G9, WF-C5890"
                   />
                 </div>
               </div>
@@ -884,12 +884,9 @@
                 <option value="Desktop">Desktop</option>
                 <option value="Notebook">Notebook</option>
                 <option value="Tablet">Tablet</option>
-                <option value="Smartphone">Smartphone</option>
-                <option value="Monitor">Monitor</option>
                 <option value="Servidor">Servidor</option>
                 <option value="Roteador">Roteador</option>
                 <option value="Switch">Switch</option>
-                <option value="Projetor">Projetor</option>
                 <option value="Outro">Outro</option>
               </select>
             </div>
