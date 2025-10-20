@@ -290,40 +290,92 @@ function preencherPresetsFabricante(event) {
   const tipoEquipamento = form.querySelector("#tipoEquipamento").value;
   const fabricante = fabricanteInput.value.trim().toLowerCase();
 
-  if (tipoEquipamento === "Notebook" && fabricante === "hp") {
-    // Aplicar presets de Notebook HP
-    form.querySelector("#modelo").value = "ProBook 445 G9";
-    form.querySelector("#polegadas").value = "14'";
-    form.querySelector("#memoriaRam").value = "16GB";
-    form.querySelector("#armazenamento").value = "256";
-    form.querySelector("#processador").value = "AMD Ryzen 5 5625U";
-    form.querySelector("#versaoWindows").value = "Windows 11 Pro";
-
+  if (tipoEquipamento === "Notebook") {
+    // 1. Armazena os elementos do formulário
+    const modelo = form.querySelector("#modelo");
+    const polegadas = form.querySelector("#polegadas");
+    const memoriaRam = form.querySelector("#memoriaRam");
+    const armazenamento = form.querySelector("#armazenamento");
+    const processador = form.querySelector("#processador");
+    const versaoWindows = form.querySelector("#versaoWindows");
     const radioAlugado = form.querySelector(
       'input[name="tipoAquisicao"][value="Alugado"]'
     );
-    if (radioAlugado) {
-      radioAlugado.checked = true;
-      // Dispara o handler para atualizar campos dependentes (Fornecedor, Valor)
-      handleTipoAquisicaoChange(radioAlugado);
+    const radioPatrimonial = form.querySelector(
+      'input[name="tipoAquisicao"][value="Patrimonial"]'
+    );
+    const valor = form.querySelector("#valor");
+
+    if (fabricante === "hp") {
+      // 2. AÇÃO DE PREENCHER (Lógica que você já tinha)
+      modelo.value = "ProBook 445 G9";
+      polegadas.value = "14'";
+      memoriaRam.value = "16GB";
+      armazenamento.value = "256";
+      processador.value = "AMD Ryzen 5 5625U";
+      versaoWindows.value = "Windows 11 Pro";
+
+      if (radioAlugado) {
+        radioAlugado.checked = true;
+        handleTipoAquisicaoChange(radioAlugado);
+      }
+      valor.value = "285,98";
+    } else {
+      // 3. AÇÃO DE RESETAR (Nova lógica)
+      // Limpa os campos de texto
+      modelo.value = "";
+      polegadas.value = "";
+      memoriaRam.value = "";
+      armazenamento.value = "";
+      processador.value = "";
+      versaoWindows.value = "";
+      valor.value = "";
+
+      // Reseta o rádio para o padrão (Patrimonial) e chama o handler
+      if (radioPatrimonial) {
+        radioPatrimonial.checked = true;
+        handleTipoAquisicaoChange(radioPatrimonial);
+      } else if (radioAlugado) {
+        // Fallback caso o radio 'Patrimonial' não exista
+        radioAlugado.checked = false;
+        handleTipoAquisicaoChange(radioAlugado);
+      }
     }
-
-    form.querySelector("#valor").value = "285,98";
-  } else if (tipoEquipamento === "Impressora" && fabricante === "epson") {
-    // Aplicar presets de Impressora Epson
-    form.querySelector("#modelo").value = "WF-C5890";
-
+  } else if (tipoEquipamento === "Impressora") {
+    // 1. Armazena os elementos do formulário
+    const modelo = form.querySelector("#modelo");
     const radioAlugado = form.querySelector(
       'input[name="tipoAquisicao"][value="Alugado"]'
     );
-    if (radioAlugado) {
-      radioAlugado.checked = true;
-      // Dispara o handler para atualizar campos dependentes
-      handleTipoAquisicaoChange(radioAlugado);
-    }
+    const radioPatrimonial = form.querySelector(
+      'input[name="tipoAquisicao"][value="Patrimonial"]'
+    );
+    const valor = form.querySelector("#valor");
+    const observacoes = form.querySelector("#observacoes");
 
-    form.querySelector("#valor").value = "288,75";
-    form.querySelector("#observacoes").value = "Produção: R$ 0,08";
+    if (fabricante === "epson") {
+      // 2. AÇÃO DE PREENCHER (Lógica que você já tinha)
+      modelo.value = "WF-C5890";
+      if (radioAlugado) {
+        radioAlugado.checked = true;
+        handleTipoAquisicaoChange(radioAlugado);
+      }
+      valor.value = "288,75";
+      observacoes.value = "Produção: R$ 0,08";
+    } else {
+      // 3. AÇÃO DE RESETAR (Nova lógica)
+      modelo.value = "";
+      valor.value = "";
+      observacoes.value = "";
+      
+      if (radioPatrimonial) {
+        radioPatrimonial.checked = true;
+        handleTipoAquisicaoChange(radioPatrimonial);
+      } else if (radioAlugado) {
+        radioAlugado.checked = false;
+        handleTipoAquisicaoChange(radioAlugado);
+      }
+    }
   }
 }
 
