@@ -281,6 +281,52 @@ function handleTipoAquisicaoChange(radioElement) {
   }
 }
 
+function preencherPresetsFabricante(event) {
+  const fabricanteInput = event.target;
+  const form = fabricanteInput.closest("form"); // #equipamento-form
+
+  if (!form) return;
+
+  const tipoEquipamento = form.querySelector("#tipoEquipamento").value;
+  const fabricante = fabricanteInput.value.trim().toLowerCase();
+
+  if (tipoEquipamento === "Notebook" && fabricante === "hp") {
+    // Aplicar presets de Notebook HP
+    form.querySelector("#modelo").value = "ProBook 445 G9";
+    form.querySelector("#polegadas").value = "14'";
+    form.querySelector("#memoriaRam").value = "16GB";
+    form.querySelector("#armazenamento").value = "256";
+    form.querySelector("#processador").value = "AMD Ryzen 5 5625U";
+    form.querySelector("#versaoWindows").value = "Windows 11 Pro";
+
+    const radioAlugado = form.querySelector(
+      'input[name="tipoAquisicao"][value="Alugado"]'
+    );
+    if (radioAlugado) {
+      radioAlugado.checked = true;
+      // Dispara o handler para atualizar campos dependentes (Fornecedor, Valor)
+      handleTipoAquisicaoChange(radioAlugado);
+    }
+
+    form.querySelector("#valor").value = "285,98";
+  } else if (tipoEquipamento === "Impressora" && fabricante === "epson") {
+    // Aplicar presets de Impressora Epson
+    form.querySelector("#modelo").value = "WF-C5890";
+
+    const radioAlugado = form.querySelector(
+      'input[name="tipoAquisicao"][value="Alugado"]'
+    );
+    if (radioAlugado) {
+      radioAlugado.checked = true;
+      // Dispara o handler para atualizar campos dependentes
+      handleTipoAquisicaoChange(radioAlugado);
+    }
+
+    form.querySelector("#valor").value = "288,75";
+    form.querySelector("#observacoes").value = "Produção: R$ 0,08";
+  }
+}
+
 // ===========================================
 // GERENCIAMENTO DE ACESSÓRIOS
 // ===========================================
@@ -1430,6 +1476,11 @@ function configurarEventListeners() {
     atualizarListaArquivados;
   document.getElementById("tipoEquipamento").onchange = (e) =>
     handleTipoEquipamentoChange(e.target);
+
+  document
+    .getElementById("fabricante")
+    .addEventListener("input", preencherPresetsFabricante);
+
   document.getElementById("acessorio-tipo").onchange = () =>
     handleTipoAcessorioChange();
   configurarValidacaoTempoReal();
