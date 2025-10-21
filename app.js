@@ -170,9 +170,59 @@ function handleTipoAcessorioChange(prefix = "") {
   }
 }
 
+function handleCategoriaAcessorioChange(prefix = "") {
+  const idPrefix = prefix ? `${prefix}-` : "acessorio-";
+  const categoriaSelect = document.getElementById(`${idPrefix}categoria`);
+  if (!categoriaSelect) return;
+
+  const categoria = categoriaSelect.value;
+  const campoPolegadasId = prefix
+    ? `campo-${prefix}polegadas`
+    : "campo-acessorio-polegadas";
+
+  const campoPolegadas = document.getElementById(campoPolegadasId);
+  if (!campoPolegadas) return;
+
+  if (categoria === "Monitores") {
+    campoPolegadas.style.display = "grid"; // 'grid' pois é uma 'form-row'
+  } else {
+    campoPolegadas.style.display = "none";
+    // Limpar o valor se a categoria mudar
+    const inputPolegadas = document.getElementById(`${idPrefix}polegadas`);
+    if (inputPolegadas) inputPolegadas.value = "";
+  }
+}
+
 // ===============================================
 // LÓGICA DE VISIBILIDADE DOS CAMPOS DO FORMULÁRIO
 // ===============================================
+/**
+ * Alterna a visibilidade dos campos de CPF e CNPJ com base no nome do usuário.
+ * @param {Event} event - O evento de input do campo de nome de usuário.
+ */
+function handleNomeUsuarioChange(event) {
+  const input = event.target;
+  const form = input.closest("form");
+  if (!form) return;
+
+  const nomeUsuario = input.value.trim().toLowerCase();
+  // Usa seletores de "ends-with" para funcionar tanto no formulário principal quanto no de edição
+  const cpfGroup = form.querySelector('[id$="cpf-group"]');
+  const cnpjGroup = form.querySelector('[id$="cnpj-group"]');
+  const cpfInput = form.querySelector('[id$="cpf"]');
+
+  if (!cpfGroup || !cnpjGroup) return;
+
+  if (nomeUsuario === "cebri") {
+    cpfGroup.style.display = "none";
+    if (cpfInput) cpfInput.value = ""; // Limpa o CPF para não ser salvo por engano
+    cnpjGroup.style.display = "block";
+  } else {
+    cpfGroup.style.display = "block";
+    cnpjGroup.style.display = "none";
+  }
+}
+
 function handleTipoEquipamentoChange(selectElement) {
   const form = selectElement.closest("form");
   if (!form) return;
@@ -187,29 +237,24 @@ function handleTipoEquipamentoChange(selectElement) {
   const modalActions = form.querySelector(".modal-actions");
   const departamentoGroup = form.querySelector('[id$="departamento-group"]');
   const salaIpGroup = form.querySelector('[id$="sala-ip-group"]');
-  // INÍCIO DA ALTERAÇÃO
   const outroTipoGroup = form.querySelector('[id="outroTipoEquipamentoGroup"]');
-  // FIM DA ALTERAÇÃO
 
   const tipo = selectElement.value;
-  const tiposComUsuario = ["Desktop", "Notebook", "Tablet", "Smartphone"];
 
   const show = (el) => el && (el.style.display = "block");
   const hide = (el) => el && (el.style.display = "none");
   const showFlex = (el) => el && (el.style.display = "flex");
   const showGrid = (el) => el && (el.style.display = "grid");
 
-  // INÍCIO DA ALTERAÇÃO: Lógica para mostrar/esconder o campo "Outro"
   if (outroTipoGroup) {
     if (tipo === "Outro") {
       show(outroTipoGroup);
     } else {
       hide(outroTipoGroup);
       const outroInput = outroTipoGroup.querySelector("input");
-      if (outroInput) outroInput.value = ""; // Limpa o campo ao esconder
+      if (outroInput) outroInput.value = "";
     }
   }
-  // FIM DA ALTERAÇÃO
 
   if (!tipo) {
     hide(fieldsetUsuario);
@@ -219,11 +264,13 @@ function handleTipoEquipamentoChange(selectElement) {
     hide(fieldsetSpecs);
     if (formActionsContainer) hide(formActionsContainer);
   } else {
-    if (tiposComUsuario.includes(tipo)) {
-      show(fieldsetUsuario);
-    } else {
-      hide(fieldsetUsuario);
+    show(fieldsetUsuario); // <-- ALTERAÇÃO: Sempre mostra as informações do usuário
+    // Garante que o estado de CPF/CNPJ esteja correto ao mudar o tipo
+    const nomeUsuarioInput = form.querySelector('[name="nomeUsuario"]');
+    if (nomeUsuarioInput) {
+      handleNomeUsuarioChange({ target: nomeUsuarioInput });
     }
+
     show(fieldsetComercial);
 
     if (["Notebook", "Desktop"].includes(tipo)) {
@@ -246,7 +293,6 @@ function handleTipoEquipamentoChange(selectElement) {
     if (modalActions) showFlex(modalActions);
   }
 
-  // Lógica para alternar entre Departamento e Sala/IP
   if (departamentoGroup && salaIpGroup) {
     if (tipo === "Impressora") {
       hide(departamentoGroup);
@@ -291,7 +337,6 @@ function preencherPresetsFabricante(event) {
   const fabricante = fabricanteInput.value.trim().toLowerCase();
 
   if (tipoEquipamento === "Notebook") {
-    // 1. Armazena os elementos do formulário
     const modelo = form.querySelector("#modelo");
     const polegadas = form.querySelector("#polegadas");
     const memoriaRam = form.querySelector("#memoriaRam");
@@ -307,7 +352,6 @@ function preencherPresetsFabricante(event) {
     const valor = form.querySelector("#valor");
 
     if (fabricante === "hp") {
-      // 2. AÇÃO DE PREENCHER (Lógica que você já tinha)
       modelo.value = "ProBook 445 G9";
       polegadas.value = "14'";
       memoriaRam.value = "16GB";
@@ -321,8 +365,6 @@ function preencherPresetsFabricante(event) {
       }
       valor.value = "285,98";
     } else {
-      // 3. AÇÃO DE RESETAR (Nova lógica)
-      // Limpa os campos de texto
       modelo.value = "";
       polegadas.value = "";
       memoriaRam.value = "";
@@ -331,18 +373,15 @@ function preencherPresetsFabricante(event) {
       versaoWindows.value = "";
       valor.value = "";
 
-      // Reseta o rádio para o padrão (Patrimonial) e chama o handler
       if (radioPatrimonial) {
         radioPatrimonial.checked = true;
         handleTipoAquisicaoChange(radioPatrimonial);
       } else if (radioAlugado) {
-        // Fallback caso o radio 'Patrimonial' não exista
         radioAlugado.checked = false;
         handleTipoAquisicaoChange(radioAlugado);
       }
     }
   } else if (tipoEquipamento === "Impressora") {
-    // 1. Armazena os elementos do formulário
     const modelo = form.querySelector("#modelo");
     const radioAlugado = form.querySelector(
       'input[name="tipoAquisicao"][value="Alugado"]'
@@ -354,7 +393,6 @@ function preencherPresetsFabricante(event) {
     const observacoes = form.querySelector("#observacoes");
 
     if (fabricante === "epson") {
-      // 2. AÇÃO DE PREENCHER (Lógica que você já tinha)
       modelo.value = "WF-C5890";
       if (radioAlugado) {
         radioAlugado.checked = true;
@@ -363,11 +401,10 @@ function preencherPresetsFabricante(event) {
       valor.value = "288,75";
       observacoes.value = "Produção: R$ 0,08";
     } else {
-      // 3. AÇÃO DE RESETAR (Nova lógica)
       modelo.value = "";
       valor.value = "";
       observacoes.value = "";
-      
+
       if (radioPatrimonial) {
         radioPatrimonial.checked = true;
         handleTipoAquisicaoChange(radioPatrimonial);
@@ -395,10 +432,12 @@ function gerarIdUnicoAcessorio() {
 function salvarAcessorio(e) {
   e.preventDefault();
   const form = new FormData(e.target);
+  const categoria = form.get("categoria");
   const novoAcessorio = {
     id: gerarIdUnicoAcessorio(),
-    categoria: form.get("categoria"),
+    categoria: categoria,
     modelo: form.get("modelo"),
+    polegadas: categoria === "Monitores" ? form.get("polegadas") : "",
     patrimonio: form.get("patrimonio") || "",
     numeroSerie: form.get("numeroSerie") || "",
     tipo: form.get("tipo"),
@@ -497,6 +536,7 @@ function editarAcessorio(id) {
   const valorInput = document.getElementById("edit-acessorio-valor-mensal");
   if (valorInput) valorInput.addEventListener("input", aplicarMascaraValor);
   handleTipoAcessorioChange("edit");
+  handleCategoriaAcessorioChange("edit");
   document.getElementById("edit-acessorio-modal").classList.add("active");
 }
 
@@ -526,13 +566,24 @@ function criarFormularioEdicaoAcessorio(acessorio) {
       <fieldset class="form-section">
         <legend>Detalhes do Acessório</legend>
         <div class="form-row">
-          <div class="form-group"><label>Categoria</label><select name="categoria" class="form-control">${opts(
+          <div class="form-group"><label>Categoria</label><select id="edit-categoria" name="categoria" class="form-control" onchange="handleCategoriaAcessorioChange('edit')">${opts(
             categorias,
             acessorio.categoria
           )}</select></div>
           <div class="form-group"><label>Modelo</label><input type="text" name="modelo" class="form-control" value="${safe(
             acessorio.modelo
           )}"></div>
+        </div>
+
+        <div class="form-row" id="campo-edit-polegadas" style="display: ${
+          acessorio.categoria === "Monitores" ? "grid" : "none"
+        };">
+          <div class="form-group full-width">
+            <label>Polegadas</label>
+            <input type="text" id="edit-acessorio-polegadas" name="polegadas" class="form-control" value="${safe(
+              acessorio.polegadas || ""
+            )}">
+          </div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>Fabricante</label><input type="text" name="fabricante" class="form-control" value="${safe(
@@ -546,7 +597,7 @@ function criarFormularioEdicaoAcessorio(acessorio) {
           <div class="form-group"><label>Número de Série</label><input type="text" name="numeroSerie" class="form-control" value="${safe(
             acessorio.numeroSerie
           )}"></div>
-          <div class="form-group"><label>Tipo</label><select name="tipo" class="form-control" onchange="handleTipoAcessorioChange('edit')">${opts(
+          <div class="form-group"><label>Tipo</label><select id="edit-tipo" name="tipo" class="form-control" onchange="handleTipoAcessorioChange('edit')">${opts(
             tipos,
             acessorio.tipo
           )}</select></div>
@@ -554,7 +605,7 @@ function criarFormularioEdicaoAcessorio(acessorio) {
         <div class="form-row">
           <div id="campo-edit-fornecedor" class="form-group" style="display:${
             isLocacao ? "block" : "none"
-          };"><label>Fornecedor</label><input type="text" name="fornecedor" class="form-control" readonly value="${safe(
+          };"><label>Fornecedor</label><input type="text" id="edit-fornecedor" name="fornecedor" class="form-control" readonly value="${safe(
     acessorio.fornecedor
   )}"></div>
           <div id="campo-edit-valor-mensal" class="form-group" style="display:${
@@ -579,10 +630,12 @@ function salvarEdicaoAcessorio(event, id) {
   if (index === -1) return;
   const form = new FormData(event.target);
   const tipo = form.get("tipo");
+  const categoria = form.get("categoria");
   acessorios[index] = {
     ...acessorios[index],
-    categoria: form.get("categoria"),
+    categoria: categoria,
     modelo: form.get("modelo"),
+    polegadas: categoria === "Monitores" ? form.get("polegadas") : "",
     fabricante: form.get("fabricante"),
     patrimonio: form.get("patrimonio"),
     numeroSerie: form.get("numeroSerie"),
@@ -700,7 +753,6 @@ function atualizarListaCartuchos() {
       Object.values(c).some((val) => String(val).toLowerCase().includes(termo))
   );
 
-  // Lógica de Ordenação
   const colorOrder = {
     "Ciano (C)": 1,
     "Magenta (M)": 2,
@@ -713,10 +765,9 @@ function atualizarListaCartuchos() {
     const orderB = colorOrder[b.cor] || 99;
 
     if (orderA !== orderB) {
-      return orderA - orderB; // Ordena pela cor
+      return orderA - orderB;
     }
 
-    // Se a cor for a mesma, ordena pelo patrimônio
     return a.patrimonio.localeCompare(b.patrimonio);
   });
 
@@ -771,7 +822,6 @@ function editarCartucho(id) {
   const container = document.getElementById("edit-cartucho-form-container");
   container.innerHTML = criarFormularioEdicaoCartucho(cartucho);
 
-  // Apenas adiciona o event listener se o cartucho não estiver arquivado
   if (!cartucho.isArchived) {
     document
       .getElementById("edit-cartucho-status")
@@ -954,7 +1004,6 @@ function desarquivarCartucho(id) {
   if (cartucho) {
     cartucho.isArchived = false;
     cartucho.status = "Disponível";
-    // Limpa o vínculo ao desarquivar, pois ele volta ao estoque
     cartucho.impressoraVinculada = null;
     salvarCartuchosParaLocalStorage();
     setEstadoAlteracao(true);
@@ -1169,18 +1218,16 @@ function salvarEquipamento(e) {
   }
   const equipamento = Object.fromEntries(form.entries());
 
-  // INÍCIO DA ALTERAÇÃO: Lógica para salvar o tipo "Outro"
   if (equipamento.tipoEquipamento === "Outro") {
     const tipoCustomizado = form.get("outroTipoEquipamento").trim();
     if (!tipoCustomizado) {
       mostrarMensagem("Por favor, especifique o tipo de equipamento.", "error");
       mostrarErro("outroTipoEquipamento", "Campo obrigatório");
-      return; // Interrompe o salvamento
+      return;
     }
-    equipamento.tipoEquipamento = tipoCustomizado; // Sobrescreve 'Outro' pelo valor digitado
+    equipamento.tipoEquipamento = tipoCustomizado;
   }
-  delete equipamento.outroTipoEquipamento; // Remove o campo temporário do objeto final
-  // FIM DA ALTERAÇÃO
+  delete equipamento.outroTipoEquipamento;
 
   equipamento.registro = gerarIdUnico();
   equipamento.acessorios = [...acessoriosSelecionadosTemporariamente];
@@ -1264,7 +1311,6 @@ function criarFormularioEdicao(equipamento) {
   ];
   const salas = ["Casa COP", "COPA", "EVENTOS", "FINANCEIRO", "PROJETOS"];
 
-  // INÍCIO DA ALTERAÇÃO: Lógica para o campo "Outro" na edição
   const tiposPadrao = [
     "Desktop",
     "Notebook",
@@ -1277,12 +1323,16 @@ function criarFormularioEdicao(equipamento) {
   const isTipoOutro = !tiposPadrao.includes(equipamento.tipoEquipamento);
   const tipoSelecionado = isTipoOutro ? "Outro" : equipamento.tipoEquipamento;
   const valorOutro = isTipoOutro ? equipamento.tipoEquipamento : "";
-  // FIM DA ALTERAÇÃO
 
   const isImpressora = equipamento.tipoEquipamento === "Impressora";
   const isNotebookOrDesktop = ["Notebook", "Desktop"].includes(
     equipamento.tipoEquipamento
   );
+
+  // <-- ALTERAÇÃO: Verifica se o usuário é CEBRI para exibir o campo correto
+  const isCebriUser =
+    (equipamento.nomeUsuario || "").trim().toLowerCase() === "cebri";
+
   return `
     <form id="edit-form" class="equipment-form" onsubmit="salvarEdicao(event, '${
       equipamento.registro
@@ -1353,20 +1403,33 @@ function criarFormularioEdicao(equipamento) {
       </fieldset>
       <fieldset id="fieldset-usuario-edit"><legend>Usuário</legend>
         <div class="form-row">
-          <div class="form-group"><label>Nome</label><input type="text" name="nomeUsuario" class="form-control" value="${safe(
+          <div class="form-group"><label>Nome</label><input type="text" name="nomeUsuario" class="form-control" oninput="handleNomeUsuarioChange(event)" value="${safe(
             equipamento.nomeUsuario
           )}"></div>
           <div class="form-group"><label>Email</label><input type="email" name="email" class="form-control" value="${safe(
             equipamento.email
           )}"></div>
         </div>
-        <div class="form-group"><label>CPF</label><input type="text" id="edit-cpf" name="cpf" class="form-control" value="${safe(
-          equipamento.cpf
-        )}"></div>
+         <div class="form-row">
+            <div class="form-group" id="edit-cpf-group" style="display: ${
+              isCebriUser ? "none" : "block"
+            }">
+                <label class="form-label" for="edit-cpf">CPF</label>
+                <input type="text" id="edit-cpf" name="cpf" class="form-control" value="${safe(
+                  equipamento.cpf
+                )}" placeholder="000.000.000-00" maxlength="14" />
+            </div>
+            <div class="form-group" id="edit-cnpj-group" style="display: ${
+              isCebriUser ? "block" : "none"
+            }">
+                <label class="form-label" for="edit-cnpj">CNPJ</label>
+                <input type="text" id="edit-cnpj" name="cnpj" class="form-control" value="02.673.153/0001-25" readonly />
+            </div>
+        </div>
       </fieldset>
       <fieldset id="fieldset-comercial-edit"><legend>Comercial</legend>
         <div class="form-row">
-          <div class="form-group"><label>Aquisição</label><input type="date" name="dataAquisicao" class="form-control" value="${safe(
+          <div class="form-group"><label>Aquisição / Instalação / Entrega</label><input type="date" name="dataAquisicao" class="form-control" value="${safe(
             equipamento.dataAquisicao
           )}"></div>
           <div class="form-group"><label>Tipo</label><div class="radio-group">${radios(
@@ -1448,17 +1511,15 @@ function salvarEdicao(event, registro) {
 
   const updatedData = Object.fromEntries(form.entries());
 
-  // INÍCIO DA ALTERAÇÃO: Lógica para salvar o tipo "Outro" na edição
   if (updatedData.tipoEquipamento === "Outro") {
     const tipoCustomizado = form.get("outroTipoEquipamento").trim();
     if (!tipoCustomizado) {
       mostrarMensagem("Por favor, especifique o tipo de equipamento.", "error");
       return;
     }
-    updatedData.tipoEquipamento = tipoCustomizado; // Sobrescreve 'Outro'
+    updatedData.tipoEquipamento = tipoCustomizado;
   }
-  delete updatedData.outroTipoEquipamento; // Limpa o objeto
-  // FIM DA ALTERAÇÃO
+  delete updatedData.outroTipoEquipamento;
 
   equipamentos[index] = {
     ...equipamentoAntigo,
@@ -1473,7 +1534,6 @@ function salvarEdicao(event, registro) {
   salvarAcessoriosParaLocalStorage();
   setEstadoAlteracao(true);
 
-  // Atualiza a visualização correta dependendo de onde o item está (arquivado ou não)
   if (equipamentos[index].isArchived) {
     atualizarListaArquivados();
   } else {
@@ -1528,6 +1588,9 @@ function configurarEventListeners() {
     atualizarListaArquivados;
   document.getElementById("tipoEquipamento").onchange = (e) =>
     handleTipoEquipamentoChange(e.target);
+
+  document.getElementById("acessorio-categoria").onchange = () =>
+    handleCategoriaAcessorioChange();
 
   document
     .getElementById("fabricante")
@@ -1615,6 +1678,7 @@ const cabecalhoAcessoriosCSV = [
   "id",
   "categoria",
   "modelo",
+  "polegadas",
   "patrimonio",
   "numeroSerie",
   "tipo",
@@ -1711,7 +1775,6 @@ function parseCsvData(csv, cabecalho) {
       item[key] = valores[index] || "";
     });
 
-    // Convertendo booleanos e números
     [
       "isArchived",
       "isDeleted",
@@ -2036,7 +2099,6 @@ function abrirModalConfirmacao(mensagem, callback, dynamicHtml = "") {
   btn.parentNode.replaceChild(novoBtn, btn);
 
   novoBtn.onclick = () => {
-    // Captura o valor dos inputs ANTES de fechar o modal
     const motivoArquivamentoInput = document.getElementById(
       "motivo-arquivamento"
     );
@@ -2047,7 +2109,6 @@ function abrirModalConfirmacao(mensagem, callback, dynamicHtml = "") {
       motivoManutencaoInput?.value.trim() ??
       null;
 
-    // Passa o motivo para o callback e DEPOIS fecha o modal
     callback(motivo);
     fecharModalConfirm();
   };
@@ -2065,6 +2126,7 @@ function limparFormularioEquipamento() {
 function limparFormularioAcessorio() {
   document.getElementById("acessorio-form").reset();
   handleTipoAcessorioChange();
+  handleCategoriaAcessorioChange();
 }
 function limparTodosErros() {
   document
@@ -2208,14 +2270,14 @@ function criarLinhaEquipamento(eq) {
         eq.registro
       }" onclick="verificarSelecao('equipamentos')"></td>
       <td>${eq.registro}</td>
-      <td>${eq.nomeUsuario || "CEBRI"}</td>
+      <td>${eq.nomeUsuario || "Nenhum"}</td>
       <td>${eq.tipoEquipamento || ""}</td>
       <td>${eq.numeroSerie || ""}</td>
       <td>${eq.numeroPatrimonio || "N/A"}</td>
       <td><span class="status-badge ${
         statusClasses[eq.statusOperacional] || ""
       }">${eq.statusOperacional || ""}</span></td>
-      <td>${eq.departamento || "TI"}</td>
+      <td>${eq.nomeUsuario ? eq.departamento || "TI" : "Nenhum"}</td>
       <td>${acessoriosHtml}</td>
       <td>${documentosHtml}</td>
       <td>
@@ -2374,7 +2436,7 @@ function atualizarListaManutencao() {
       (eq) => `
     <tr>
       <td>${eq.registro}</td>
-      <td>${eq.nomeUsuario || "CEBRI"}</td>
+      <td>${eq.nomeUsuario || "Nenhum"}</td>
       <td>${eq.tipoEquipamento || ""}</td>
       <td>${eq.numeroSerie || ""}</td>
       <td>${eq.numeroPatrimonio || "N/A"}</td>
@@ -2453,7 +2515,7 @@ function desarquivarEquipamento(registro) {
   if (eq) {
     eq.isArchived = false;
     delete eq.archiveDate;
-    eq.motivoArquivamento = ""; // Limpa o motivo ao desarquivar
+    eq.motivoArquivamento = "";
     eq.statusOperacional = "Disponível";
     salvarParaLocalStorage();
     setEstadoAlteracao(true);
@@ -2496,7 +2558,7 @@ function atualizarListaArquivados() {
       (eq) => `
     <tr>
       <td>${eq.registro}</td>
-      <td>${eq.nomeUsuario || "CEBRI"}</td>
+      <td>${eq.nomeUsuario || "Nenhum"}</td>
       <td>${eq.tipoEquipamento || ""}</td>
       <td>${eq.numeroSerie || ""}</td>
       <td>${eq.numeroPatrimonio || "N/A"}</td>
@@ -2777,7 +2839,6 @@ function mostrarTooltipCartuchos(event, sala) {
   let tooltipContent;
   if (cartuchosNaImpressora.length > 0) {
     tooltipContent = "<h4>Cartuchos Instalados</h4>";
-    // Ordenar por cor para uma exibição consistente
     const colorOrder = {
       "Ciano (C)": 1,
       "Magenta (M)": 2,
