@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-R" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sistema de Gestão de Inventário - TI</title>
     <link rel="stylesheet" href="style.css" />
@@ -392,6 +392,7 @@
                     name="nomeUsuario"
                     class="form-control"
                     placeholder="Digite o nome completo"
+                    oninput="handleNomeUsuarioChange(event)"
                   />
                   <span class="error-message" id="error-nomeUsuario"></span>
                 </div>
@@ -410,7 +411,7 @@
                 </div>
               </div>
               <div class="form-row">
-                <div class="form-group">
+                <div class="form-group" id="cpf-group">
                   <label class="form-label" for="cpf">CPF</label>
                   <input
                     type="text"
@@ -421,6 +422,17 @@
                     maxlength="14"
                   />
                   <span class="error-message" id="error-cpf"></span>
+                </div>
+                <div class="form-group" id="cnpj-group" style="display: none">
+                  <label class="form-label" for="cnpj">CNPJ</label>
+                  <input
+                    type="text"
+                    id="cnpj"
+                    name="cnpj"
+                    class="form-control"
+                    value="02.673.153/0001-25"
+                    readonly
+                  />
                 </div>
               </div>
             </fieldset>
@@ -682,6 +694,25 @@
                     name="modelo"
                     class="form-control"
                     placeholder="Ex: Dell UltraSharp U2419H"
+                  />
+                </div>
+              </div>
+
+              <div
+                class="form-row"
+                id="campo-acessorio-polegadas"
+                style="display: none"
+              >
+                <div class="form-group full-width">
+                  <label class="form-label" for="acessorio-polegadas"
+                    >Polegadas</label
+                  >
+                  <input
+                    type="text"
+                    id="acessorio-polegadas"
+                    name="polegadas"
+                    class="form-control"
+                    placeholder='Ex: 24"'
                   />
                 </div>
               </div>
