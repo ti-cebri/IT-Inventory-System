@@ -838,13 +838,28 @@ function atualizarContagemCartuchosDisponiveis() {
     return acc;
   }, {});
 
-  const summaryText = Object.entries(contagemPorCor)
-    .map(([cor, quantidade]) => `${quantidade} ${cor}`)
-    .join(", ");
+  // Define a ordem desejada das cores
+  const colorOrder = ["Ciano (C)", "Amarelo (Y)", "Magenta (M)", "Preto (BK)"];
 
-  summaryElement.textContent = summaryText
-    ? `Disponíveis: ${summaryText}`
-    : "Nenhum cartucho disponível";
+  // Filtra e ordena as cores que têm contagem maior que 0
+  const orderedEntries = colorOrder
+    .map((cor) => [cor, contagemPorCor[cor]]) // Mapeia para [cor, quantidade]
+    .filter(([_, quantidade]) => quantidade > 0); // Filtra cores com quantidade > 0
+
+  // Gera o HTML com spans coloridos
+  const summaryHtml = orderedEntries
+    .map(([cor, quantidade]) => {
+      // Extrai o nome base da cor para usar como classe CSS (ex: 'ciano', 'amarelo')
+      const baseColor = cor.split(" ")[0].toLowerCase().replace(/[()]/g, "");
+      // Cria o span com a classe base e a classe específica da cor
+      return `<span class="summary-color summary-${baseColor}">${quantidade} ${cor}</span>`;
+    })
+    .join(", "); // Junta as partes com vírgula e espaço
+
+  // Define o conteúdo do elemento, usando innerHTML pois agora temos HTML
+  summaryElement.innerHTML = summaryHtml
+    ? `Disponíveis: ${summaryHtml}` // Adiciona o prefixo se houver cartuchos
+    : "Nenhum cartucho disponível"; // Mensagem se não houver nenhum
 }
 
 function atualizarListaCartuchos() {
