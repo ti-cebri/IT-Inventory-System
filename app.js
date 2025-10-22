@@ -2435,17 +2435,23 @@ function criarLinhaEquipamento(eq) {
     Disponível: "disponivel",
   };
 
-  // === Lógica dos Ícones de Acessórios ===
+  // === Ícones Clicáveis e Classes de Cor ===
   let acessoriosHtml = '<div class="acessorios-container">Nenhum</div>';
   if (eq.acessorios && eq.acessorios.length) {
-    // Mapeamento de Categoria para Ícone Font Awesome
-    const iconMap = {
-      "Kit (teclado + mouse sem fio)": "fas fa-keyboard",
-      Headsets: "fas fa-headphones",
-      Monitores: "fas fa-desktop", // Ou fas fa-display
-      Mouses: "fas fa-computer-mouse",
-      "Suportes com Cooler": "fas fa-fan",
-      Outros: "fas fa-puzzle-piece", // Ou fas fa-box
+    // Mapeamento de Categoria para Ícone Font Awesome E Classe de Estilo
+    const accessoryInfoMap = {
+      "Kit (teclado + mouse sem fio)": {
+        icon: "fas fa-keyboard",
+        styleClass: "icon-kit",
+      },
+      Headsets: { icon: "fas fa-headphones", styleClass: "icon-headsets" },
+      Monitores: { icon: "fas fa-desktop", styleClass: "icon-monitores" },
+      Mouses: { icon: "fas fa-computer-mouse", styleClass: "icon-mouses" },
+      "Suportes com Cooler": {
+        icon: "fas fa-fan",
+        styleClass: "icon-suportes",
+      },
+      Outros: { icon: "fas fa-puzzle-piece", styleClass: "icon-outros" },
       // Adicione mais mapeamentos se tiver outras categorias
     };
 
@@ -2454,16 +2460,20 @@ function criarLinhaEquipamento(eq) {
         const acc = acessorios.find((a) => String(a.id) === String(id));
         if (!acc) return ""; // Pula se o acessório não for encontrado
 
-        // Pega o ícone do mapeamento, ou um ícone padrão se a categoria não for mapeada
-        const iconClass = iconMap[acc.categoria] || "fas fa-question-circle";
-        // Usa a categoria como tooltip (title)
+        // Pega informações do mapeamento ou usa padrões
+        const info = accessoryInfoMap[acc.categoria] || {
+          icon: "fas fa-question-circle",
+          styleClass: "icon-outros",
+        };
+        const iconClass = info.icon;
+        const styleClass = info.styleClass; // Classe para a cor
+
         const tooltipText = `${acc.categoria} (${acc.modelo || "Sem modelo"})`;
 
-        // Gera o HTML do ícone com tooltip
-        return `<i class="${iconClass}" title="${tooltipText.replace(
-          /"/g,
-          "&quot;"
-        )}"></i>`; // Usa replace para evitar que aspas no nome quebrem o HTML
+        // Gera o HTML do ícone com tooltip, classe de estilo E ONCLICK
+        return `<i class="${iconClass} ${styleClass}"
+                  title="${tooltipText.replace(/"/g, "&quot;")}"
+                  onclick="mostrarTooltipAcessorio(event, '${acc.id}')"></i>`; // Adicionado onclick
       })
       .join("")}</div>`;
   }
