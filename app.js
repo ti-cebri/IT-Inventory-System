@@ -433,6 +433,43 @@ function salvarAcessorio(e) {
   e.preventDefault();
   const form = new FormData(e.target);
   const categoria = form.get("categoria");
+
+  // --- INÍCIO DA VERIFICAÇÃO DE DUPLICIDADE ---
+  const novoPatrimonio = form.get("patrimonio").trim();
+  const novoNumeroSerie = form.get("numeroSerie").trim();
+
+  // 1. Verificar Patrimônio
+  if (novoPatrimonio) {
+    // Acessórios não têm 'isArchived', apenas 'isDeleted' (Lixeira)
+    const matchPatrimonio = acessorios.find(
+      (ac) => ac.patrimonio === novoPatrimonio && !ac.isDeleted
+    );
+
+    if (matchPatrimonio) {
+      mostrarMensagem(
+        `Acessório já cadastrado com o Patrimônio: ${novoPatrimonio}.`,
+        "error"
+      );
+      return;
+    }
+  }
+
+  // 2. Verificar Número de Série (só se não achou por patrimônio)
+  if (novoNumeroSerie) {
+    const matchSerie = acessorios.find(
+      (ac) => ac.numeroSerie === novoNumeroSerie && !ac.isDeleted
+    );
+
+    if (matchSerie) {
+      mostrarMensagem(
+        `Acessório já cadastrado com o Número de Série: ${novoNumeroSerie}.`,
+        "error"
+      );
+      return;
+    }
+  }
+  // --- FIM DA VERIFICAÇÃO DE DUPLICIDADE ---
+
   const novoAcessorio = {
     id: gerarIdUnicoAcessorio(),
     categoria: categoria,
@@ -471,6 +508,42 @@ function atualizarListaAcessorios(categoriaFiltro = "todos", termoBusca = "") {
       Object.values(a).some((val) => String(val).toLowerCase().includes(termo))
     );
   }
+
+  acessoriosFiltrados.sort((a, b) => {
+    // 1. Critério principal: Ordenar por Categoria (alfabética)
+    const catA = a.categoria || "";
+    const catB = b.categoria || "";
+    const categoriaCompare = catA.localeCompare(catB);
+
+    if (categoriaCompare !== 0) {
+      return categoriaCompare;
+    }
+
+    // 2. Critério secundário: Ordenar por Patrimônio (crescente)
+    // Acessórios sem patrimônio (vazio ou "N/A") devem ir para o final.
+    const pA = a.patrimonio;
+    const pB = b.patrimonio;
+
+    const pA_valido = pA && pA !== "N/A";
+    const pB_valido = pB && pB !== "N/A";
+
+    if (pA_valido && !pB_valido) {
+      return -1; // pA (com patrimônio) vem antes
+    }
+    if (!pA_valido && pB_valido) {
+      return 1; // pB (com patrimônio) vem antes
+    }
+    if (!pA_valido && !pB_valido) {
+      // 3. Critério de desempate (se ambos não têm patrimônio): Ordenar por Modelo
+      return (a.modelo || "").localeCompare(b.modelo || "");
+    }
+
+    // Ambos têm patrimônio, comparar usando 'numeric: true' para tratar números em strings
+    return pA.localeCompare(pB, undefined, {
+      numeric: true,
+      sensitivity: "base",
+    });
+  });
 
   tbody.innerHTML =
     acessoriosFiltrados.length > 0
@@ -691,6 +764,38 @@ function salvarCartucho(e) {
     mostrarMensagem("Número de Série e Cor são obrigatórios.", "error");
     return;
   }
+
+  // --- INÍCIO DA VERIFICAÇÃO DE DUPLICIDADE ---
+  // 1. Verificar Patrimônio
+  if (patrimonio) {
+    const matchPatrimonio = cartuchos.find(
+      (c) => c.patrimonio === patrimonio && !c.isArchived && !c.isDeleted
+    );
+
+    if (matchPatrimonio) {
+      mostrarMensagem(
+        `Cartucho já cadastrado com o Patrimônio: ${patrimonio}.`,
+        "error"
+      );
+      return;
+    }
+  }
+
+  // 2. Verificar Número de Série (só se não achou por patrimônio)
+  if (numeroSerie) {
+    const matchSerie = cartuchos.find(
+      (c) => c.numeroSerie === numeroSerie && !c.isArchived && !c.isDeleted
+    );
+
+    if (matchSerie) {
+      mostrarMensagem(
+        `Cartucho já cadastrado com o Número de Série: ${numeroSerie}.`,
+        "error"
+      );
+      return;
+    }
+  }
+  // --- FIM DA VERIFICAÇÃO DE DUPLICIDADE ---
 
   const novoCartucho = {
     id: gerarIdUnicoCartucho(),
@@ -1215,6 +1320,30 @@ function salvarEquipamento(e) {
   if (!camposObrigatorios.every((c) => validarCampo(c))) {
     mostrarMensagem("Preencha todos os campos obrigatórios.", "error");
     return;
+  }
+
+  // --- INÍCIO DA VERIFICAÇÃO DE PATRIMÔNIO (Série já foi checada por validarCampo) ---
+  const novoPatrimonio = form.get("numeroPatrimonio").trim();
+
+  if (novoPatrimonio) {
+    const matchPatrimonio = equipamentos.find(
+      (eq) =>
+        eq.numeroPatrimonio === novoPatrimonio &&
+        !eq.isArchived &&
+        !eq.isDeleted
+    );
+
+    if (matchPatrimonio) {
+      mostrarMensagem(
+        `Equipamento já cadastrado com o Patrimônio: ${novoPatrimonio}.`,
+        "error"
+      );
+      mostrarErro(
+        "numeroPatrimonio",
+        "Patrimônio já cadastrado em um item ativo."
+      );
+      return; // Para a execução
+    }
   }
   const equipamento = Object.fromEntries(form.entries());
 
@@ -1925,6 +2054,7 @@ function validarCampo(id, registroExcluido = null) {
         equipamentos.some(
           (eq) =>
             !eq.isDeleted &&
+            !eq.isArchived && // <-- ADICIONE ESTA LINHA
             eq.numeroSerie.toLowerCase() === valor.toLowerCase() &&
             eq.registro !== registroExcluido
         )
