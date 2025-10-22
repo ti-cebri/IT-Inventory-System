@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
-    <meta charset="UTF-R" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sistema de Gestão de Inventário - TI</title>
     <link rel="stylesheet" href="style.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -16,18 +15,9 @@
       <header class="header">
         <h1><i class="fas fa-laptop"></i> Sistema de Inventário de TI</h1>
         <p>Gestão Completa de Equipamentos e Ativos Tecnológicos</p>
-
-        <button
-          id="theme-toggle"
-          class="theme-toggle-btn"
-          title="Alternar tema"
-        >
+        <button id="theme-toggle" class="theme-toggle-btn" title="Alternar tema">
           <i class="fas fa-moon" id="theme-toggle-icon-moon"></i>
-          <i
-            class="fas fa-sun"
-            id="theme-toggle-icon-sun"
-            style="display: none"
-          ></i>
+          <i class="fas fa-sun" id="theme-toggle-icon-sun" style="display: none"></i>
         </button>
       </header>
 
@@ -683,6 +673,7 @@
                     id="acessorio-categoria"
                     name="categoria"
                     class="form-control"
+                    onchange="handleCategoriaAcessorioChange()"
                   >
                     <option value="">Selecione a categoria</option>
                     <option value="Kit (teclado + mouse sem fio)">
@@ -843,7 +834,7 @@
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label" for="cartucho-nserie"
-                    >Número de Série</label
+                    >Número de Série <span class="required">*</span></label
                   >
                   <input
                     type="text"
@@ -869,7 +860,7 @@
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label" for="cartucho-cor"
-                    >Cor do Cartucho</label
+                    >Cor do Cartucho <span class="required">*</span></label
                   >
                   <select id="cartucho-cor" name="cor" class="form-control">
                     <option value="">Selecione a cor...</option>
@@ -1071,10 +1062,29 @@
             </div>
           </div>
         </div>
+
+        <div class="bulk-actions-container">
+          <button
+            id="btn-apagar-cartuchos"
+            class="btn btn--danger"
+            style="display: none"
+            onclick="excluirCartuchosSelecionados()"
+          >
+            <i class="fas fa-trash"></i> Apagar Itens Selecionados
+          </button>
+        </div>
         <div class="table-container">
           <table class="equipment-table" id="cartuchos-table">
             <thead>
               <tr>
+
+                <th class="checkbox-cell">
+                  <input
+                    type="checkbox"
+                    id="select-all-cartuchos"
+                    onclick="toggleAllCheckboxes('cartuchos')"
+                  />
+                </th>
                 <th>ID</th>
                 <th>Nº de Série</th>
                 <th>Patrimônio</th>
