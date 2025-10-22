@@ -1704,3 +1704,21 @@ button:disabled i,
 [data-color-scheme="dark"] .summary-preto {
   color: #f9fafb;
 } /* Branco/Cinza claro */
+
+.acessorios-container {
+  display: flex;
+  flex-wrap: nowrap; /* Impede que quebre a linha */
+  gap: var(--space-12); /* Aumenta o espaço entre ícones */
+  align-items: center; /* Centraliza verticalmente se a linha ficar alta por outro motivo */
+  font-size: var(--font-size-lg); /* Tamanho dos ícones */
+  color: var(--color-text-secondary); /* Cor padrão dos ícones */
+}
+
+.acessorios-container i[title] {
+  cursor: pointer; /* Indica que tem tooltip */
+  transition: color var(--duration-fast);
+}
+
+.acessorios-container i:hover {
+  color: var(--color-primary); /* Muda cor no hover */
+}
