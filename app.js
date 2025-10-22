@@ -29,6 +29,7 @@ window.addEventListener("beforeunload", (event) => {
 });
 
 function inicializarAplicacao() {
+  aplicarTemaSalvo(); // <-- ADIÇÃO PARA TEMA
   configurarEventListeners();
   configurarMascaras();
   carregarDeLocalStorage();
@@ -1739,6 +1740,8 @@ function configurarEventListeners() {
       esconderTooltip();
     }
   });
+
+  document.getElementById("theme-toggle").onclick = toggleTheme; // <-- ADIÇÃO PARA TEMA
 }
 
 // ===========================================
@@ -2164,7 +2167,7 @@ function criarGrafico(
   if (chartInstance) chartInstance.destroy();
 
   const counts = data.reduce((acc, item) => {
-    const key = item[groupBy] || "Indefinido";
+    const key = item[groupBy] || "Indefindio";
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
@@ -3108,4 +3111,51 @@ function excluirAcessoriosSelecionados() {
       );
     }
   );
+}
+
+// ===========================================
+// GERENCIAMENTO DE TEMA (DARK/LIGHT)
+// ===========================================
+
+/**
+ * Aplica o tema salvo no localStorage ao carregar a página.
+ */
+function aplicarTemaSalvo() {
+  const savedTheme = localStorage.getItem("themePreference");
+  // Se não houver tema salvo, usa o 'light' como padrão
+  const theme = savedTheme || "light";
+  document.documentElement.setAttribute("data-color-scheme", theme);
+  atualizarIconeTema(theme);
+}
+
+/**
+ * Alterna o tema entre 'light' e 'dark' e salva no localStorage.
+ */
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute("data-color-scheme") === "dark";
+  const newTheme = isDark ? "light" : "dark";
+
+  html.setAttribute("data-color-scheme", newTheme);
+  localStorage.setItem("themePreference", newTheme);
+  atualizarIconeTema(newTheme);
+}
+
+/**
+ * Atualiza o ícone (sol/lua) no botão de tema.
+ * @param {string} theme - O tema atual ('light' ou 'dark').
+ */
+function atualizarIconeTema(theme) {
+  const moonIcon = document.getElementById("theme-toggle-icon-moon");
+  const sunIcon = document.getElementById("theme-toggle-icon-sun");
+
+  if (!moonIcon || !sunIcon) return;
+
+  if (theme === "dark") {
+    moonIcon.style.display = "none";
+    sunIcon.style.display = "inline";
+  } else {
+    moonIcon.style.display = "inline";
+    sunIcon.style.display = "none";
+  }
 }
