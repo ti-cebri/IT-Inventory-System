@@ -2390,6 +2390,24 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
     );
   }
 
+  equipamentosFiltrados.sort((a, b) => {
+    const isADisponivel = a.statusOperacional === "Disponível";
+    const isBDisponivel = b.statusOperacional === "Disponível";
+
+    // Coloca 'Disponível' no topo
+    if (isADisponivel && !isBDisponivel) {
+      return -1; // a vem antes de b
+    }
+    if (!isADisponivel && isBDisponivel) {
+      return 1; // b vem antes de a
+    }
+
+    // Se ambos são 'Disponível' ou ambos não são, ordena pelo nome do usuário
+    const nomeA = a.nomeUsuario || ""; // Trata 'Nenhum' ou nulo como string vazia para comparação consistente
+    const nomeB = b.nomeUsuario || "";
+    return nomeA.localeCompare(nomeB); // Ordena alfabeticamente
+  });
+
   emptyState.style.display =
     equipamentos.filter(
       (eq) =>
