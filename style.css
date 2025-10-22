@@ -1722,3 +1722,43 @@ button:disabled i,
 .acessorios-container i:hover {
   color: var(--color-primary); /* Muda cor no hover */
 }
+
+/* Cores para o Tema Claro */
+.icon-kit {
+  color: #d97706;
+} /* Âmbar */
+.icon-headsets {
+  color: #9333ea;
+} /* Roxo */
+.icon-monitores {
+  color: #2563eb;
+} /* Azul */
+.icon-mouses {
+  color: #16a34a;
+} /* Verde */
+.icon-suportes {
+  color: #0d9488;
+} /* Teal */
+.icon-outros {
+  color: var(--color-text-secondary);
+} /* Cinza (Padrão) */
+
+/* Cores para o Tema Escuro */
+[data-color-scheme="dark"] .icon-kit {
+  color: #f59e0b;
+} /* Âmbar mais claro */
+[data-color-scheme="dark"] .icon-headsets {
+  color: #c084fc;
+} /* Roxo mais claro */
+[data-color-scheme="dark"] .icon-monitores {
+  color: #60a5fa;
+} /* Azul mais claro */
+[data-color-scheme="dark"] .icon-mouses {
+  color: #4ade80;
+} /* Verde mais claro */
+[data-color-scheme="dark"] .icon-suportes {
+  color: #2dd4bf;
+} /* Teal mais claro */
+[data-color-scheme="dark"] .icon-outros {
+  color: var(--color-text-secondary);
+} /* Cinza (Padrão) */
