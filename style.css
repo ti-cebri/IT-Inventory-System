@@ -1658,3 +1658,49 @@ button:disabled i,
     right: var(--space-12);
   }
 }
+
+/* Ajuste no estilo base do sumário para melhor visibilidade */
+.summary-text {
+  font-size: var(--font-size-md);
+  color: var(--color-text); /* Cor principal do texto para "Disponíveis:" */
+  font-weight: var(--font-weight-normal);
+  background-color: var(--color-secondary);
+  padding: var(--space-6) var(--space-12); /* Aumenta padding vertical */
+  border-radius: var(--radius-base);
+  margin: 0;
+  border: 1px solid var(--color-border); /* Adiciona uma borda sutil */
+}
+
+/* Estilo base para os spans coloridos */
+.summary-color {
+  font-weight: var(--font-weight-medium); /* Deixa a contagem/cor em negrito */
+  margin-left: 4px; /* Pequeno espaço após a vírgula */
+}
+
+/* Cores específicas para cada tipo no TEMA CLARO */
+.summary-ciano {
+  color: #0e7490;
+} /* Azul Ciano escuro */
+.summary-amarelo {
+  color: #a16207;
+} /* Amarelo Ouro escuro */
+.summary-magenta {
+  color: #be185d;
+} /* Rosa Magenta escuro */
+.summary-preto {
+  color: #1f2937;
+} /* Cinza bem escuro */
+
+/* Cores específicas para cada tipo no TEMA ESCURO */
+[data-color-scheme="dark"] .summary-ciano {
+  color: #67e8f9;
+} /* Ciano claro */
+[data-color-scheme="dark"] .summary-amarelo {
+  color: #fde047;
+} /* Amarelo claro */
+[data-color-scheme="dark"] .summary-magenta {
+  color: #f9a8d4;
+} /* Rosa claro */
+[data-color-scheme="dark"] .summary-preto {
+  color: #f9fafb;
+} /* Branco/Cinza claro */
