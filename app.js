@@ -758,6 +758,7 @@ function salvarCartucho(e) {
   e.preventDefault();
   const form = new FormData(e.target);
   const numeroSerie = form.get("numeroSerie");
+  const patrimonio = form.get("patrimonio"); // Adicionado para pegar patrimonio
   const cor = form.get("cor");
   const impressoraVinculada = form.get("impressoraVinculada");
 
@@ -769,6 +770,7 @@ function salvarCartucho(e) {
   // --- INÍCIO DA VERIFICAÇÃO DE DUPLICIDADE ---
   // 1. Verificar Patrimônio
   if (patrimonio) {
+    // Verifica se patrimonio não é nulo ou vazio
     const matchPatrimonio = cartuchos.find(
       (c) => c.patrimonio === patrimonio && !c.isArchived && !c.isDeleted
     );
@@ -874,7 +876,13 @@ function atualizarListaCartuchos() {
       return orderA - orderB;
     }
 
-    return a.patrimonio.localeCompare(b.patrimonio);
+    // Ordenar por patrimônio como desempate (tratando N/A)
+    const patA = a.patrimonio === "N/A" ? "ZZZ" : a.patrimonio; // N/A vai para o fim
+    const patB = b.patrimonio === "N/A" ? "ZZZ" : b.patrimonio;
+    return patA.localeCompare(patB, undefined, {
+      numeric: true,
+      sensitivity: "base",
+    });
   });
 
   if (cartuchos.filter((c) => !c.isArchived && !c.isDeleted).length === 0) {
@@ -894,6 +902,9 @@ function atualizarListaCartuchos() {
           cartucho.status === "Disponível" ? "disponivel" : "ativo";
         return `
         <tr>
+          <td class="checkbox-cell"><input type="checkbox" class="checkbox-cartuchos" value="${
+            cartucho.id
+          }" onclick="verificarSelecao('cartuchos')"></td>
           <td>${cartucho.id}</td>
           <td>${cartucho.numeroSerie}</td>
           <td>${cartucho.patrimonio}</td>
@@ -919,6 +930,7 @@ function atualizarListaCartuchos() {
       })
       .join("");
   }
+  verificarSelecao("cartuchos"); // Garante estado inicial do botão de apagar
 }
 
 function editarCartucho(id) {
@@ -2167,7 +2179,7 @@ function criarGrafico(
   if (chartInstance) chartInstance.destroy();
 
   const counts = data.reduce((acc, item) => {
-    const key = item[groupBy] || "Indefindio";
+    const key = item[groupBy] || "Indefinido"; // Corrigido erro de digitação
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
@@ -2177,22 +2189,43 @@ function criarGrafico(
     : Object.keys(counts);
   const chartData = labels.map((key) => counts[key]);
 
+  // Cores baseadas nas variáveis CSS para consistência
+  const themeColors = {
+    disponivel: getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-primary")
+      .trim(),
+    ativo: getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-success")
+      .trim(),
+    inativo: getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-error")
+      .trim(),
+    manutencao: getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-warning")
+      .trim(),
+    arquivado: getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-info")
+      .trim(),
+  };
+
   const colors = {
     bar: {
-      Disponível: "#2563eb",
-      Ativo: "#059669",
-      Inativo: "#dc2626",
-      "Em manutenção": "#d97706",
-      Arquivado: "#6b7280",
+      Disponível: themeColors.disponivel,
+      Ativo: themeColors.ativo,
+      Inativo: themeColors.inativo,
+      "Em manutenção": themeColors.manutencao,
+      Arquivado: themeColors.arquivado,
     },
+    // Paleta de cores para Doughnut (pode ser ajustada)
     doughnut: [
-      "#1FB8CD",
-      "#FFC185",
-      "#B4413C",
-      "#ECEBD5",
-      "#5D878F",
-      "#DB4545",
+      themeColors.disponivel,
+      "#FFC185", // Laranja claro
+      "#B4413C", // Vermelho escuro
+      "#6b7280", // Cinza (Info)
+      "#d97706", // Laranja (Warning)
+      themeColors.ativo,
     ],
+    line: themeColors.disponivel, // Cor da linha para gráfico de linha
   };
 
   chartInstance = new Chart(ctx, {
@@ -2204,9 +2237,23 @@ function criarGrafico(
           label: "Quantidade",
           data: chartData,
           backgroundColor:
-            type === "bar" ? labels.map((l) => colors.bar[l]) : colors.doughnut,
-          borderColor: type === "line" ? "#2563eb" : "#fff",
-          fill: type === "line",
+            type === "bar"
+              ? labels.map((l) => colors.bar[l] || "#cccccc")
+              : type === "doughnut"
+              ? colors.doughnut
+              : "transparent", // Sem fundo para linha
+          borderColor:
+            type === "line"
+              ? colors.line
+              : type === "bar"
+              ? labels.map((l) => colors.bar[l] || "#cccccc") // Borda da mesma cor da barra
+              : "#ffffff", // Borda branca para doughnut
+          borderWidth: type === "doughnut" ? 2 : 1,
+          fill:
+            type === "line"
+              ? { target: "origin", above: "rgba(13, 110, 253, 0.1)" }
+              : false, // Preenchimento suave para linha
+          tension: 0.1, // Suaviza a linha
         },
       ],
     },
@@ -2214,7 +2261,10 @@ function criarGrafico(
       responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { display: type !== "bar", position: "bottom" } },
-      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+      scales:
+        type === "bar" || type === "line"
+          ? { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+          : {}, // Eixos apenas para bar/line
     },
   });
 }
@@ -2512,7 +2562,8 @@ function enviarParaManutencao(registro) {
   abrirModalConfirmacao(
     "Enviar este equipamento para manutenção?",
     (motivo) => {
-      if (motivo !== null) {
+      if (motivo !== null && motivo.trim() !== "") {
+        // Verifica se motivo não é nulo e não está vazio
         eq.motivoManutencao = motivo;
         eq.statusOperacional = "Em manutenção";
         eq.dataEntradaManutencao = new Date().toISOString();
@@ -2521,11 +2572,14 @@ function enviarParaManutencao(registro) {
         setEstadoAlteracao(true);
 
         aplicarFiltrosEquipamentos();
+        atualizarListaManutencao(); // Adicionado para atualizar a lista de manutenção
         atualizarDashboard();
         mostrarMensagem(
           "Equipamento enviado para manutenção com sucesso.",
           "success"
         );
+      } else {
+        mostrarMensagem("O motivo da manutenção é obrigatório.", "error"); // Mensagem de erro se motivo estiver vazio
       }
     },
     motivoHtml
@@ -2603,9 +2657,8 @@ function arquivarEquipamento(registro) {
   abrirModalConfirmacao(
     "Tem certeza que deseja arquivar este equipamento?",
     (motivo) => {
-      if (motivo !== null) {
-        eq.motivoArquivamento = motivo;
-      }
+      // O callback agora recebe o motivo (pode ser null se o campo não existir ou vazio)
+      eq.motivoArquivamento = motivo || ""; // Define como string vazia se for null
 
       if (
         ["Notebook", "Desktop"].includes(eq.tipoEquipamento) &&
@@ -2626,20 +2679,24 @@ function arquivarEquipamento(registro) {
 
       eq.isArchived = true;
       eq.archiveDate = new Date().toISOString();
-      eq.statusOperacional = "Arquivado";
+      eq.statusOperacional = "Arquivado"; // Garante que o status seja Arquivado
 
       salvarParaLocalStorage();
       setEstadoAlteracao(true);
 
-      aplicarFiltrosEquipamentos();
-      atualizarListaImpressoras();
-      aplicarFiltrosAcessorios();
+      // Atualiza as listas relevantes
+      if (eq.tipoEquipamento === "Impressora") {
+        atualizarListaImpressoras();
+      } else {
+        aplicarFiltrosEquipamentos();
+      }
+      aplicarFiltrosAcessorios(); // Atualiza acessórios caso tenham sido desvinculados
       atualizarListaArquivados();
       atualizarDashboard();
 
       mostrarMensagem("Equipamento arquivado com sucesso.", "success");
     },
-    motivoHtml
+    motivoHtml // Passa o HTML do campo de motivo para o modal
   );
 }
 
@@ -2649,12 +2706,17 @@ function desarquivarEquipamento(registro) {
     eq.isArchived = false;
     delete eq.archiveDate;
     eq.motivoArquivamento = "";
-    eq.statusOperacional = "Disponível";
+    eq.statusOperacional = "Disponível"; // Volta para disponível
     salvarParaLocalStorage();
     setEstadoAlteracao(true);
     atualizarListaArquivados();
-    aplicarFiltrosEquipamentos();
-    atualizarListaImpressoras();
+
+    // Atualiza a lista correta dependendo do tipo
+    if (eq.tipoEquipamento === "Impressora") {
+      atualizarListaImpressoras();
+    } else {
+      aplicarFiltrosEquipamentos();
+    }
     atualizarDashboard();
     mostrarMensagem("Equipamento restaurado!", "success");
   }
@@ -2696,7 +2758,7 @@ function atualizarListaArquivados() {
       <td>${eq.numeroSerie || ""}</td>
       <td>${eq.numeroPatrimonio || "N/A"}</td>
       <td><span class="status-badge arquivado">${
-        eq.statusOperacional || ""
+        eq.statusOperacional || "" /* Exibe status Arquivado */
       }</span></td>
       <td>${formatarData(eq.archiveDate)}</td>
       <td>${eq.motivoArquivamento || "N/A"}</td>
@@ -2775,7 +2837,19 @@ function restaurarEquipamento(registro) {
     delete eq.deletionDate;
     salvarParaLocalStorage();
     setEstadoAlteracao(true);
-    atualizarLixeira();
+    atualizarLixeira(); // Atualiza a lixeira
+    // Atualiza a lista correta (equipamentos, impressoras, arquivados)
+    if (eq.isArchived) {
+      atualizarListaArquivados();
+    } else if (eq.tipoEquipamento === "Impressora") {
+      atualizarListaImpressoras();
+    } else {
+      aplicarFiltrosEquipamentos();
+    }
+    if (eq.statusOperacional === "Em manutenção") {
+      atualizarListaManutencao();
+    }
+    atualizarDashboard();
     mostrarMensagem("Equipamento restaurado.", "success");
   }
 }
@@ -2788,15 +2862,25 @@ function excluirPermanenteEquipamento(registro) {
       if (eq && eq.acessorios) {
         eq.acessorios.forEach((id) => {
           const acc = acessorios.find((a) => String(a.id) === String(id));
-          if (acc) acc.disponivel = true;
+          // Só marca como disponível se o acessório ainda existir e não estiver na lixeira
+          if (acc && !acc.isDeleted) {
+            acc.disponivel = true;
+          }
         });
         salvarAcessoriosParaLocalStorage();
+        // Atualiza a lista de acessórios se estiver visível
+        if (
+          document.getElementById("acessorios").classList.contains("active")
+        ) {
+          aplicarFiltrosAcessorios();
+        }
       }
 
       equipamentos = equipamentos.filter((e) => e.registro !== registro);
       salvarParaLocalStorage();
       setEstadoAlteracao(true);
       atualizarLixeira();
+      atualizarDashboard(); // Atualiza contagens do dashboard
       mostrarMensagem("Equipamento excluído permanentemente.", "success");
     }
   );
@@ -2844,21 +2928,40 @@ function restaurarAcessorio(id) {
   if (acc) {
     acc.isDeleted = false;
     delete acc.deletionDate;
+    // Verifica se o acessório deveria estar disponível (não vinculado a equipamento ativo/não deletado)
+    const vinculado = equipamentos.some(
+      (eq) => !eq.isDeleted && eq.acessorios?.includes(id)
+    );
+    acc.disponivel = !vinculado;
+
     salvarAcessoriosParaLocalStorage();
     setEstadoAlteracao(true);
     atualizarLixeira();
+    aplicarFiltrosAcessorios(); // Atualiza a lista principal de acessórios
     mostrarMensagem("Acessório restaurado.", "success");
   }
 }
 
 function excluirPermanenteAcessorio(id) {
   abrirModalConfirmacao(
-    "Deseja excluir permanentemente este acessório?",
+    "Esta ação é irreversível. Deseja excluir permanentemente este acessório? Ele será desvinculado de qualquer equipamento.",
     () => {
+      // Desvincular de equipamentos antes de excluir
+      equipamentos.forEach((eq) => {
+        if (eq.acessorios?.includes(id)) {
+          eq.acessorios = eq.acessorios.filter((accId) => accId !== id);
+        }
+      });
+      salvarParaLocalStorage(); // Salva equipamentos sem o acessório
+
       acessorios = acessorios.filter((a) => String(a.id) !== String(id));
       salvarAcessoriosParaLocalStorage();
       setEstadoAlteracao(true);
       atualizarLixeira();
+      // Atualizar lista principal de equipamentos se estiver visível (para mostrar desvinculação)
+      if (document.getElementById("lista").classList.contains("active")) {
+        aplicarFiltrosEquipamentos();
+      }
       mostrarMensagem("Acessório excluído permanentemente.", "success");
     }
   );
@@ -2909,18 +3012,30 @@ function restaurarCartucho(id) {
     salvarCartuchosParaLocalStorage();
     setEstadoAlteracao(true);
     atualizarLixeira();
+    if (cartucho.isArchived) {
+      atualizarListaCartuchosArquivados();
+    } else {
+      atualizarListaCartuchos();
+    }
     mostrarMensagem("Cartucho restaurado.", "success");
   }
 }
 
 function excluirPermanenteCartucho(id) {
-  abrirModalConfirmacao("Deseja excluir permanentemente este cartucho?", () => {
-    cartuchos = cartuchos.filter((c) => c.id !== id);
-    salvarCartuchosParaLocalStorage();
-    setEstadoAlteracao(true);
-    atualizarLixeira();
-    mostrarMensagem("Cartucho excluído permanentemente.", "success");
-  });
+  abrirModalConfirmacao(
+    "Esta ação é irreversível. Deseja excluir permanentemente este cartucho?",
+    () => {
+      cartuchos = cartuchos.filter((c) => c.id !== id);
+      salvarCartuchosParaLocalStorage();
+      setEstadoAlteracao(true);
+      atualizarLixeira();
+      // Atualiza contagem no header da lista principal se estiver visível
+      if (document.getElementById("cartuchos").classList.contains("active")) {
+        atualizarContagemCartuchosDisponiveis();
+      }
+      mostrarMensagem("Cartucho excluído permanentemente.", "success");
+    }
+  );
 }
 
 // ===========================================
@@ -2943,14 +3058,21 @@ function mostrarTooltipAcessorio(event, id) {
 function mostrarTooltipUsuario(event, acessorioId) {
   event.stopPropagation();
   const tooltip = document.getElementById("acessorio-tooltip");
+  // Procura em equipamentos não deletados e não arquivados
   const eq = equipamentos.find(
-    (e) => e.acessorios && e.acessorios.includes(String(acessorioId))
+    (e) =>
+      !e.isDeleted &&
+      !e.isArchived &&
+      e.acessorios &&
+      e.acessorios.includes(String(acessorioId))
   );
   tooltip.innerHTML = eq
     ? `<h4>Vinculado a</h4><p><strong>Usuário:</strong> ${
         eq.nomeUsuario || "N/A"
-      }</p><p><strong>Equipamento:</strong> ${eq.numeroPatrimonio || "N/A"}</p>`
-    : `<h4>Informação não encontrada</h4>`;
+      }</p><p><strong>Equipamento (Pat):</strong> ${
+        eq.numeroPatrimonio || "N/A"
+      }</p>`
+    : `<h4>Acessório Disponível</h4><p>Não vinculado a um equipamento ativo.</p>`;
   posicionarTooltip(event, tooltip);
 }
 
@@ -2965,8 +3087,13 @@ function mostrarTooltipCartuchos(event, sala) {
   event.stopPropagation();
   const tooltip = document.getElementById("acessorio-tooltip");
 
+  // Busca cartuchos não deletados, não arquivados, em uso e vinculados à sala específica
   const cartuchosNaImpressora = cartuchos.filter(
-    (c) => c.impressoraVinculada === sala && c.status === "Em uso"
+    (c) =>
+      !c.isDeleted &&
+      !c.isArchived &&
+      c.impressoraVinculada === sala &&
+      c.status === "Em uso"
   );
 
   let tooltipContent;
@@ -2986,14 +3113,17 @@ function mostrarTooltipCartuchos(event, sala) {
       .map((cartucho) => {
         const corBase = cartucho.cor.split(" ")[0];
         const corClasse = corBase.toLowerCase().replace(/[()]/g, "");
-        return `<p><span class="tooltip-cor ${corClasse}">${corBase}</span> (${
-          cartucho.patrimonio || "N/A"
-        })</p>`;
+        // Mostra ID ou Patrimônio se disponível
+        const identificador =
+          cartucho.patrimonio && cartucho.patrimonio !== "N/A"
+            ? cartucho.patrimonio
+            : cartucho.id;
+        return `<p><span class="tooltip-cor ${corClasse}">${corBase}</span> (${identificador})</p>`;
       })
       .join("");
   } else {
     tooltipContent =
-      "<h4>Cartuchos Instalados</h4><p>Nenhum cartucho vinculado.</p>";
+      "<h4>Cartuchos Instalados</h4><p>Nenhum cartucho ativo vinculado.</p>";
   }
 
   tooltip.innerHTML = tooltipContent;
@@ -3031,7 +3161,8 @@ function verificarSelecao(tipo) {
   const master = document.getElementById(`select-all-${tipo}`);
   if (master) {
     master.indeterminate = checked.length > 0 && checked.length < all.length;
-    master.checked = checked.length > 0 && checked.length === all.length;
+    // Marca o checkbox principal apenas se TODOS estiverem marcados e houver pelo menos um item
+    master.checked = all.length > 0 && checked.length === all.length;
   }
 }
 
@@ -3113,6 +3244,35 @@ function excluirAcessoriosSelecionados() {
   );
 }
 
+// === NOVA FUNÇÃO ===
+function excluirCartuchosSelecionados() {
+  const idsParaExcluir = Array.from(
+    document.querySelectorAll(".checkbox-cartuchos:checked")
+  ).map((cb) => cb.value);
+
+  if (idsParaExcluir.length === 0) return;
+
+  abrirModalConfirmacao(
+    `Mover ${idsParaExcluir.length} cartuchos para a lixeira?`,
+    () => {
+      idsParaExcluir.forEach((id) => {
+        const cartucho = cartuchos.find((c) => c.id === id);
+        if (cartucho) {
+          cartucho.isDeleted = true;
+          cartucho.deletionDate = new Date().toISOString();
+        }
+      });
+      salvarCartuchosParaLocalStorage();
+      setEstadoAlteracao(true);
+      atualizarListaCartuchos(); // Atualiza a lista visível
+      mostrarMensagem(
+        `${idsParaExcluir.length} cartuchos movidos para a lixeira.`,
+        "success"
+      );
+    }
+  );
+}
+
 // ===========================================
 // GERENCIAMENTO DE TEMA (DARK/LIGHT)
 // ===========================================
@@ -3139,6 +3299,10 @@ function toggleTheme() {
   html.setAttribute("data-color-scheme", newTheme);
   localStorage.setItem("themePreference", newTheme);
   atualizarIconeTema(newTheme);
+  // Re-renderiza os gráficos ao trocar de tema para pegar as novas cores das variáveis CSS
+  if (document.getElementById("dashboard").classList.contains("active")) {
+    criarGraficos();
+  }
 }
 
 /**
