@@ -2434,20 +2434,40 @@ function criarLinhaEquipamento(eq) {
     Arquivado: "arquivado",
     Disponível: "disponivel",
   };
+
+  // === Lógica dos Ícones de Acessórios ===
   let acessoriosHtml = '<div class="acessorios-container">Nenhum</div>';
   if (eq.acessorios && eq.acessorios.length) {
+    // Mapeamento de Categoria para Ícone Font Awesome
+    const iconMap = {
+      "Kit (teclado + mouse sem fio)": "fas fa-keyboard",
+      Headsets: "fas fa-headphones",
+      Monitores: "fas fa-desktop", // Ou fas fa-display
+      Mouses: "fas fa-computer-mouse",
+      "Suportes com Cooler": "fas fa-fan",
+      Outros: "fas fa-puzzle-piece", // Ou fas fa-box
+      // Adicione mais mapeamentos se tiver outras categorias
+    };
+
     acessoriosHtml = `<div class="acessorios-container">${eq.acessorios
       .map((id) => {
         const acc = acessorios.find((a) => String(a.id) === String(id));
-        if (!acc) return "";
-        const nome =
-          acc.categoria === "Kit (teclado + mouse sem fio)"
-            ? "Kit"
-            : acc.categoria;
-        return `<span class="acessorio-badge" onclick="mostrarTooltipAcessorio(event, '${acc.id}')">${nome}</span>`;
+        if (!acc) return ""; // Pula se o acessório não for encontrado
+
+        // Pega o ícone do mapeamento, ou um ícone padrão se a categoria não for mapeada
+        const iconClass = iconMap[acc.categoria] || "fas fa-question-circle";
+        // Usa a categoria como tooltip (title)
+        const tooltipText = `${acc.categoria} (${acc.modelo || "Sem modelo"})`;
+
+        // Gera o HTML do ícone com tooltip
+        return `<i class="${iconClass}" title="${tooltipText.replace(
+          /"/g,
+          "&quot;"
+        )}"></i>`; // Usa replace para evitar que aspas no nome quebrem o HTML
       })
       .join("")}</div>`;
   }
+
   let documentosHtml = '<div class="documentos-container">N/A</div>';
   if (eq.tipoEquipamento === "Notebook") {
     const termoIcon = `<i class="fas ${
