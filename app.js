@@ -1632,7 +1632,6 @@ function criarFormularioEdicao(equipamento) {
         </div>
       </fieldset>
       
-      <!-- *** INÍCIO DA MODIFICAÇÃO *** -->
       <fieldset id="fieldset-acessorios-edit" style="display:${
         isNotebookOrDesktop ? "block" : "none"
       }"><legend>Acessórios</legend>
@@ -1645,7 +1644,6 @@ function criarFormularioEdicao(equipamento) {
           </div>
         </div>
         
-        <!-- Campos Adicionados -->
         <div class="form-row" style="margin-top: 16px">
             <div class="form-group">
                 <label class="form-label">Mochila / Case</label>
@@ -1684,11 +1682,7 @@ function criarFormularioEdicao(equipamento) {
                 </div>
             </div>
         </div>
-        <!-- Fim dos Campos Adicionados -->
-
-      </fieldset>
-      <!-- *** FIM DA MODIFICAÇÃO *** -->
-
+        </fieldset>
       <fieldset id="fieldset-documentos-edit"><legend>Documentos</legend><div class="checkbox-item"><input type="checkbox" id="edit-termo-responsabilidade" name="termoResponsabilidade" ${
         equipamento.termoResponsabilidade ? "checked" : ""
       }><label for="edit-termo-responsabilidade">Termo Assinado</label></div><div class="checkbox-item"><input type="checkbox" id="edit-foto-notebook" name="fotoNotebook" ${
@@ -2383,8 +2377,16 @@ function abrirModalConfirmacao(mensagem, callback, dynamicHtml = "") {
       motivoManutencaoInput?.value.trim() ??
       null;
 
-    callback(motivo);
-    fecharModalConfirm();
+    try {
+      // Tenta executar a ação principal (excluir, arquivar, etc.)
+      callback(motivo);
+    } catch (e) {
+      // Se der erro, registra no console para depuração
+      console.error("Erro ao executar a ação de confirmação:", e);
+    } finally {
+      // Garante que o modal SEMPRE feche, mesmo se o callback falhar.
+      fecharModalConfirm();
+    }
   };
 
   modal.classList.add("active");
@@ -2466,23 +2468,34 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
     );
   }
 
+  // *** INÍCIO DA MODIFICAÇÃO (NOVA LÓGICA DE ORDENAÇÃO) ***
   equipamentosFiltrados.sort((a, b) => {
-    const isADisponivel = a.statusOperacional === "Disponível";
-    const isBDisponivel = b.statusOperacional === "Disponível";
+    // Req 3: 'Disponível' e 'Sem Usuário' (Nenhum) vão para o topo
+    const aTopo = a.statusOperacional === "Disponível" && !a.nomeUsuario;
+    const bTopo = b.statusOperacional === "Disponível" && !b.nomeUsuario;
 
-    // Coloca 'Disponível' no topo
-    if (isADisponivel && !isBDisponivel) {
-      return -1; // a vem antes de b
+    if (aTopo && !bTopo) {
+      return -1; // 'a' (que é do topo) vem antes
     }
-    if (!isADisponivel && isBDisponivel) {
-      return 1; // b vem antes de a
+    if (!aTopo && bTopo) {
+      return 1; // 'b' (que é do topo) vem antes
     }
 
-    // Se ambos são 'Disponível' ou ambos não são, ordena pelo nome do usuário
-    const nomeA = a.nomeUsuario || ""; // Trata 'Nenhum' ou nulo como string vazia para comparação consistente
+    // Req 1: Agrupar por Tipo de Equipamento (ordem alfabética)
+    const tipoA = a.tipoEquipamento || "";
+    const tipoB = b.tipoEquipamento || "";
+    const tipoCompare = tipoA.localeCompare(tipoB);
+
+    if (tipoCompare !== 0) {
+      return tipoCompare; // Tipos diferentes, ordena por tipo
+    }
+
+    // Req 2: Se os tipos são iguais, ordenar por Nome de Usuário (ordem alfabética)
+    const nomeA = a.nomeUsuario || ""; // Trata 'Nenhum' ou nulo como string vazia
     const nomeB = b.nomeUsuario || "";
-    return nomeA.localeCompare(nomeB); // Ordena alfabeticamente
+    return nomeA.localeCompare(nomeB);
   });
+  // *** FIM DA MODIFICAÇÃO ***
 
   emptyState.style.display =
     equipamentos.filter(
@@ -2945,6 +2958,9 @@ function atualizarLixeiraEquipamentos() {
       .map(
         (eq) => `
             <tr>
+                <td class="checkbox-cell"><input type="checkbox" class="checkbox-lixeira-equipamentos" value="${
+                  eq.registro
+                }" onclick="verificarSelecao('lixeira-equipamentos')"></td>
                 <td>${eq.registro}</td>
                 <td>${eq.tipoEquipamento}</td>
                 <td>${eq.numeroSerie}</td>
@@ -2967,6 +2983,7 @@ function atualizarLixeiraEquipamentos() {
     tbody.closest(".table-container").style.display = "table";
     emptyState.style.display = "none";
   }
+  verificarSelecao("lixeira-equipamentos"); // <-- MODIFICAÇÃO
 }
 
 function restaurarEquipamento(registro) {
@@ -3039,6 +3056,9 @@ function atualizarLixeiraAcessorios() {
       .map(
         (ac) => `
             <tr>
+                <td class="checkbox-cell"><input type="checkbox" class="checkbox-lixeira-acessorios" value="${
+                  ac.id
+                }" onclick="verificarSelecao('lixeira-acessorios')"></td>
                 <td>${ac.id}</td>
                 <td>${ac.categoria}</td>
                 <td>${ac.modelo}</td>
@@ -3060,6 +3080,7 @@ function atualizarLixeiraAcessorios() {
     tbody.closest(".table-container").style.display = "table";
     emptyState.style.display = "none";
   }
+  verificarSelecao("lixeira-acessorios"); // <-- MODIFICAÇÃO
 }
 
 function restaurarAcessorio(id) {
@@ -3120,6 +3141,9 @@ function atualizarLixeiraCartuchos() {
       .map(
         (ca) => `
             <tr>
+                <td class="checkbox-cell"><input type="checkbox" class="checkbox-lixeira-cartuchos" value="${
+                  ca.id
+                }" onclick="verificarSelecao('lixeira-cartuchos')"></td>
                 <td>${ca.id}</td>
                 <td>${ca.numeroSerie}</td>
                 <td>${ca.cor}</td>
@@ -3141,6 +3165,7 @@ function atualizarLixeiraCartuchos() {
     tbody.closest(".table-container").style.display = "table";
     emptyState.style.display = "none";
   }
+  verificarSelecao("lixeira-cartuchos"); // <-- MODIFICAÇÃO
 }
 
 function restaurarCartucho(id) {
@@ -3173,6 +3198,108 @@ function excluirPermanenteCartucho(id) {
         atualizarContagemCartuchosDisponiveis();
       }
       mostrarMensagem("Cartucho excluído permanentemente.", "success");
+    }
+  );
+}
+
+// ===========================================
+// LIXEIRA - EXCLUSÃO PERMANENTE EM MASSA
+// ===========================================
+
+function excluirEquipamentosSelecionadosLixeira() {
+  const idsParaExcluir = Array.from(
+    document.querySelectorAll(".checkbox-lixeira-equipamentos:checked")
+  ).map((cb) => cb.value);
+
+  if (idsParaExcluir.length === 0) return;
+
+  abrirModalConfirmacao(
+    `Esta ação é irreversível. Deseja excluir permanentemente ${idsParaExcluir.length} equipamento(s)?`,
+    () => {
+      // Lógica de desvinculação de acessórios
+      idsParaExcluir.forEach((registro) => {
+        const eq = equipamentos.find((e) => e.registro === registro);
+        if (eq && eq.acessorios) {
+          eq.acessorios.forEach((id) => {
+            const acc = acessorios.find((a) => String(a.id) === String(id));
+            if (acc && !acc.isDeleted) {
+              acc.disponivel = true;
+            }
+          });
+        }
+      });
+      salvarAcessoriosParaLocalStorage(); // Salva acessórios desvinculados
+
+      // Filtra e remove os equipamentos
+      equipamentos = equipamentos.filter(
+        (e) => !idsParaExcluir.includes(e.registro)
+      );
+      salvarParaLocalStorage();
+      setEstadoAlteracao(true);
+      atualizarLixeira(); // Atualiza a lixeira
+      atualizarDashboard();
+      mostrarMensagem(
+        `${idsParaExcluir.length} equipamento(s) excluído(s) permanentemente.`,
+        "success"
+      );
+    }
+  );
+}
+
+function excluirAcessoriosSelecionadosLixeira() {
+  const idsParaExcluir = Array.from(
+    document.querySelectorAll(".checkbox-lixeira-acessorios:checked")
+  ).map((cb) => cb.value);
+
+  if (idsParaExcluir.length === 0) return;
+
+  abrirModalConfirmacao(
+    `Esta ação é irreversível. Deseja excluir permanentemente ${idsParaExcluir.length} acessório(s)? Eles serão desvinculados de qualquer equipamento.`,
+    () => {
+      // Desvincular de equipamentos antes de excluir
+      equipamentos.forEach((eq) => {
+        if (eq.acessorios?.length) {
+          eq.acessorios = eq.acessorios.filter(
+            (accId) => !idsParaExcluir.includes(String(accId))
+          );
+        }
+      });
+      salvarParaLocalStorage(); // Salva equipamentos
+
+      // Filtra e remove os acessórios
+      acessorios = acessorios.filter(
+        (a) => !idsParaExcluir.includes(String(a.id))
+      );
+      salvarAcessoriosParaLocalStorage();
+      setEstadoAlteracao(true);
+      atualizarLixeira();
+      mostrarMensagem(
+        `${idsParaExcluir.length} acessório(s) excluído(s) permanentemente.`,
+        "success"
+      );
+    }
+  );
+}
+
+function excluirCartuchosSelecionadosLixeira() {
+  const idsParaExcluir = Array.from(
+    document.querySelectorAll(".checkbox-lixeira-cartuchos:checked")
+  ).map((cb) => cb.value);
+
+  if (idsParaExcluir.length === 0) return;
+
+  abrirModalConfirmacao(
+    `Esta ação é irreversível. Deseja excluir permanentemente ${idsParaExcluir.length} cartucho(s)?`,
+    () => {
+      // Filtra e remove os cartuchos
+      cartuchos = cartuchos.filter((c) => !idsParaExcluir.includes(c.id));
+      salvarCartuchosParaLocalStorage();
+      setEstadoAlteracao(true);
+      atualizarLixeira();
+      mostrarMensagem(
+        `${idsParaExcluir.length} cartucho(s) excluído(s) permanentemente.`,
+        "success"
+      );
     }
   );
 }
