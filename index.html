@@ -1347,11 +1347,28 @@
           <h2>Lixeira</h2>
         </div>
 
+        <div class="bulk-actions-container">
+          <button
+            id="btn-apagar-lixeira-equipamentos"
+            class="btn btn--danger"
+            style="display: none"
+            onclick="excluirEquipamentosSelecionadosLixeira()"
+          >
+            <i class="fas fa-times-circle"></i> Excluir Itens Permanentemente
+          </button>
+        </div>
         <h3 class="lixeira-section-title">Equipamentos Excluídos</h3>
         <div class="table-container">
           <table class="equipment-table" id="lixeira-equipment-table">
             <thead>
               <tr>
+                <th class="checkbox-cell">
+                  <input
+                    type="checkbox"
+                    id="select-all-lixeira-equipamentos"
+                    onclick="toggleAllCheckboxes('lixeira-equipamentos')"
+                  />
+                </th>
                 <th>ID</th>
                 <th>Tipo</th>
                 <th>Nº de Série</th>
@@ -1372,11 +1389,28 @@
           <h3>Nenhum equipamento na lixeira</h3>
         </div>
 
+        <div class="bulk-actions-container">
+          <button
+            id="btn-apagar-lixeira-acessorios"
+            class="btn btn--danger"
+            style="display: none"
+            onclick="excluirAcessoriosSelecionadosLixeira()"
+          >
+            <i class="fas fa-times-circle"></i> Excluir Itens Permanentemente
+          </button>
+        </div>
         <h3 class="lixeira-section-title">Acessórios Excluídos</h3>
         <div class="table-container">
           <table class="equipment-table" id="lixeira-acessorios-table">
             <thead>
               <tr>
+                <th class="checkbox-cell">
+                  <input
+                    type="checkbox"
+                    id="select-all-lixeira-acessorios"
+                    onclick="toggleAllCheckboxes('lixeira-acessorios')"
+                  />
+                </th>
                 <th>ID</th>
                 <th>Categoria</th>
                 <th>Modelo</th>
@@ -1396,11 +1430,28 @@
           <h3>Nenhum acessório na lixeira</h3>
         </div>
 
+        <div class="bulk-actions-container">
+          <button
+            id="btn-apagar-lixeira-cartuchos"
+            class="btn btn--danger"
+            style="display: none"
+            onclick="excluirCartuchosSelecionadosLixeira()"
+          >
+            <i class="fas fa-times-circle"></i> Excluir Itens Permanentemente
+          </button>
+        </div>
         <h3 class="lixeira-section-title">Cartuchos Excluídos</h3>
         <div class="table-container">
           <table class="equipment-table" id="lixeira-cartuchos-table">
             <thead>
               <tr>
+                <th class="checkbox-cell">
+                  <input
+                    type="checkbox"
+                    id="select-all-lixeira-cartuchos"
+                    onclick="toggleAllCheckboxes('lixeira-cartuchos')"
+                  />
+                </th>
                 <th>ID</th>
                 <th>Nº de Série</th>
                 <th>Cor</th>
@@ -1420,7 +1471,6 @@
           <h3>Nenhum cartucho na lixeira</h3>
         </div>
       </div>
-
       <div class="modal" id="edit-modal">
         <div class="modal-content">
           <div class="modal-header">
