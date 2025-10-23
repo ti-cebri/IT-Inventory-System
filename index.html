@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
-    <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sistema de Gestão de Inventário - TI</title>
     <link rel="stylesheet" href="style.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -15,9 +16,17 @@
       <header class="header">
         <h1><i class="fas fa-laptop"></i> Sistema de Inventário de TI</h1>
         <p>Gestão Completa de Equipamentos e Ativos Tecnológicos</p>
-        <button id="theme-toggle" class="theme-toggle-btn" title="Alternar tema">
+        <button
+          id="theme-toggle"
+          class="theme-toggle-btn"
+          title="Alternar tema"
+        >
           <i class="fas fa-moon" id="theme-toggle-icon-moon"></i>
-          <i class="fas fa-sun" id="theme-toggle-icon-sun" style="display: none"></i>
+          <i
+            class="fas fa-sun"
+            id="theme-toggle-icon-sun"
+            style="display: none"
+          ></i>
         </button>
       </header>
 
@@ -598,6 +607,37 @@
                   </p>
                 </div>
               </div>
+
+              <div class="form-row" style="margin-top: 16px">
+                <div class="form-group">
+                  <label class="form-label">Mochila / Case</label>
+                  <div class="checkbox-item" style="margin-top: 8px">
+                    <input type="checkbox" id="mochila" name="mochila" />
+                    <label for="mochila">Mochila</label>
+                  </div>
+                  <div class="checkbox-item">
+                    <input type="checkbox" id="case" name="case" />
+                    <label for="case">Case</label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Pacote Office - 365</label>
+                  <div class="radio-group">
+                    <label class="radio-label">
+                      <input
+                        type="radio"
+                        name="pacoteOffice"
+                        value="Standard"
+                      />
+                      <span class="radio-custom"></span>Standard
+                    </label>
+                    <label class="radio-label">
+                      <input type="radio" name="pacoteOffice" value="Premium" />
+                      <span class="radio-custom"></span>Premium
+                    </label>
+                  </div>
+                </div>
+              </div>
             </fieldset>
 
             <fieldset
@@ -1077,7 +1117,6 @@
           <table class="equipment-table" id="cartuchos-table">
             <thead>
               <tr>
-
                 <th class="checkbox-cell">
                   <input
                     type="checkbox"
