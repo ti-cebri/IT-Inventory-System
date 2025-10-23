@@ -275,7 +275,7 @@ function handleTipoEquipamentoChange(selectElement) {
     show(fieldsetComercial);
 
     if (["Notebook", "Desktop"].includes(tipo)) {
-      show(fieldsetAcessorios);
+      show(fieldsetAcessorios); // <-- Exibe o fieldset (que contém os novos campos)
       show(fieldsetSpecs);
     } else {
       hide(fieldsetAcessorios);
@@ -1391,6 +1391,11 @@ function salvarEquipamento(e) {
   equipamento.valor = parseMoeda(equipamento.valor);
   equipamento.termoResponsabilidade = form.has("termoResponsabilidade");
   equipamento.fotoNotebook = form.has("fotoNotebook");
+  // *** INÍCIO DA MODIFICAÇÃO ***
+  equipamento.mochila = form.has("mochila");
+  equipamento.case = form.has("case");
+  // O campo 'pacoteOffice' (radio) já é pego pelo Object.fromEntries
+  // *** FIM DA MODIFICAÇÃO ***
   equipamento.isArchived = false;
   equipamento.isDeleted = false;
 
@@ -1483,7 +1488,7 @@ function criarFormularioEdicao(equipamento) {
 
   const isImpressora = equipamento.tipoEquipamento === "Impressora";
   const isNotebookOrDesktop = ["Notebook", "Desktop"].includes(
-    equipamento.tipoEquipamento
+    tipoSelecionado // <-- Corrigido para usar o tipo base
   );
 
   // <-- ALTERAÇÃO: Verifica se o usuário é CEBRI para exibir o campo correto
@@ -1626,9 +1631,64 @@ function criarFormularioEdicao(equipamento) {
           )}"></div>
         </div>
       </fieldset>
+      
+      <!-- *** INÍCIO DA MODIFICAÇÃO *** -->
       <fieldset id="fieldset-acessorios-edit" style="display:${
         isNotebookOrDesktop ? "block" : "none"
-      }"><legend>Acessórios</legend><div class="acessorio-search-component"><div class="form-group"><label>Buscar</label><input type="text" id="edit-acessorio-search-input" class="form-control" placeholder="Digite para buscar..." autocomplete="off"/><div id="edit-acessorio-search-results" class="search-results-container"></div></div><div id="edit-acessorios-selecionados-container" class="selected-items-container"><p class="empty-selection-text">Nenhum acessório.</p></div></div></fieldset>
+      }"><legend>Acessórios</legend>
+        <div class="acessorio-search-component">
+          <div class="form-group"><label>Buscar</label><input type="text" id="edit-acessorio-search-input" class="form-control" placeholder="Digite para buscar..." autocomplete="off"/>
+            <div id="edit-acessorio-search-results" class="search-results-container"></div>
+          </div>
+          <div id="edit-acessorios-selecionados-container" class="selected-items-container">
+            <p class="empty-selection-text">Nenhum acessório.</p>
+          </div>
+        </div>
+        
+        <!-- Campos Adicionados -->
+        <div class="form-row" style="margin-top: 16px">
+            <div class="form-group">
+                <label class="form-label">Mochila / Case</label>
+                <div class="checkbox-item" style="margin-top: 8px">
+                    <input type="checkbox" id="edit-mochila" name="mochila" ${
+                      equipamento.mochila ? "checked" : ""
+                    } />
+                    <label for="edit-mochila">Mochila</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="edit-case" name="case" ${
+                      equipamento.case ? "checked" : ""
+                    } />
+                    <label for="edit-case">Case</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Pacote Office - 365</label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="pacoteOffice" value="Standard" ${
+                          equipamento.pacoteOffice === "Standard"
+                            ? "checked"
+                            : ""
+                        } />
+                        <span class="radio-custom"></span>Standard
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="pacoteOffice" value="Premium" ${
+                          equipamento.pacoteOffice === "Premium"
+                            ? "checked"
+                            : ""
+                        } />
+                        <span class="radio-custom"></span>Premium
+                    </label>
+                </div>
+            </div>
+        </div>
+        <!-- Fim dos Campos Adicionados -->
+
+      </fieldset>
+      <!-- *** FIM DA MODIFICAÇÃO *** -->
+
       <fieldset id="fieldset-documentos-edit"><legend>Documentos</legend><div class="checkbox-item"><input type="checkbox" id="edit-termo-responsabilidade" name="termoResponsabilidade" ${
         equipamento.termoResponsabilidade ? "checked" : ""
       }><label for="edit-termo-responsabilidade">Termo Assinado</label></div><div class="checkbox-item"><input type="checkbox" id="edit-foto-notebook" name="fotoNotebook" ${
@@ -1685,6 +1745,11 @@ function salvarEdicao(event, registro) {
     acessorios: [...novosAcessorios],
     termoResponsabilidade: form.has("termoResponsabilidade"),
     fotoNotebook: form.has("fotoNotebook"),
+    // *** INÍCIO DA MODIFICAÇÃO ***
+    mochila: form.has("mochila"),
+    case: form.has("case"),
+    // 'pacoteOffice' já está em 'updatedData'
+    // *** FIM DA MODIFICAÇÃO ***
   };
 
   salvarParaLocalStorage();
@@ -1797,6 +1862,7 @@ function setEstadoAlteracao(alterado) {
       : `<i class="fas fa-download"></i> Salvar CSV`;
 }
 
+// *** INÍCIO DA MODIFICAÇÃO ***
 const cabecalhoEquipamentosCSV = [
   "registro",
   "nomeUsuario",
@@ -1819,6 +1885,9 @@ const cabecalhoEquipamentosCSV = [
   "observacoes",
   "termoResponsabilidade",
   "fotoNotebook",
+  "mochila", // NOVO
+  "case", // NOVO
+  "pacoteOffice", // NOVO
   "isArchived",
   "archiveDate",
   "motivoArquivamento",
@@ -1833,6 +1902,8 @@ const cabecalhoEquipamentosCSV = [
   "dataEntradaManutencao",
   "motivoManutencao",
 ];
+// *** FIM DA MODIFICAÇÃO ***
+
 const cabecalhoAcessoriosCSV = [
   "id",
   "categoria",
@@ -1934,15 +2005,20 @@ function parseCsvData(csv, cabecalho) {
       item[key] = valores[index] || "";
     });
 
+    // *** INÍCIO DA MODIFICAÇÃO ***
     [
       "isArchived",
       "isDeleted",
       "termoResponsabilidade",
       "fotoNotebook",
       "disponivel",
+      "mochila", // NOVO
+      "case", // NOVO
     ].forEach((key) => {
       if (item[key] !== undefined) item[key] = item[key] === "true";
     });
+    // *** FIM DA MODIFICAÇÃO ***
+
     ["valor", "valorMensal"].forEach((key) => {
       if (item[key] !== undefined) item[key] = parseFloat(item[key]) || 0;
     });
@@ -2194,7 +2270,7 @@ function criarGrafico(
   if (chartInstance) chartInstance.destroy();
 
   const counts = data.reduce((acc, item) => {
-    const key = item[groupBy] || "Indefinido"; // Corrigido erro de digitação
+    const key = item[groupBy] || "Indefindo";
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
