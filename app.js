@@ -591,15 +591,22 @@ function atualizarListaAcessorios(categoriaFiltro = "todos", termoBusca = "") {
 }
 
 function excluirAcessorio(id) {
-  const acessorio = acessorios.find((a) => String(a.id) === String(id));
-  if (acessorio) {
-    acessorio.isDeleted = true;
-    acessorio.deletionDate = new Date().toISOString();
-    salvarAcessoriosParaLocalStorage();
-    setEstadoAlteracao(true);
-    aplicarFiltrosAcessorios();
-    mostrarMensagem("Acessório movido para a lixeira.", "success");
-  }
+  // MODIFICAÇÃO (Goal 1): Adiciona modal de confirmação
+  abrirModalConfirmacao(
+    "Tem certeza que deseja mover este acessório para a lixeira?",
+    () => {
+      // Lógica original movida para o callback
+      const acessorio = acessorios.find((a) => String(a.id) === String(id));
+      if (acessorio) {
+        acessorio.isDeleted = true;
+        acessorio.deletionDate = new Date().toISOString();
+        salvarAcessoriosParaLocalStorage();
+        setEstadoAlteracao(true);
+        aplicarFiltrosAcessorios(); // Atualiza a lista de acessórios
+        mostrarMensagem("Acessório movido para a lixeira.", "success");
+      }
+    }
+  );
 }
 
 function editarAcessorio(id) {
@@ -1098,15 +1105,29 @@ function salvarEdicaoCartucho(event, id) {
 }
 
 function excluirCartucho(id) {
-  const cartucho = cartuchos.find((c) => c.id === id);
-  if (cartucho) {
-    cartucho.isDeleted = true;
-    cartucho.deletionDate = new Date().toISOString();
-    salvarCartuchosParaLocalStorage();
-    setEstadoAlteracao(true);
-    atualizarListaCartuchos();
-    mostrarMensagem("Cartucho movido para a lixeira.", "success");
-  }
+  // MODIFICAÇÃO (Goal 1): Adiciona modal de confirmação
+  abrirModalConfirmacao(
+    "Tem certeza que deseja mover este cartucho para a lixeira?",
+    () => {
+      // Lógica original movida para o callback
+      const cartucho = cartuchos.find((c) => c.id === id);
+      if (cartucho) {
+        cartucho.isDeleted = true;
+        cartucho.deletionDate = new Date().toISOString();
+        salvarCartuchosParaLocalStorage();
+        setEstadoAlteracao(true);
+
+        // Atualiza a lista correta de onde o item saiu
+        if (cartucho.isArchived) {
+          atualizarListaCartuchosArquivados();
+        } else {
+          atualizarListaCartuchos();
+        }
+
+        mostrarMensagem("Cartucho movido para a lixeira.", "success");
+      }
+    }
+  );
 }
 
 function fecharModalCartucho() {
@@ -1765,17 +1786,57 @@ function salvarEdicao(event, registro) {
 }
 
 function excluirEquipamento(registro) {
-  const eq = equipamentos.find((e) => e.registro === registro);
-  if (eq) {
-    eq.isDeleted = true;
-    eq.deletionDate = new Date().toISOString();
-    salvarParaLocalStorage();
-    setEstadoAlteracao(true);
-    aplicarFiltrosEquipamentos();
-    atualizarListaImpressoras();
-    atualizarListaArquivados();
-    mostrarMensagem("Equipamento movido para a lixeira.", "success");
-  }
+  // MODIFICAÇÃO (Goal 1): Adiciona modal de confirmação
+  abrirModalConfirmacao(
+    "Tem certeza que deseja mover este item para a lixeira?",
+    () => {
+      // Esta é a função de callback que executa a exclusão
+      const eq = equipamentos.find((e) => e.registro === registro);
+      if (eq) {
+        // --- INÍCIO DA MODIFICAÇÃO (Goal 2) ---
+        // Se for um equipamento que pode ter acessórios, liberar os acessórios
+        if (
+          ["Notebook", "Desktop"].includes(eq.tipoEquipamento) &&
+          eq.acessorios &&
+          eq.acessorios.length > 0
+        ) {
+          eq.acessorios.forEach((acessorioId) => {
+            const acessorio = acessorios.find(
+              (a) => String(a.id) === String(acessorioId)
+            );
+            // Verifica se o acessório existe e não está, ele mesmo, na lixeira
+            if (acessorio && !acessorio.isDeleted) {
+              acessorio.disponivel = true;
+            }
+          });
+          salvarAcessoriosParaLocalStorage(); // Salva o novo estado dos acessórios
+          // Atualiza a lista de acessórios se o usuário estiver nela
+          if (
+            document.getElementById("acessorios").classList.contains("active")
+          ) {
+            aplicarFiltrosAcessorios();
+          }
+        }
+        // --- FIM DA MODIFICAÇÃO (Goal 2) ---
+
+        eq.isDeleted = true;
+        eq.deletionDate = new Date().toISOString();
+        salvarParaLocalStorage();
+        setEstadoAlteracao(true);
+
+        // Atualiza a lista correta de onde o item saiu
+        if (eq.isArchived) {
+          atualizarListaArquivados();
+        } else if (eq.tipoEquipamento === "Impressora") {
+          atualizarListaImpressoras();
+        } else {
+          aplicarFiltrosEquipamentos();
+        }
+
+        mostrarMensagem("Equipamento movido para a lixeira.", "success");
+      }
+    }
+  );
 }
 
 // ===========================================
@@ -2987,27 +3048,59 @@ function atualizarLixeiraEquipamentos() {
 }
 
 function restaurarEquipamento(registro) {
-  const eq = equipamentos.find((e) => e.registro === registro);
-  if (eq) {
-    eq.isDeleted = false;
-    delete eq.deletionDate;
-    salvarParaLocalStorage();
-    setEstadoAlteracao(true);
-    atualizarLixeira(); // Atualiza a lixeira
-    // Atualiza a lista correta (equipamentos, impressoras, arquivados)
-    if (eq.isArchived) {
-      atualizarListaArquivados();
-    } else if (eq.tipoEquipamento === "Impressora") {
-      atualizarListaImpressoras();
-    } else {
-      aplicarFiltrosEquipamentos();
+  // MODIFICAÇÃO (Goal 1): Adiciona modal de confirmação
+  abrirModalConfirmacao(
+    "Tem certeza que deseja restaurar este equipamento?",
+    () => {
+      // Esta é a função de callback que executa a restauração
+      const eq = equipamentos.find((e) => e.registro === registro);
+      if (eq) {
+        eq.isDeleted = false;
+        delete eq.deletionDate;
+
+        // --- INÍCIO DA MODIFICAÇÃO (Goal 2) ---
+        // Se o equipamento restaurado tiver acessórios, marcar os acessórios como "Não disponíveis"
+        if (eq.acessorios && eq.acessorios.length > 0) {
+          eq.acessorios.forEach((acessorioId) => {
+            const acessorio = acessorios.find(
+              (a) => String(a.id) === String(acessorioId)
+            );
+            // Só marca como 'Não disponível' se o acessório ainda existir E não estiver na lixeira
+            if (acessorio && !acessorio.isDeleted) {
+              acessorio.disponivel = false; // Define como "Não"
+            }
+          });
+          salvarAcessoriosParaLocalStorage(); // Salva o novo estado dos acessórios
+          // Atualiza a lista de acessórios se o usuário estiver nela
+          if (
+            document.getElementById("acessorios").classList.contains("active")
+          ) {
+            aplicarFiltrosAcessorios();
+          }
+        }
+        // --- FIM DA MODIFICAÇÃO (Goal 2) ---
+
+        salvarParaLocalStorage();
+        setEstadoAlteracao(true);
+        atualizarLixeira(); // Atualiza a lixeira (item some de lá)
+
+        // Atualiza a lista correta para onde o item foi restaurado
+        if (eq.isArchived) {
+          atualizarListaArquivados();
+        } else if (eq.tipoEquipamento === "Impressora") {
+          atualizarListaImpressoras();
+        } else {
+          aplicarFiltrosEquipamentos();
+        }
+        if (eq.statusOperacional === "Em manutenção") {
+          atualizarListaManutencao();
+        }
+
+        atualizarDashboard();
+        mostrarMensagem("Equipamento restaurado.", "success");
+      }
     }
-    if (eq.statusOperacional === "Em manutenção") {
-      atualizarListaManutencao();
-    }
-    atualizarDashboard();
-    mostrarMensagem("Equipamento restaurado.", "success");
-  }
+  );
 }
 
 function excluirPermanenteEquipamento(registro) {
@@ -3084,22 +3177,43 @@ function atualizarLixeiraAcessorios() {
 }
 
 function restaurarAcessorio(id) {
-  const acc = acessorios.find((a) => String(a.id) === String(id));
-  if (acc) {
-    acc.isDeleted = false;
-    delete acc.deletionDate;
-    // Verifica se o acessório deveria estar disponível (não vinculado a equipamento ativo/não deletado)
-    const vinculado = equipamentos.some(
-      (eq) => !eq.isDeleted && eq.acessorios?.includes(id)
-    );
-    acc.disponivel = !vinculado;
+  // MODIFICAÇÃO (Goal 1): Adiciona modal de confirmação
+  abrirModalConfirmacao(
+    "Tem certeza que deseja restaurar este acessório?",
+    () => {
+      // Lógica de restauração movida para o callback
+      const acc = acessorios.find((a) => String(a.id) === String(id));
+      if (acc) {
+        acc.isDeleted = false;
+        delete acc.deletionDate;
 
-    salvarAcessoriosParaLocalStorage();
-    setEstadoAlteracao(true);
-    atualizarLixeira();
-    aplicarFiltrosAcessorios(); // Atualiza a lista principal de acessórios
-    mostrarMensagem("Acessório restaurado.", "success");
-  }
+        // MODIFICAÇÃO (Goal 2): Verifica se o acessório deve voltar como 'Disponível' ou 'Não'
+        // Ele estará 'Não disponível' (disponivel = false) se estiver vinculado a um equipamento ATIVO (não-deletado e não-arquivado)
+        const vinculadoEquipamentoAtivo = equipamentos.some(
+          (eq) =>
+            !eq.isDeleted && // Não está na lixeira
+            !eq.isArchived && // Não está no arquivo
+            eq.acessorios?.includes(String(id)) // E está vinculado a este acessório
+        );
+
+        // Se estiver vinculado a um equipamento ativo, 'disponivel' é false (Não)
+        // Se não estiver vinculado, 'disponivel' é true (Sim)
+        acc.disponivel = !vinculadoEquipamentoAtivo;
+
+        salvarAcessoriosParaLocalStorage();
+        setEstadoAlteracao(true);
+        atualizarLixeira();
+        aplicarFiltrosAcessorios(); // Atualiza a lista principal de acessórios
+
+        // Atualiza a lista de equipamentos também, pois o ícone de acessório pode ter mudado
+        if (document.getElementById("lista").classList.contains("active")) {
+          aplicarFiltrosEquipamentos();
+        }
+
+        mostrarMensagem("Acessório restaurado.", "success");
+      }
+    }
+  );
 }
 
 function excluirPermanenteAcessorio(id) {
@@ -3169,20 +3283,29 @@ function atualizarLixeiraCartuchos() {
 }
 
 function restaurarCartucho(id) {
-  const cartucho = cartuchos.find((c) => c.id === id);
-  if (cartucho) {
-    cartucho.isDeleted = false;
-    delete cartucho.deletionDate;
-    salvarCartuchosParaLocalStorage();
-    setEstadoAlteracao(true);
-    atualizarLixeira();
-    if (cartucho.isArchived) {
-      atualizarListaCartuchosArquivados();
-    } else {
-      atualizarListaCartuchos();
+  // MODIFICAÇÃO (Goal 1): Adiciona modal de confirmação
+  abrirModalConfirmacao(
+    "Tem certeza que deseja restaurar este cartucho?",
+    () => {
+      // Lógica de restauração movida para o callback
+      const cartucho = cartuchos.find((c) => c.id === id);
+      if (cartucho) {
+        cartucho.isDeleted = false;
+        delete cartucho.deletionDate;
+        salvarCartuchosParaLocalStorage();
+        setEstadoAlteracao(true);
+        atualizarLixeira();
+
+        // Restaura para a lista correta
+        if (cartucho.isArchived) {
+          atualizarListaCartuchosArquivados();
+        } else {
+          atualizarListaCartuchos();
+        }
+        mostrarMensagem("Cartucho restaurado.", "success");
+      }
     }
-    mostrarMensagem("Cartucho restaurado.", "success");
-  }
+  );
 }
 
 function excluirPermanenteCartucho(id) {
