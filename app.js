@@ -2533,8 +2533,8 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
   // *** INÍCIO DA MODIFICAÇÃO (NOVA LÓGICA DE ORDENAÇÃO) ***
   equipamentosFiltrados.sort((a, b) => {
     // Req 3: 'Disponível' e 'Sem Usuário' (Nenhum) vão para o topo
-    const aTopo = a.statusOperacional === "Disponível" && !a.nomeUsuario;
-    const bTopo = b.statusOperacional === "Disponível" && !b.nomeUsuario;
+    const aTopo = a.statusOperacional === "Disponível";
+    const bTopo = b.statusOperacional === "Disponível";
 
     if (aTopo && !bTopo) {
       return -1; // 'a' (que é do topo) vem antes
