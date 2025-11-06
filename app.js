@@ -1395,6 +1395,11 @@ function salvarEquipamento(e) {
     }
   }
   const equipamento = Object.fromEntries(form.entries());
+  
+  // *** CORREÇÃO DASHBOARD ***
+  if (equipamento.statusOperacional === 'Disponível' && !equipamento.nomeUsuario) {
+      equipamento.departamento = "";
+  }
 
   if (equipamento.tipoEquipamento === "Outro") {
     const tipoCustomizado = form.get("outroTipoEquipamento").trim();
@@ -1637,10 +1642,12 @@ function criarFormularioEdicao(equipamento) {
         </div>
         <div class="form-row" id="edit-departamento-group" style="display:${
           isImpressora ? "none" : "grid"
-        }"><div class="form-group"><label>Departamento</label><select name="departamento" class="form-control">${opts(
-    departamentos,
-    equipamento.departamento
-  )}</select></div></div>
+        }"><div class="form-group"><label>Departamento</label><select name="departamento" class="form-control"><option value="" ${
+      equipamento.departamento === "" ? "selected" : ""
+    }>Nenhum</option>${opts(
+      departamentos,
+      equipamento.departamento
+    )}</select></div></div>
         <div class="form-row" id="edit-sala-ip-group" style="display:${
           isImpressora ? "grid" : "none"
         }">
@@ -1743,6 +1750,11 @@ function salvarEdicao(event, registro) {
   });
 
   const updatedData = Object.fromEntries(form.entries());
+  
+  // *** CORREÇÃO DASHBOARD ***
+  if (updatedData.statusOperacional === 'Disponível' && !updatedData.nomeUsuario) {
+      updatedData.departamento = "";
+  }
 
   if (updatedData.tipoEquipamento === "Outro") {
     const tipoCustomizado = form.get("outroTipoEquipamento").trim();
@@ -2307,7 +2319,8 @@ function criarGraficos() {
     departamentoChart,
     "departamentoChart",
     "line",
-    equipamentos.filter((e) => !e.isArchived && !e.isDeleted && e.departamento),
+    // *** CORREÇÃO DASHBOARD ***
+    equipamentos.filter((e) => !e.isArchived && !e.isDeleted && e.tipoEquipamento !== "Impressora"),
     "departamento",
     "Equipamentos por Departamento"
   );
@@ -2326,7 +2339,8 @@ function criarGrafico(
   if (chartInstance) chartInstance.destroy();
 
   const counts = data.reduce((acc, item) => {
-    const key = item[groupBy] || "Indefindo";
+    // *** CORREÇÃO DASHBOARD ***
+    const key = item[groupBy] || "Nenhum";
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
@@ -2532,7 +2546,7 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
 
   // *** INÍCIO DA MODIFICAÇÃO (NOVA LÓGICA DE ORDENAÇÃO) ***
   equipamentosFiltrados.sort((a, b) => {
-    // Req 3: 'Disponível' e 'Sem Usuário' (Nenhum) vão para o topo
+    // Req 3: 'Disponível' vai para o topo
     const aTopo = a.statusOperacional === "Disponível";
     const bTopo = b.statusOperacional === "Disponível";
 
@@ -2674,7 +2688,7 @@ function criarLinhaEquipamento(eq) {
       <td><span class="status-badge ${
         statusClasses[eq.statusOperacional] || ""
       }">${eq.statusOperacional || ""}</span></td>
-      <td>${eq.nomeUsuario ? eq.departamento || "TI" : "Nenhum"}</td>
+      <td>${eq.departamento || "Nenhum"}</td>
       <td>${acessoriosHtml}</td>
       <td>${documentosHtml}</td>
       <td>
