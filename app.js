@@ -1487,6 +1487,7 @@ function criarFormularioEdicao(equipamento) {
     "Financeiro",
     "Projetos",
     "Relações Corporativas",
+    "Relações Externas",
     "Relações Institucionais",
     "Revista",
     "RH",
