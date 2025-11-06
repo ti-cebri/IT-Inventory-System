@@ -1763,3 +1763,59 @@ button:disabled i,
 [data-color-scheme="dark"] .icon-outros {
   color: var(--color-text-secondary);
 } /* Cinza (Padrão) */
+
+/* ===========================================
+   CORREÇÃO: Impede que a coluna de Ações 
+   seja cortada em telas menores ou com
+   nomes longos.
+   =========================================== */
+
+/* Tabela Principal de Equipamentos (Ações é a 11ª coluna) */
+#equipment-table td:nth-child(11) {
+  white-space: nowrap;
+}
+
+/* Tabela de Impressoras (Ações é a 8ª coluna) */
+#impressoras .equipment-table td:nth-child(8) {
+  white-space: nowrap;
+}
+
+/* Tabela de Cartuchos (Ações é a 8ª coluna) */
+#cartuchos-table td:nth-child(8) {
+  white-space: nowrap;
+}
+
+/* Tabela de Acessórios (Ações é a 9ª coluna) */
+#acessorios-table td:nth-child(9) {
+  white-space: nowrap;
+}
+
+/* Tabela de Manutenção (Ações é a 8ª coluna) */
+#manutencao .equipment-table td:nth-child(8) {
+  white-space: nowrap;
+}
+
+/* Tabela de Equipamentos Arquivados (Ações é a 9ª coluna) */
+#archived-equipment-table td:nth-child(9) {
+  white-space: nowrap;
+}
+
+/* Tabela de Cartuchos Arquivados (Ações é a 7ª coluna) */
+#archived-cartridges-table td:nth-child(7) {
+  white-space: nowrap;
+}
+
+/* Tabela da Lixeira - Equipamentos (Ações é a 7ª coluna) */
+#lixeira-equipment-table td:nth-child(7) {
+  white-space: nowrap;
+}
+
+/* Tabela da Lixeira - Acessórios (Ações é a 6ª coluna) */
+#lixeira-acessorios-table td:nth-child(6) {
+  white-space: nowrap;
+}
+
+/* Tabela da Lixeira - Cartuchos (Ações é a 6ª coluna) */
+#lixeira-cartuchos-table td:nth-child(6) {
+  white-space: nowrap;
+}
