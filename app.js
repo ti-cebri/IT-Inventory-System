@@ -2062,40 +2062,102 @@ function salvarDadosCompletos() {
   mostrarMensagem("Arquivo de inventário completo salvo!", "success");
 }
 
+/**
+ * [CORRIGIDO] Analisa o texto CSV em um array de objetos, lidando
+ * corretamente com quebras de linha e aspas escapadas (RFC 4180).
+ */
 function parseCsvData(csv, cabecalho) {
   if (!csv || !csv.trim()) return [];
-  const linhas = csv
-    .trim()
-    .split("\n")
-    .filter((l) => l.trim() && !l.startsWith("###"));
-  if (linhas.length > 0 && linhas[0].includes(cabecalho[0])) linhas.shift();
+
+  const linhas = [];
+  let inQuotes = false;
+  let currentLine = "";
+  let start = 0;
+
+  // 1. Limpa o marcador de seção (se existir no início)
+  const csvData = csv.trim().replace(/^###[A-Z]+###\n/, "");
+
+  // 2. Separa o CSV em linhas, respeitando as quebras de linha dentro das aspas
+  for (let i = 0; i < csvData.length; i++) {
+    const char = csvData[i];
+
+    if (char === '"') {
+      if (csvData[i + 1] === '"') {
+        // É uma aspa escapada (""), pular
+        i++;
+      } else {
+        // É uma aspa de abertura/fechamento
+        inQuotes = !inQuotes;
+      }
+    }
+
+    // Se o caractere for um newline E não estivermos dentro de aspas,
+    // encontramos o fim de uma linha de dados.
+    if (char === '\n' && !inQuotes) {
+      currentLine = csvData.substring(start, i).trim();
+      if (currentLine && !currentLine.startsWith("###")) {
+        linhas.push(currentLine);
+      }
+      start = i + 1; // Próxima linha começa depois do \n
+    }
+  }
+  // Adicionar a última linha
+  currentLine = csvData.substring(start).trim();
+  if (currentLine && !currentLine.startsWith("###")) {
+    linhas.push(currentLine);
+  }
+
+  // 3. Processar cada linha para extrair colunas
+  if (linhas.length > 0 && linhas[0].includes(cabecalho[0])) {
+    linhas.shift(); // Remove o cabeçalho do CSV
+  }
 
   return linhas.map((linha) => {
-    const valores = (linha.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g) || []).map(
-      (v) => v.replace(/^"|"$/g, "").replace(/""/g, '"')
-    );
+    const valores = [];
+    // Regex CORRIGIDA que lida com:
+    // 1. Campos com aspas (e aspas escapadas dentro: "")
+    // 2. Newlines DENTRO de campos com aspas
+    // 3. Campos sem aspas
+    const regex = /(?:(?:"((?:[^"]|"")*)")|([^,]*))(?:,|$)/g;
+    let match;
+
+    while (match = regex.exec(linha)) {
+      if (match[1] !== undefined) {
+        // Campo com aspas (grupo 1)
+        // Desescapa as aspas ("" -> ")
+        valores.push(match[1].replace(/""/g, '"'));
+      } else if (match[2] !== undefined) {
+        // Campo sem aspas (grupo 2)
+        valores.push(match[2]);
+      }
+      // Se a correspondência não terminar com uma vírgula, é o fim da linha
+      if (match[0].slice(-1) !== ',') {
+        break;
+      }
+    }
+
     const item = {};
     cabecalho.forEach((key, index) => {
       item[key] = valores[index] || "";
     });
 
-    // *** INÍCIO DA MODIFICAÇÃO ***
+    // O resto da sua lógica de parsing (booleans, floats, etc.)
     [
       "isArchived",
       "isDeleted",
       "termoResponsabilidade",
       "fotoNotebook",
       "disponivel",
-      "mochila", // NOVO
-      "case", // NOVO
+      "mochila",
+      "case",
     ].forEach((key) => {
       if (item[key] !== undefined) item[key] = item[key] === "true";
     });
-    // *** FIM DA MODIFICAÇÃO ***
 
     ["valor", "valorMensal"].forEach((key) => {
-      if (item[key] !== undefined) item[key] = parseFloat(item[key]) || 0;
+      if (item[key] !== undefined) item[key] = parseFloat(String(item[key]).replace(",", ".")) || 0;
     });
+    
     if (item.acessorios) {
       item.acessorios = String(item.acessorios)
         .split(";")
