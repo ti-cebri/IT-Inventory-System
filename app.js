@@ -49,6 +49,8 @@ function salvarParaLocalStorage() {
 function carregarDeLocalStorage() {
   const dadosSalvos = localStorage.getItem("inventarioEquipamentos");
   equipamentos = dadosSalvos ? JSON.parse(dadosSalvos) : [];
+  atualizarEstadoBotaoSalvar();
+  setEstadoAlteracao(false);
 }
 
 function salvarAcessoriosParaLocalStorage() {
@@ -70,1487 +72,3621 @@ function carregarCartuchosDeLocalStorage() {
 }
 
 // ===========================================
-// NAVEGAÇÃO E EXIBIÇÃO DE ABAS
+// NAVEGAÇÃO E EXIBIÇÃO DE CONTEÚDO
 // ===========================================
 
 function mostrarTab(tabId) {
-  const tabs = document.querySelectorAll(".tab-content");
-  tabs.forEach((tab) => tab.classList.remove("active"));
-
-  const buttons = document.querySelectorAll(".tab-btn");
-  buttons.forEach((btn) => btn.classList.remove("active"));
+  const globalActions = document.querySelector(".global-actions");
+  document
+    .querySelectorAll(".tab-content")
+    .forEach((tab) => tab.classList.remove("active"));
+  document
+    .querySelectorAll(".tab-btn")
+    .forEach((btn) => btn.classList.remove("active"));
 
   document.getElementById(tabId).classList.add("active");
-  document
-    .querySelector(`.tab-btn[data-tab="${tabId}"]`)
-    .classList.add("active");
+  document.querySelector(`[data-tab="${tabId}"]`).classList.add("active");
 
-  // Renderizar conteúdo específico da aba
-  switch (tabId) {
-    case "dashboard":
-      renderizarDashboard();
-      break;
-    case "equipamentos":
-      renderizarTabelaEquipamentos();
-      break;
-    case "acessorios":
-      renderizarTabelaAcessorios();
-      break;
-    case "cartuchos":
-      renderizarTabelaCartuchos();
-      break;
-    case "configuracoes":
-      // Nenhuma ação de renderização necessária por enquanto
-      break;
-  }
-}
-
-// ===========================================
-// CONFIGURAÇÃO DE EVENT LISTENERS
-// ===========================================
-
-function configurarEventListeners() {
-  // Navegação principal
-  const tabButtons = document.querySelectorAll(".tab-btn");
-  tabButtons.forEach((btn) => {
-    btn.addEventListener("click", () => mostrarTab(btn.dataset.tab));
-  });
-
-  // Botão de alternar tema
-  document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
-
-  // Formulário de Equipamentos
-  document
-    .getElementById("form-equipamento")
-    .addEventListener("submit", salvarEquipamento);
-  document
-    .getElementById("btn-cancelar-edicao")
-    .addEventListener("click", cancelarEdicaoEquipamento);
-  document
-    .getElementById("btn-limpar-form")
-    .addEventListener("click", limparFormularioEquipamento);
-
-  // Botões de Acessórios no formulário de equipamento
-  document
-    .getElementById("btn-vincular-acessorio")
-    .addEventListener("click", abrirModalVincularAcessorios);
-  document
-    .getElementById("btn-salvar-vinculo-acessorios")
-    .addEventListener("click", salvarVinculoAcessorios);
-
-  // Pesquisa de Equipamentos
-  document
-    .getElementById("pesquisa-equipamento")
-    .addEventListener("input", filtrarTabelaEquipamentos);
-
-  // Formulário de Acessórios
-  document
-    .getElementById("form-acessorio")
-    .addEventListener("submit", salvarAcessorio);
-  document
-    .getElementById("btn-cancelar-edicao-acessorio")
-    .addEventListener("click", cancelarEdicaoAcessorio);
-
-  // Pesquisa de Acessórios
-  document
-    .getElementById("pesquisa-acessorio")
-    .addEventListener("input", filtrarTabelaAcessorios);
-
-  // Formulário de Cartuchos
-  document
-    .getElementById("form-cartucho")
-    .addEventListener("submit", salvarCartucho);
-  document
-    .getElementById("btn-cancelar-edicao-cartucho")
-    .addEventListener("click", cancelarEdicaoCartucho);
-
-  // Pesquisa de Cartuchos
-  document
-    .getElementById("pesquisa-cartucho")
-    .addEventListener("input", filtrarTabelaCartuchos);
-
-  // Ações de Importação/Exportação
-  document
-    .getElementById("btn-exportar-csv-equip")
-    .addEventListener("click", () => exportarParaCSV(equipamentos, "equipamentos"));
-  document
-    .getElementById("btn-exportar-json-equip")
-    .addEventListener("click", () => exportarParaJSON(equipamentos, "equipamentos"));
-  document
-    .getElementById("input-importar-csv-equip")
-    .addEventListener("change", importarDeCSV);
-  document
-    .getElementById("btn-importar-csv-equip")
-    .addEventListener("click", () =>
-      document.getElementById("input-importar-csv-equip").click()
-    );
-  document
-    .getElementById("input-importar-json-equip")
-    .addEventListener("change", importarDeJSON);
-  document
-    .getElementById("btn-importar-json-equip")
-    .addEventListener("click", () =>
-      document.getElementById("input-importar-json-equip").click()
-    );
-
-  //... (Adicionar listeners para exportação/importação de acessórios e cartuchos se necessário)
-}
-
-// ===========================================
-// MÁSCARAS DE FORMULÁRIO (INPUTMASK)
-// ===========================================
-
-function configurarMascaras() {
-  // Esta função seria para aplicar máscaras de input (ex: R$, datas, IPs)
-  // Exemplo: Inputmask("R$ 999.999,99").mask(document.getElementById("valor"));
-  // Por enquanto, está vazia.
-}
-
-// ===========================================
-// DASHBOARD
-// ===========================================
-
-function renderizarDashboard() {
-  // Atualizar contadores
-  document.getElementById("count-equipamentos").textContent =
-    equipamentos.length;
-  document.getElementById("count-acessorios").textContent = acessorios.length;
-  document.getElementById("count-cartuchos").textContent = cartuchos.length;
-  document.getElementById("count-manutencao").textContent = equipamentos.filter(
-    (e) => e.statusOperacional === "Em manutenção"
-  ).length;
-
-  // Criar/Atualizar gráficos
-  criarGraficos();
-}
-
-function criarGraficos() {
-  // Destruir gráficos antigos para evitar sobreposição de tooltips
-  if (tipoChart) tipoChart.destroy();
-  if (statusChart) statusChart.destroy();
-  if (departamentoChart) departamentoChart.destroy();
-
-  const ctxTipo = document
-    .getElementById("chart-tipo-equipamento")
-    .getContext("2d");
-  const ctxStatus = document
-    .getElementById("chart-status-equipamento")
-    .getContext("2d");
-  const ctxDepto = document
-    .getElementById("chart-departamento")
-    .getContext("2d");
-
-  // Obter cores do CSS
-  const style = getComputedStyle(document.documentElement);
-  const chartColors = [
-    style.getPropertyValue("--color-chart-1").trim(),
-    style.getPropertyValue("--color-chart-2").trim(),
-    style.getPropertyValue("--color-chart-3").trim(),
-    style.getPropertyValue("--color-chart-4").trim(),
-    style.getPropertyValue("--color-chart-5").trim(),
-    style.getPropertyValue("--color-chart-6").trim(),
-  ];
-  const textColor = style.getPropertyValue("--color-text").trim();
-  const gridColor = style.getPropertyValue("--color-border").trim();
-
-  // Configurações globais de texto para Chart.js
-  Chart.defaults.color = textColor;
-  Chart.defaults.borderColor = gridColor;
-
-  // 1. Gráfico de Pizza: Tipos de Equipamento
-  const tipos = contarOcorrencias(equipamentos, "tipoEquipamento");
-  tipoChart = new Chart(ctxTipo, {
-    type: "doughnut",
-    data: {
-      labels: Object.keys(tipos),
-      datasets: [
-        {
-          label: "Tipos de Equipamento",
-          data: Object.values(tipos),
-          backgroundColor: chartColors,
-          borderColor: style.getPropertyValue("--color-surface").trim(),
-          borderWidth: 2,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: "top",
-          labels: {
-            color: textColor,
-          },
-        },
-        title: {
-          display: true,
-          text: "Equipamentos por Tipo",
-          color: textColor,
-        },
-      },
-    },
-  });
-
-  // 2. Gráfico de Barras: Status Operacional
-  const status = contarOcorrencias(equipamentos, "statusOperacional");
-  statusChart = new Chart(ctxStatus, {
-    type: "bar",
-    data: {
-      labels: Object.keys(status),
-      datasets: [
-        {
-          label: "Status Operacional",
-          data: Object.values(status),
-          backgroundColor: chartColors,
-          borderColor: chartColors,
-          borderWidth: 1,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      indexAxis: "y", // Gráfico de barras horizontais
-      scales: {
-        x: {
-          ticks: { color: textColor },
-          grid: { color: gridColor },
-        },
-        y: {
-          ticks: { color: textColor },
-          grid: { display: false },
-        },
-      },
-      plugins: {
-        legend: {
-          display: false,
-        },
-        title: {
-          display: true,
-          text: "Status dos Equipamentos",
-          color: textColor,
-        },
-      },
-    },
-  });
-
-  // 3. Gráfico de Pizza: Equipamentos por Departamento
-  const departamentos = contarOcorrencias(equipamentos, "departamento");
-  departamentoChart = new Chart(ctxDepto, {
-    type: "pie",
-    data: {
-      labels: Object.keys(departamentos),
-      datasets: [
-        {
-          label: "Departamentos",
-          data: Object.values(departamentos),
-          backgroundColor: chartColors,
-          borderColor: style.getPropertyValue("--color-surface").trim(),
-          borderWidth: 2,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: "top",
-        },
-        title: {
-          display: true,
-          text: "Equipamentos por Departamento",
-          color: textColor,
-        },
-      },
-    },
-  });
-}
-
-// ===========================================
-// CRUD: EQUIPAMENTOS
-// ===========================================
-
-function salvarEquipamento(event) {
-  event.preventDefault();
-  const form = event.target;
-  const id = form.dataset.editId;
-
-  const equipamento = {
-    registro:
-      id ||
-      `#E${Date.now()}` +
-        Math.floor(Math.random() * 1000)
-          .toString()
-          .padStart(3, "0"),
-    nomeUsuario: document.getElementById("nomeUsuario").value,
-    email: document.getElementById("email").value,
-    departamento: document.getElementById("departamento").value,
-    tipoEquipamento: document.getElementById("tipoEquipamento").value,
-    modelo: document.getElementById("modelo").value,
-    numeroSerie: document.getElementById("numeroSerie").value,
-    numeroPatrimonio: document.getElementById("numeroPatrimonio").value,
-    statusOperacional: document.getElementById("statusOperacional").value,
-    observacoes: document.getElementById("observacoes").value,
-    acessorios: acessoriosSelecionadosTemporariamente.map((a) => a.id), // Salva apenas os IDs
-  };
-
-  if (id) {
-    // Editando
-    const index = equipamentos.findIndex((e) => e.registro === id);
-    if (index !== -1) {
-      equipamentos[index] = { ...equipamentos[index], ...equipamento };
-    }
+  if (["dashboard", "cadastro"].includes(tabId)) {
+    globalActions.style.display = "none";
   } else {
-    // Criando
-    equipamentos.push(equipamento);
+    globalActions.style.display = "";
   }
 
-  dadosForamAlterados = true;
-  salvarParaLocalStorage();
-  renderizarTabelaEquipamentos();
-  limparFormularioEquipamento();
-  mostrarAlerta("Equipamento salvo com sucesso!", "success");
-}
-
-function editarEquipamento(id) {
-  const equipamento = equipamentos.find((e) => e.registro === id);
-  if (!equipamento) return;
-
-  document.getElementById("form-equipamento").dataset.editId = id;
-  document.getElementById("form-title-equipamento").textContent =
-    "Editar Equipamento";
-  document.getElementById("btn-salvar-equipamento").textContent =
-    "Atualizar Equipamento";
-  document.getElementById("btn-cancelar-edicao").style.display = "inline-block";
-  document.getElementById("btn-limpar-form").style.display = "none";
-
-  document.getElementById("nomeUsuario").value = equipamento.nomeUsuario || "";
-  document.getElementById("email").value = equipamento.email || "";
-  document.getElementById("departamento").value = equipamento.departamento || "";
-  document.getElementById("tipoEquipamento").value =
-    equipamento.tipoEquipamento || "";
-  document.getElementById("modelo").value = equipamento.modelo || "";
-  document.getElementById("numeroSerie").value = equipamento.numeroSerie || "";
-  document.getElementById("numeroPatrimonio").value =
-    equipamento.numeroPatrimonio || "";
-  document.getElementById("statusOperacional").value =
-    equipamento.statusOperacional || "";
-  document.getElementById("observacoes").value = equipamento.observacoes || "";
-
-  // Carregar acessórios vinculados
-  acessoriosSelecionadosTemporariamente = (equipamento.acessorios || [])
-    .map((acessorioId) => acessorios.find((a) => a.id === acessorioId))
-    .filter(Boolean); // Filtra IDs que não existem mais
-
-  renderizarAcessoriosTemporarios();
-
-  // Focar no formulário
-  document.getElementById("form-equipamento").scrollIntoView();
-}
-
-function confirmarExclusaoEquipamento(id) {
-  abrirModalConfirm(
-    "Tem certeza que deseja excluir este equipamento?",
-    "Esta ação não pode ser desfeita.",
-    () => excluirEquipamento(id)
-  );
-}
-
-function excluirEquipamento(id) {
-  equipamentos = equipamentos.filter((e) => e.registro !== id);
-  dadosForamAlterados = true;
-  salvarParaLocalStorage();
-  renderizarTabelaEquipamentos();
-  mostrarAlerta("Equipamento excluído com sucesso!", "success");
-  fecharModalConfirm();
-}
-
-function limparFormularioEquipamento() {
-  const form = document.getElementById("form-equipamento");
-  form.reset();
-  form.dataset.editId = "";
-  document.getElementById("form-title-equipamento").textContent =
-    "Adicionar Novo Equipamento";
-  document.getElementById("btn-salvar-equipamento").textContent =
-    "Salvar Equipamento";
-  document.getElementById("btn-cancelar-edicao").style.display = "none";
-  document.getElementById("btn-limpar-form").style.display = "inline-block";
-
-  acessoriosSelecionadosTemporariamente = [];
-  renderizarAcessoriosTemporarios();
-}
-
-function cancelarEdicaoEquipamento() {
-  limparFormularioEquipamento();
-}
-
-function renderizarTabelaEquipamentos(lista = equipamentos) {
-  const tabelaBody = document
-    .getElementById("tabela-equipamentos")
-    .querySelector("tbody");
-  tabelaBody.innerHTML = ""; // Limpa a tabela
-
-  if (lista.length === 0) {
-    tabelaBody.innerHTML =
-      '<tr><td colspan="10" class="text-center">Nenhum equipamento encontrado.</td></tr>';
-    return;
+  if (tabId === "dashboard") atualizarDashboard();
+  if (tabId === "lista") aplicarFiltrosEquipamentos();
+  if (tabId === "impressoras") atualizarListaImpressoras();
+  if (tabId === "acessorios") aplicarFiltrosAcessorios();
+  if (tabId === "manutencao") atualizarListaManutencao();
+  if (tabId === "cartuchos") atualizarListaCartuchos();
+  if (tabId === "arquivados") {
+    atualizarListaArquivados();
+    atualizarListaCartuchosArquivados();
   }
-
-  lista.forEach((equip) => {
-    const row = document.createElement("tr");
-    row.dataset.id = equip.registro;
-
-    // Usamos template literals para construir o HTML
-    // A célula de Observações será preenchida via textContent para segurança
-    row.innerHTML = `
-      <td data-label="Patrimônio">${equip.numeroPatrimonio || "N/A"}</td>
-      <td data-label="Usuário">${equip.nomeUsuario || "N/A"}</td>
-      <td data-label="Departamento">${equip.departamento || "N/A"}</td>
-      <td data-label="Tipo">${equip.tipoEquipamento || "N/A"}</td>
-      <td data-label="Modelo">${equip.modelo || "N/A"}</td>
-      <td data-label="Nº de Série">${equip.numeroSerie || "N/A"}</td>
-      <td data-label="Status">
-        <span class="status-badge status-${normalizarString(
-          equip.statusOperacional
-        )}">
-          ${equip.statusOperacional || "N/A"}
-        </span>
-      </td>
-      <td data-label="Acessórios">
-        ${renderizarIconesAcessorios(
-          equip.acessorios || [],
-          `equip-${equip.registro}`
-        )}
-      </td>
-      <td data-label="Observações" class="obs-cell">
-        </td>
-      <td data-label="Ações">
-        <button class="btn-icon" title="Editar" onclick="editarEquipamento('${
-          equip.registro
-        }')">
-          <i class="fas fa-edit"></i>
-        </button>
-        <button class="btn-icon btn-icon--danger" title="Excluir" onclick="confirmarExclusaoEquipamento('${
-          equip.registro
-        }')">
-          <i class="fas fa-trash"></i>
-        </button>
-      </td>
-    `;
-
-    // ****** INÍCIO DA CORREÇÃO ******
-    // Inserir observações de forma segura para evitar quebra de HTML
-    const obsCell = row.querySelector(".obs-cell");
-    if (obsCell) {
-      obsCell.textContent = equip.observacoes || "";
-    }
-    // ****** FIM DA CORREÇÃO ******
-
-    tabelaBody.appendChild(row);
-  });
-
-  // (Re)ativar tooltips para ícones de acessórios
-  configurarTooltipsAcessorios();
+  if (tabId === "lixeira") atualizarLixeira();
+  if (tabId === "cadastro") {
+    mostrarFormulario("equipamento");
+  }
 }
 
-function filtrarTabelaEquipamentos() {
-  const termo = document
-    .getElementById("pesquisa-equipamento")
-    .value.toLowerCase();
-  const filtrados = equipamentos.filter((equip) => {
-    return (
-      (equip.nomeUsuario &&
-        equip.nomeUsuario.toLowerCase().includes(termo)) ||
-      (equip.departamento &&
-        equip.departamento.toLowerCase().includes(termo)) ||
-      (equip.tipoEquipamento &&
-        equip.tipoEquipamento.toLowerCase().includes(termo)) ||
-      (equip.modelo && equip.modelo.toLowerCase().includes(termo)) ||
-      (equip.numeroSerie && equip.numeroSerie.toLowerCase().includes(termo)) ||
-      (equip.numeroPatrimonio &&
-        equip.numeroPatrimonio.toLowerCase().includes(termo)) ||
-      (equip.statusOperacional &&
-        equip.statusOperacional.toLowerCase().includes(termo))
-    );
-  });
-  renderizarTabelaEquipamentos(filtrados);
+function mostrarFormulario(tipo) {
+  const formEquipamento = document.getElementById("form-container-equipamento");
+  const formAcessorio = document.getElementById("form-container-acessorio");
+  const formCartucho = document.getElementById("form-container-cartucho");
+  const btnEquipamento = document.getElementById("btn-toggle-equipamento");
+  const btnAcessorio = document.getElementById("btn-toggle-acessorio");
+  const btnCartucho = document.getElementById("btn-toggle-cartucho");
+
+  formEquipamento.style.display = "none";
+  formAcessorio.style.display = "none";
+  formCartucho.style.display = "none";
+  btnEquipamento.classList.remove("active");
+  btnAcessorio.classList.remove("active");
+  btnCartucho.classList.remove("active");
+
+  if (tipo === "equipamento") {
+    formEquipamento.style.display = "block";
+    btnEquipamento.classList.add("active");
+    acessoriosSelecionadosTemporariamente = [];
+    inicializarBuscaAcessorios();
+    renderizarAcessoriosSelecionados();
+    handleTipoEquipamentoChange(document.getElementById("tipoEquipamento"));
+  } else if (tipo === "acessorio") {
+    formAcessorio.style.display = "block";
+    btnAcessorio.classList.add("active");
+  } else if (tipo === "cartucho") {
+    formCartucho.style.display = "block";
+    btnCartucho.classList.add("active");
+    popularImpressorasNoCadastroCartucho();
+  }
 }
 
-// ===========================================
-// CRUD: ACESSÓRIOS
-// ===========================================
+function handleTipoAcessorioChange(prefix = "") {
+  const idPrefix = prefix ? `${prefix}-` : "acessorio-";
+  const tipoSelect = document.getElementById(`${idPrefix}tipo`);
+  if (!tipoSelect) return;
 
-function salvarAcessorio(event) {
-  event.preventDefault();
-  const form = event.target;
-  const id = form.dataset.editId;
+  const tipo = tipoSelect.value;
+  const campoFornecedorId = prefix
+    ? `campo-${prefix}fornecedor`
+    : "campo-fornecedor";
+  const campoValorMensalId = prefix
+    ? `campo-${prefix}valor-mensal`
+    : "campo-valor-mensal";
 
-  const acessorio = {
-    id:
-      id ||
-      `#A${Date.now()}` +
-        Math.floor(Math.random() * 1000)
-          .toString()
-          .padStart(3, "0"),
-    tipo: document.getElementById("acessorio-tipo").value,
-    modelo: document.getElementById("acessorio-modelo").value,
-    numeroSerie: document.getElementById("acessorio-numeroSerie").value,
-    status: document.getElementById("acessorio-status").value,
-    observacao: document.getElementById("acessorio-observacao").value,
-  };
+  const campoFornecedor = document.getElementById(campoFornecedorId);
+  const campoValorMensal = document.getElementById(campoValorMensalId);
+  const inputFornecedor = document.getElementById(`${idPrefix}fornecedor`);
 
-  if (id) {
-    // Editando
-    const index = acessorios.findIndex((a) => a.id === id);
-    if (index !== -1) {
-      acessorios[index] = { ...acessorios[index], ...acessorio };
-    }
+  if (!campoFornecedor || !campoValorMensal || !inputFornecedor) return;
+
+  if (tipo === "Locação") {
+    campoFornecedor.style.display = "block";
+    campoValorMensal.style.display = "block";
+    inputFornecedor.value = "Apnetworks";
   } else {
-    // Criando
-    acessorios.push(acessorio);
+    campoFornecedor.style.display = "none";
+    campoValorMensal.style.display = "none";
+    inputFornecedor.value = "";
+  }
+}
+
+function handleCategoriaAcessorioChange(prefix = "") {
+  const idPrefix = prefix ? `${prefix}-` : "acessorio-";
+  const categoriaSelect = document.getElementById(`${idPrefix}categoria`);
+  if (!categoriaSelect) return;
+
+  const categoria = categoriaSelect.value;
+  const campoPolegadasId = prefix
+    ? `campo-${prefix}polegadas`
+    : "campo-acessorio-polegadas";
+
+  const campoPolegadas = document.getElementById(campoPolegadasId);
+  if (!campoPolegadas) return;
+
+  if (categoria === "Monitores") {
+    campoPolegadas.style.display = "grid"; // 'grid' pois é uma 'form-row'
+  } else {
+    campoPolegadas.style.display = "none";
+    // Limpar o valor se a categoria mudar
+    const inputPolegadas = document.getElementById(`${idPrefix}polegadas`);
+    if (inputPolegadas) inputPolegadas.value = "";
+  }
+}
+
+// ===============================================
+// LÓGICA DE VISIBILIDADE DOS CAMPOS DO FORMULÁRIO
+// ===============================================
+/**
+ * Alterna a visibilidade dos campos de CPF e CNPJ com base no nome do usuário.
+ * @param {Event} event - O evento de input do campo de nome de usuário.
+ */
+function handleNomeUsuarioChange(event) {
+  const input = event.target;
+  const form = input.closest("form");
+  if (!form) return;
+
+  const nomeUsuario = input.value.trim().toLowerCase();
+  // Usa seletores de "ends-with" para funcionar tanto no formulário principal quanto no de edição
+  const cpfGroup = form.querySelector('[id$="cpf-group"]');
+  const cnpjGroup = form.querySelector('[id$="cnpj-group"]');
+  const cpfInput = form.querySelector('[id$="cpf"]');
+
+  if (!cpfGroup || !cnpjGroup) return;
+
+  if (nomeUsuario === "cebri") {
+    cpfGroup.style.display = "none";
+    if (cpfInput) cpfInput.value = ""; // Limpa o CPF para não ser salvo por engano
+    cnpjGroup.style.display = "block";
+  } else {
+    cpfGroup.style.display = "block";
+    cnpjGroup.style.display = "none";
+  }
+}
+
+function handleTipoEquipamentoChange(selectElement) {
+  const form = selectElement.closest("form");
+  if (!form) return;
+
+  const fieldsetUsuario = form.querySelector('[id^="fieldset-usuario"]');
+  const fieldsetComercial = form.querySelector('[id^="fieldset-comercial"]');
+  const fieldsetAcessorios = form.querySelector('[id^="fieldset-acessorios"]');
+  const fieldsetDocumentos = form.querySelector('[id^="fieldset-documentos"]');
+  const fieldsetSpecs = form.querySelector('[id^="fieldset-specs"]');
+  const polegadasGroup = form.querySelector('[id$="specs-polegadas-group"]');
+  const formActionsContainer = form.querySelector("#form-actions-container");
+  const modalActions = form.querySelector(".modal-actions");
+  const departamentoGroup = form.querySelector('[id$="departamento-group"]');
+  const salaIpGroup = form.querySelector('[id$="sala-ip-group"]');
+  const outroTipoGroup = form.querySelector('[id="outroTipoEquipamentoGroup"]');
+
+  const tipo = selectElement.value;
+
+  const show = (el) => el && (el.style.display = "block");
+  const hide = (el) => el && (el.style.display = "none");
+  const showFlex = (el) => el && (el.style.display = "flex");
+  const showGrid = (el) => el && (el.style.display = "grid");
+
+  if (outroTipoGroup) {
+    if (tipo === "Outro") {
+      show(outroTipoGroup);
+    } else {
+      hide(outroTipoGroup);
+      const outroInput = outroTipoGroup.querySelector("input");
+      if (outroInput) outroInput.value = "";
+    }
   }
 
-  dadosForamAlterados = true;
+  if (!tipo) {
+    hide(fieldsetUsuario);
+    hide(fieldsetComercial);
+    hide(fieldsetAcessorios);
+    hide(fieldsetDocumentos);
+    hide(fieldsetSpecs);
+    if (formActionsContainer) hide(formActionsContainer);
+  } else {
+    show(fieldsetUsuario); // <-- ALTERAÇÃO: Sempre mostra as informações do usuário
+    // Garante que o estado de CPF/CNPJ esteja correto ao mudar o tipo
+    const nomeUsuarioInput = form.querySelector('[name="nomeUsuario"]');
+    if (nomeUsuarioInput) {
+      handleNomeUsuarioChange({ target: nomeUsuarioInput });
+    }
+
+    show(fieldsetComercial);
+
+    if (["Notebook", "Desktop"].includes(tipo)) {
+      show(fieldsetAcessorios); // <-- Exibe o fieldset (que contém os novos campos)
+      show(fieldsetSpecs);
+    } else {
+      hide(fieldsetAcessorios);
+      hide(fieldsetSpecs);
+    }
+
+    if (tipo === "Notebook") {
+      show(fieldsetDocumentos);
+      if (polegadasGroup) showGrid(polegadasGroup);
+    } else {
+      hide(fieldsetDocumentos);
+      if (polegadasGroup) hide(polegadasGroup);
+    }
+
+    if (formActionsContainer) showFlex(formActionsContainer);
+    if (modalActions) showFlex(modalActions);
+  }
+
+  if (departamentoGroup && salaIpGroup) {
+    if (tipo === "Impressora") {
+      hide(departamentoGroup);
+      showGrid(salaIpGroup);
+    } else {
+      showGrid(departamentoGroup);
+      hide(salaIpGroup);
+    }
+  }
+}
+
+function handleTipoAquisicaoChange(radioElement) {
+  const form = radioElement.closest("form");
+  if (!form) return;
+
+  const fornecedorInput = form.querySelector('[name="fornecedor"]');
+  const valorGroup = form.querySelector('[id$="valor-group"]');
+
+  if (!fornecedorInput || !valorGroup) return;
+
+  const tipoAquisicao = radioElement.value;
+
+  if (tipoAquisicao === "Alugado") {
+    fornecedorInput.value = "Apnetworks";
+    valorGroup.style.display = "block";
+  } else if (tipoAquisicao === "Patrimonial") {
+    fornecedorInput.value = "Propriedade CEBRI";
+    valorGroup.style.display = "none";
+  } else {
+    fornecedorInput.value = "";
+    valorGroup.style.display = "block";
+  }
+}
+
+function preencherPresetsFabricante(event) {
+  const fabricanteInput = event.target;
+  const form = fabricanteInput.closest("form"); // #equipamento-form
+
+  if (!form) return;
+
+  const tipoEquipamento = form.querySelector("#tipoEquipamento").value;
+  const fabricante = fabricanteInput.value.trim().toLowerCase();
+
+  if (tipoEquipamento === "Notebook") {
+    const modelo = form.querySelector("#modelo");
+    const polegadas = form.querySelector("#polegadas");
+    const memoriaRam = form.querySelector("#memoriaRam");
+    const armazenamento = form.querySelector("#armazenamento");
+    const processador = form.querySelector("#processador");
+    const versaoWindows = form.querySelector("#versaoWindows");
+    const radioAlugado = form.querySelector(
+      'input[name="tipoAquisicao"][value="Alugado"]'
+    );
+    const radioPatrimonial = form.querySelector(
+      'input[name="tipoAquisicao"][value="Patrimonial"]'
+    );
+    const valor = form.querySelector("#valor");
+
+    if (fabricante === "hp") {
+      modelo.value = "ProBook 445 G9";
+      polegadas.value = "14'";
+      memoriaRam.value = "16GB";
+      armazenamento.value = "256";
+      processador.value = "AMD Ryzen 5 5625U";
+      versaoWindows.value = "Windows 11 Pro";
+
+      if (radioAlugado) {
+        radioAlugado.checked = true;
+        handleTipoAquisicaoChange(radioAlugado);
+      }
+      valor.value = "285,98";
+    } else {
+      modelo.value = "";
+      polegadas.value = "";
+      memoriaRam.value = "";
+      armazenamento.value = "";
+      processador.value = "";
+      versaoWindows.value = "";
+      valor.value = "";
+
+      if (radioPatrimonial) {
+        radioPatrimonial.checked = true;
+        handleTipoAquisicaoChange(radioPatrimonial);
+      } else if (radioAlugado) {
+        radioAlugado.checked = false;
+        handleTipoAquisicaoChange(radioAlugado);
+      }
+    }
+  } else if (tipoEquipamento === "Impressora") {
+    const modelo = form.querySelector("#modelo");
+    const radioAlugado = form.querySelector(
+      'input[name="tipoAquisicao"][value="Alugado"]'
+    );
+    const radioPatrimonial = form.querySelector(
+      'input[name="tipoAquisicao"][value="Patrimonial"]'
+    );
+    const valor = form.querySelector("#valor");
+    const observacoes = form.querySelector("#observacoes");
+
+    if (fabricante === "epson") {
+      modelo.value = "WF-C5890";
+      if (radioAlugado) {
+        radioAlugado.checked = true;
+        handleTipoAquisicaoChange(radioAlugado);
+      }
+      valor.value = "288,75";
+      observacoes.value = "Produção: R$ 0,08";
+    } else {
+      modelo.value = "";
+      valor.value = "";
+      observacoes.value = "";
+
+      if (radioPatrimonial) {
+        radioPatrimonial.checked = true;
+        handleTipoAquisicaoChange(radioPatrimonial);
+      } else if (radioAlugado) {
+        radioAlugado.checked = false;
+        handleTipoAquisicaoChange(radioAlugado);
+      }
+    }
+  }
+}
+
+// ===========================================
+// GERENCIAMENTO DE ACESSÓRIOS
+// ===========================================
+
+function gerarIdUnicoAcessorio() {
+  let novoId;
+  do {
+    const randomNum = Math.floor(100000 + Math.random() * 900000);
+    novoId = `#A${randomNum}`;
+  } while (acessorios.some((ac) => ac.id == novoId));
+  return novoId;
+}
+
+function salvarAcessorio(e) {
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const categoria = form.get("categoria");
+
+  // --- INÍCIO DA VERIFICAÇÃO DE DUPLICIDADE ---
+  const novoPatrimonio = form.get("patrimonio").trim();
+  const novoNumeroSerie = form.get("numeroSerie").trim();
+
+  // 1. Verificar Patrimônio
+  if (novoPatrimonio) {
+    // Acessórios não têm 'isArchived', apenas 'isDeleted' (Lixeira)
+    const matchPatrimonio = acessorios.find(
+      (ac) => ac.patrimonio === novoPatrimonio && !ac.isDeleted
+    );
+
+    if (matchPatrimonio) {
+      mostrarMensagem(
+        `Acessório já cadastrado com o Patrimônio: ${novoPatrimonio}.`,
+        "error"
+      );
+      return;
+    }
+  }
+
+  // 2. Verificar Número de Série (só se não achou por patrimônio)
+  if (novoNumeroSerie) {
+    const matchSerie = acessorios.find(
+      (ac) => ac.numeroSerie === novoNumeroSerie && !ac.isDeleted
+    );
+
+    if (matchSerie) {
+      mostrarMensagem(
+        `Acessório já cadastrado com o Número de Série: ${novoNumeroSerie}.`,
+        "error"
+      );
+      return;
+    }
+  }
+  // --- FIM DA VERIFICAÇÃO DE DUPLICIDADE ---
+
+  const novoAcessorio = {
+    id: gerarIdUnicoAcessorio(),
+    categoria: categoria,
+    modelo: form.get("modelo"),
+    polegadas: categoria === "Monitores" ? form.get("polegadas") : "",
+    patrimonio: form.get("patrimonio") || "",
+    numeroSerie: form.get("numeroSerie") || "",
+    tipo: form.get("tipo"),
+    fornecedor: form.get("tipo") === "Locação" ? "Apnetworks" : "",
+    fabricante: form.get("fabricante") || "",
+    valorMensal:
+      form.get("tipo") === "Locação" ? parseMoeda(form.get("valorMensal")) : 0,
+    disponivel: true,
+    isDeleted: false,
+  };
+  acessorios.push(novoAcessorio);
   salvarAcessoriosParaLocalStorage();
-  renderizarTabelaAcessorios();
+  setEstadoAlteracao(true);
+  aplicarFiltrosAcessorios();
+  mostrarMensagem("Acessório cadastrado com sucesso!", "success");
   limparFormularioAcessorio();
-  mostrarAlerta("Acessório salvo com sucesso!", "success");
 }
 
-function editarAcessorio(id) {
-  const acessorio = acessorios.find((a) => a.id === id);
-  if (!acessorio) return;
-
-  const form = document.getElementById("form-acessorio");
-  form.dataset.editId = id;
-  document.getElementById("form-title-acessorio").textContent =
-    "Editar Acessório";
-  document.getElementById("btn-salvar-acessorio").textContent =
-    "Atualizar Acessório";
-  document.getElementById("btn-cancelar-edicao-acessorio").style.display =
-    "inline-block";
-
-  document.getElementById("acessorio-tipo").value = acessorio.tipo || "";
-  document.getElementById("acessorio-modelo").value = acessorio.modelo || "";
-  document.getElementById("acessorio-numeroSerie").value =
-    acessorio.numeroSerie || "";
-  document.getElementById("acessorio-status").value = acessorio.status || "";
-  document.getElementById("acessorio-observacao").value =
-    acessorio.observacao || "";
-
-  form.scrollIntoView();
-}
-
-function confirmarExclusaoAcessorio(id) {
-  // Verificar se o acessório está vinculado a algum equipamento
-  const vinculado = equipamentos.some((e) =>
-    (e.acessorios || []).includes(id)
-  );
-  if (vinculado) {
-    abrirModalConfirm(
-      "Acessório Vinculado!",
-      "Este acessório está vinculado a um ou mais equipamentos. Excluí-lo irá removê-lo de todos os equipamentos. Deseja continuar?",
-      () => excluirAcessorio(id)
-    );
-  } else {
-    abrirModalConfirm(
-      "Tem certeza que deseja excluir este acessório?",
-      "Esta ação não pode ser desfeita.",
-      () => excluirAcessorio(id)
+function atualizarListaAcessorios(categoriaFiltro = "todos", termoBusca = "") {
+  const tbody = document.getElementById("acessorios-list");
+  const emptyState = document.getElementById("acessorios-empty-state");
+  let acessoriosFiltrados = acessorios.filter((a) => !a.isDeleted);
+  if (categoriaFiltro !== "todos") {
+    acessoriosFiltrados = acessoriosFiltrados.filter(
+      (a) => a.categoria === categoriaFiltro
     );
   }
+  if (termoBusca) {
+    const termo = termoBusca.toLowerCase();
+    acessoriosFiltrados = acessoriosFiltrados.filter((a) =>
+      Object.values(a).some((val) => String(val).toLowerCase().includes(termo))
+    );
+  }
+
+  acessoriosFiltrados.sort((a, b) => {
+    // 1. Critério principal: Ordenar por Categoria (alfabética)
+    const catA = a.categoria || "";
+    const catB = b.categoria || "";
+    const categoriaCompare = catA.localeCompare(catB);
+
+    if (categoriaCompare !== 0) {
+      return categoriaCompare;
+    }
+
+    // 2. Critério secundário: Ordenar por Patrimônio (crescente)
+    // Acessórios sem patrimônio (vazio ou "N/A") devem ir para o final.
+    const pA = a.patrimonio;
+    const pB = b.patrimonio;
+
+    const pA_valido = pA && pA !== "N/A";
+    const pB_valido = pB && pB !== "N/A";
+
+    if (pA_valido && !pB_valido) {
+      return -1; // pA (com patrimônio) vem antes
+    }
+    if (!pA_valido && pB_valido) {
+      return 1; // pB (com patrimônio) vem antes
+    }
+    if (!pA_valido && !pB_valido) {
+      // 3. Critério de desempate (se ambos não têm patrimônio): Ordenar por Modelo
+      return (a.modelo || "").localeCompare(b.modelo || "");
+    }
+
+    // Ambos têm patrimônio, comparar usando 'numeric: true' para tratar números em strings
+    return pA.localeCompare(pB, undefined, {
+      numeric: true,
+      sensitivity: "base",
+    });
+  });
+
+  tbody.innerHTML =
+    acessoriosFiltrados.length > 0
+      ? acessoriosFiltrados
+          .map((acessorio) => {
+            const dispClass = acessorio.disponivel ? "sim" : "nao";
+            const dispText = acessorio.disponivel ? "Sim" : "Não";
+            return `
+        <tr>
+          <td class="checkbox-cell"><input type="checkbox" class="checkbox-acessorios" value="${
+            acessorio.id
+          }" onclick="verificarSelecao('acessorios')"></td>
+          <td>${acessorio.id}</td>
+          <td>${acessorio.categoria}</td>
+          <td>${acessorio.modelo}</td>
+          <td>${acessorio.tipo}</td>
+          <td>${acessorio.patrimonio || "N/A"}</td>
+          <td>${acessorio.numeroSerie || "N/A"}</td>
+          <td><span class="disponibilidade-${dispClass}" ${
+              !acessorio.disponivel
+                ? `onclick="mostrarTooltipUsuario(event, '${acessorio.id}')"`
+                : ""
+            }>${dispText}</span></td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn-action btn-edit" onclick="editarAcessorio('${
+                acessorio.id
+              }')" title="Editar"><i class="fas fa-edit"></i></button>
+              <button class="btn-action btn-delete" onclick="excluirAcessorio('${
+                acessorio.id
+              }')" title="Excluir"><i class="fas fa-trash"></i></button>
+            </div>
+          </td>
+        </tr>`;
+          })
+          .join("")
+      : "";
+  emptyState.style.display =
+    acessorios.filter((a) => !a.isDeleted).length === 0 ? "block" : "none";
+  tbody.closest(".table-container").style.display =
+    acessoriosFiltrados.length > 0 ? "block" : "none";
+  popularFiltroCategorias();
+  verificarSelecao("acessorios");
 }
 
 function excluirAcessorio(id) {
-  // Remover de 'acessorios'
-  acessorios = acessorios.filter((a) => a.id !== id);
-
-  // Remover de todos os equipamentos que o possuem
-  equipamentos.forEach((equip) => {
-    if (equip.acessorios && equip.acessorios.includes(id)) {
-      equip.acessorios = equip.acessorios.filter((aId) => aId !== id);
+  // MODIFICAÇÃO (Goal 1): Adiciona modal de confirmação
+  abrirModalConfirmacao(
+    "Tem certeza que deseja mover este acessório para a lixeira?",
+    () => {
+      // Lógica original movida para o callback
+      const acessorio = acessorios.find((a) => String(a.id) === String(id));
+      if (acessorio) {
+        acessorio.isDeleted = true;
+        acessorio.deletionDate = new Date().toISOString();
+        salvarAcessoriosParaLocalStorage();
+        setEstadoAlteracao(true);
+        aplicarFiltrosAcessorios(); // Atualiza a lista de acessórios
+        mostrarMensagem("Acessório movido para a lixeira.", "success");
+      }
     }
-  });
+  );
+}
 
-  dadosForamAlterados = true;
+function editarAcessorio(id) {
+  const acessorio = acessorios.find((a) => String(a.id) === String(id));
+  if (!acessorio) return;
+  const container = document.getElementById("edit-acessorio-form-container");
+  container.innerHTML = criarFormularioEdicaoAcessorio(acessorio);
+  const valorInput = document.getElementById("edit-acessorio-valor-mensal");
+  if (valorInput) valorInput.addEventListener("input", aplicarMascaraValor);
+  handleTipoAcessorioChange("edit");
+  handleCategoriaAcessorioChange("edit");
+  document.getElementById("edit-acessorio-modal").classList.add("active");
+}
+
+function criarFormularioEdicaoAcessorio(acessorio) {
+  const safe = (val) => String(val || "").replace(/"/g, "&quot;");
+  const isLocacao = acessorio.tipo === "Locação";
+  const categorias = [
+    "Kit (teclado + mouse sem fio)",
+    "Headsets",
+    "Monitores",
+    "Mouses",
+    "Suportes com Cooler",
+    "Outros",
+  ];
+  const tipos = ["Propriedade CEBRI", "Locação"];
+  const opts = (arr, sel) =>
+    arr
+      .map(
+        (i) =>
+          `<option value="${i}" ${sel === i ? "selected" : ""}>${i}</option>`
+      )
+      .join("");
+  return `
+    <form id="edit-acessorio-form" class="equipment-form" onsubmit="salvarEdicaoAcessorio(event, '${
+      acessorio.id
+    }')">
+      <fieldset class="form-section">
+        <legend>Detalhes do Acessório</legend>
+        <div class="form-row">
+          <div class="form-group"><label>Categoria</label><select id="edit-categoria" name="categoria" class="form-control" onchange="handleCategoriaAcessorioChange('edit')">${opts(
+            categorias,
+            acessorio.categoria
+          )}</select></div>
+          <div class="form-group"><label>Modelo</label><input type="text" name="modelo" class="form-control" value="${safe(
+            acessorio.modelo
+          )}"></div>
+        </div>
+
+        <div class="form-row" id="campo-edit-polegadas" style="display: ${
+          acessorio.categoria === "Monitores" ? "grid" : "none"
+        };">
+          <div class="form-group full-width">
+            <label>Polegadas</label>
+            <input type="text" id="edit-acessorio-polegadas" name="polegadas" class="form-control" value="${safe(
+              acessorio.polegadas || ""
+            )}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Fabricante</label><input type="text" name="fabricante" class="form-control" value="${safe(
+            acessorio.fabricante
+          )}"></div>
+          <div class="form-group"><label>Patrimônio</label><input type="text" name="patrimonio" class="form-control" value="${safe(
+            acessorio.patrimonio
+          )}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Número de Série</label><input type="text" name="numeroSerie" class="form-control" value="${safe(
+            acessorio.numeroSerie
+          )}"></div>
+          <div class="form-group"><label>Tipo</label><select id="edit-tipo" name="tipo" class="form-control" onchange="handleTipoAcessorioChange('edit')">${opts(
+            tipos,
+            acessorio.tipo
+          )}</select></div>
+        </div>
+        <div class="form-row">
+          <div id="campo-edit-fornecedor" class="form-group" style="display:${
+            isLocacao ? "block" : "none"
+          };"><label>Fornecedor</label><input type="text" id="edit-fornecedor" name="fornecedor" class="form-control" readonly value="${safe(
+    acessorio.fornecedor
+  )}"></div>
+          <div id="campo-edit-valor-mensal" class="form-group" style="display:${
+            isLocacao ? "block" : "none"
+          };"><label>Valor Mensal (R$)</label><input type="text" id="edit-acessorio-valor-mensal" name="valorMensal" class="form-control" value="${(
+    acessorio.valorMensal || 0
+  )
+    .toFixed(2)
+    .replace(".", ",")}"></div>
+        </div>
+      </fieldset>
+      <div class="modal-actions">
+        <button type="button" class="btn btn--secondary" onclick="fecharModalAcessorio()">Cancelar</button>
+        <button type="submit" class="btn btn--primary"><i class="fas fa-save"></i> Salvar</button>
+      </div>
+    </form>`;
+}
+
+function salvarEdicaoAcessorio(event, id) {
+  event.preventDefault();
+  const index = acessorios.findIndex((a) => String(a.id) === String(id));
+  if (index === -1) return;
+  const form = new FormData(event.target);
+  const tipo = form.get("tipo");
+  const categoria = form.get("categoria");
+  acessorios[index] = {
+    ...acessorios[index],
+    categoria: categoria,
+    modelo: form.get("modelo"),
+    polegadas: categoria === "Monitores" ? form.get("polegadas") : "",
+    fabricante: form.get("fabricante"),
+    patrimonio: form.get("patrimonio"),
+    numeroSerie: form.get("numeroSerie"),
+    tipo: tipo,
+    fornecedor: tipo === "Locação" ? "Apnetworks" : "",
+    valorMensal: tipo === "Locação" ? parseMoeda(form.get("valorMensal")) : 0,
+  };
   salvarAcessoriosParaLocalStorage();
-  salvarParaLocalStorage(); // Salvar equipamentos também
-  renderizarTabelaAcessorios();
-  renderizarTabelaEquipamentos(); // Atualizar ícones na tabela de equipamentos
-  mostrarAlerta("Acessório excluído e desvinculado com sucesso!", "success");
-  fecharModalConfirm();
+  setEstadoAlteracao(true);
+  aplicarFiltrosAcessorios();
+  fecharModalAcessorio();
+  mostrarMensagem("Acessório atualizado com sucesso!", "success");
 }
 
-function limparFormularioAcessorio() {
-  const form = document.getElementById("form-acessorio");
-  form.reset();
-  form.dataset.editId = "";
-  document.getElementById("form-title-acessorio").textContent =
-    "Adicionar Novo Acessório";
-  document.getElementById("btn-salvar-acessorio").textContent =
-    "Salvar Acessório";
-  document.getElementById("btn-cancelar-edicao-acessorio").style.display =
-    "none";
+// ===========================================
+// GERENCIAMENTO DE CARTUCHOS
+// ===========================================
+
+function popularImpressorasNoCadastroCartucho() {
+  const select = document.getElementById("cartucho-impressora-vinculo");
+  const impressoras = equipamentos.filter(
+    (eq) =>
+      eq.tipoEquipamento === "Impressora" && !eq.isArchived && !eq.isDeleted
+  );
+
+  while (select.options.length > 1) {
+    select.remove(1);
+  }
+
+  impressoras.forEach((imp) => {
+    const textoOpcao = `${imp.sala} (${imp.ip || "Sem IP"})`;
+    const option = new Option(textoOpcao, imp.sala);
+    select.add(option);
+  });
 }
 
-function cancelarEdicaoAcessorio() {
-  limparFormularioAcessorio();
+function gerarIdUnicoCartucho() {
+  let id;
+  do {
+    id = `#C${Math.floor(1000 + Math.random() * 9000)}`;
+  } while (cartuchos.some((c) => c.id === id));
+  return id;
 }
 
-function renderizarTabelaAcessorios(lista = acessorios) {
-  const tabelaBody = document
-    .getElementById("tabela-acessorios")
-    .querySelector("tbody");
-  tabelaBody.innerHTML = "";
+function salvarCartucho(e) {
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const numeroSerie = form.get("numeroSerie");
+  const patrimonio = form.get("patrimonio"); // Adicionado para pegar patrimonio
+  const cor = form.get("cor");
+  const impressoraVinculada = form.get("impressoraVinculada");
 
-  if (lista.length === 0) {
-    tabelaBody.innerHTML =
-      '<tr><td colspan="6" class="text-center">Nenhum acessório encontrado.</td></tr>';
+  if (!numeroSerie || !cor) {
+    mostrarMensagem("Número de Série e Cor são obrigatórios.", "error");
     return;
   }
 
-  lista.forEach((acessorio) => {
-    const row = document.createElement("tr");
-    row.dataset.id = acessorio.id;
-
-    row.innerHTML = `
-      <td data-label="Tipo">${acessorio.tipo || "N/A"}</td>
-      <td data-label="Modelo">${acessorio.modelo || "N/A"}</td>
-      <td data-label="Nº de Série">${acessorio.numeroSerie || "N/A"}</td>
-      <td data-label="Status">
-        <span class="status-badge status-${normalizarString(
-          acessorio.status
-        )}">
-          ${acessorio.status || "N/A"}
-        </span>
-      </td>
-      <td data-label="Observação" class="obs-cell">
-        </td>
-      <td data-label="Ações">
-        <button class="btn-icon" title="Editar" onclick="editarAcessorio('${
-          acessorio.id
-        }')">
-          <i class="fas fa-edit"></i>
-        </button>
-        <button class="btn-icon btn-icon--danger" title="Excluir" onclick="confirmarExclusaoAcessorio('${
-          acessorio.id
-        }')">
-          <i class="fas fa-trash"></i>
-        </button>
-      </td>
-    `;
-
-    // ****** INÍCIO DA CORREÇÃO ******
-    // Inserir observações de forma segura para evitar quebra de HTML
-    const obsCell = row.querySelector(".obs-cell");
-    if (obsCell) {
-      obsCell.textContent = acessorio.observacao || "";
-    }
-    // ****** FIM DA CORREÇÃO ******
-
-    tabelaBody.appendChild(row);
-  });
-}
-
-function filtrarTabelaAcessorios() {
-  const termo = document
-    .getElementById("pesquisa-acessorio")
-    .value.toLowerCase();
-  const filtrados = acessorios.filter((a) => {
-    return (
-      (a.tipo && a.tipo.toLowerCase().includes(termo)) ||
-      (a.modelo && a.modelo.toLowerCase().includes(termo)) ||
-      (a.numeroSerie && a.numeroSerie.toLowerCase().includes(termo)) ||
-      (a.status && a.status.toLowerCase().includes(termo))
+  // --- INÍCIO DA VERIFICAÇÃO DE DUPLICIDADE ---
+  // 1. Verificar Patrimônio
+  if (patrimonio) {
+    // Verifica se patrimonio não é nulo ou vazio
+    const matchPatrimonio = cartuchos.find(
+      (c) => c.patrimonio === patrimonio && !c.isArchived && !c.isDeleted
     );
-  });
-  renderizarTabelaAcessorios(filtrados);
-}
 
-// ===========================================
-// CRUD: CARTUCHOS
-// ===========================================
-
-function salvarCartucho(event) {
-  event.preventDefault();
-  const form = event.target;
-  const id = form.dataset.editId;
-
-  const cartucho = {
-    id:
-      id ||
-      `#C${Date.now()}` +
-        Math.floor(Math.random() * 1000)
-          .toString()
-          .padStart(3, "0"),
-    modelo: document.getElementById("cartucho-modelo").value,
-    tipo: document.getElementById("cartucho-tipo").value,
-    cor: document.getElementById("cartucho-cor").value,
-    status: document.getElementById("cartucho-status").value,
-    observacao: document.getElementById("cartucho-observacao").value,
-  };
-
-  if (id) {
-    // Editando
-    const index = cartuchos.findIndex((c) => c.id === id);
-    if (index !== -1) {
-      cartuchos[index] = { ...cartuchos[index], ...cartucho };
+    if (matchPatrimonio) {
+      mostrarMensagem(
+        `Cartucho já cadastrado com o Patrimônio: ${patrimonio}.`,
+        "error"
+      );
+      return;
     }
-  } else {
-    // Criando
-    cartuchos.push(cartucho);
   }
 
-  dadosForamAlterados = true;
+  // 2. Verificar Número de Série (só se não achou por patrimônio)
+  if (numeroSerie) {
+    const matchSerie = cartuchos.find(
+      (c) => c.numeroSerie === numeroSerie && !c.isArchived && !c.isDeleted
+    );
+
+    if (matchSerie) {
+      mostrarMensagem(
+        `Cartucho já cadastrado com o Número de Série: ${numeroSerie}.`,
+        "error"
+      );
+      return;
+    }
+  }
+  // --- FIM DA VERIFICAÇÃO DE DUPLICIDADE ---
+
+  const novoCartucho = {
+    id: gerarIdUnicoCartucho(),
+    numeroSerie: numeroSerie,
+    patrimonio: form.get("patrimonio") || "N/A",
+    cor: cor,
+    status: impressoraVinculada ? "Em uso" : "Disponível",
+    impressoraVinculada: impressoraVinculada || null,
+    isArchived: false,
+    isDeleted: false,
+  };
+
+  cartuchos.push(novoCartucho);
   salvarCartuchosParaLocalStorage();
-  renderizarTabelaCartuchos();
+  setEstadoAlteracao(true);
+  mostrarMensagem("Cartucho cadastrado com sucesso!", "success");
   limparFormularioCartucho();
-  mostrarAlerta("Cartucho salvo com sucesso!", "success");
+  atualizarListaCartuchos();
+}
+
+function limparFormularioCartucho() {
+  document.getElementById("cartucho-form").reset();
+}
+
+function atualizarContagemCartuchosDisponiveis() {
+  const summaryElement = document.getElementById(
+    "cartuchos-disponiveis-summary"
+  );
+  if (!summaryElement) return;
+
+  const disponiveis = cartuchos.filter(
+    (c) => c.status === "Disponível" && !c.isArchived && !c.isDeleted
+  );
+
+  const contagemPorCor = disponiveis.reduce((acc, cartucho) => {
+    acc[cartucho.cor] = (acc[cartucho.cor] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Define a ordem desejada das cores
+  const colorOrder = ["Ciano (C)", "Amarelo (Y)", "Magenta (M)", "Preto (BK)"];
+
+  // Filtra e ordena as cores que têm contagem maior que 0
+  const orderedEntries = colorOrder
+    .map((cor) => [cor, contagemPorCor[cor]]) // Mapeia para [cor, quantidade]
+    .filter(([_, quantidade]) => quantidade > 0); // Filtra cores com quantidade > 0
+
+  // Gera o HTML com spans coloridos
+  const summaryHtml = orderedEntries
+    .map(([cor, quantidade]) => {
+      // Extrai o nome base da cor para usar como classe CSS (ex: 'ciano', 'amarelo')
+      const baseColor = cor.split(" ")[0].toLowerCase().replace(/[()]/g, "");
+      // Cria o span com a classe base e a classe específica da cor
+      return `<span class="summary-color summary-${baseColor}">${quantidade} ${cor}</span>`;
+    })
+    .join(", "); // Junta as partes com vírgula e espaço
+
+  // Define o conteúdo do elemento, usando innerHTML pois agora temos HTML
+  summaryElement.innerHTML = summaryHtml
+    ? `Disponíveis: ${summaryHtml}` // Adiciona o prefixo se houver cartuchos
+    : "Nenhum cartucho disponível"; // Mensagem se não houver nenhum
+}
+
+function atualizarListaCartuchos() {
+  atualizarContagemCartuchosDisponiveis();
+  const termo = document
+    .getElementById("search-input-cartuchos")
+    .value.toLowerCase();
+  const tbody = document.getElementById("cartuchos-list");
+  const emptyState = document.getElementById("cartuchos-empty-state");
+  let cartuchosFiltrados = cartuchos.filter(
+    (c) =>
+      !c.isArchived &&
+      !c.isDeleted &&
+      Object.values(c).some((val) => String(val).toLowerCase().includes(termo))
+  );
+
+  const colorOrder = {
+    "Ciano (C)": 1,
+    "Magenta (M)": 2,
+    "Amarelo (Y)": 3,
+    "Preto (BK)": 4,
+  };
+
+  cartuchosFiltrados.sort((a, b) => {
+    const orderA = colorOrder[a.cor] || 99;
+    const orderB = colorOrder[b.cor] || 99;
+
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+
+    // Ordenar por patrimônio como desempate (tratando N/A)
+    const patA = a.patrimonio === "N/A" ? "ZZZ" : a.patrimonio; // N/A vai para o fim
+    const patB = b.patrimonio === "N/A" ? "ZZZ" : b.patrimonio;
+    return patA.localeCompare(patB, undefined, {
+      numeric: true,
+      sensitivity: "base",
+    });
+  });
+
+  if (cartuchos.filter((c) => !c.isArchived && !c.isDeleted).length === 0) {
+    tbody.innerHTML = "";
+    tbody.closest(".table-container").style.display = "none";
+    emptyState.style.display = "block";
+  } else {
+    tbody.closest(".table-container").style.display = "block";
+    emptyState.style.display = "none";
+    tbody.innerHTML = cartuchosFiltrados
+      .map((cartucho) => {
+        const corClasse = cartucho.cor
+          .split(" ")[0]
+          .toLowerCase()
+          .replace(/[()]/g, "");
+        const statusClasse =
+          cartucho.status === "Disponível" ? "disponivel" : "ativo";
+        return `
+        <tr>
+          <td class="checkbox-cell"><input type="checkbox" class="checkbox-cartuchos" value="${
+            cartucho.id
+          }" onclick="verificarSelecao('cartuchos')"></td>
+          <td>${cartucho.id}</td>
+          <td>${cartucho.numeroSerie}</td>
+          <td>${cartucho.patrimonio}</td>
+          <td><span class="cor-badge ${corClasse}">${cartucho.cor}</span></td>
+          <td><span class="status-badge ${statusClasse}">${
+          cartucho.status
+        }</span></td>
+          <td>${cartucho.impressoraVinculada || "Nenhum"}</td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn-action btn-archive" onclick="arquivarCartucho('${
+                cartucho.id
+              }')" title="Arquivar"><i class="fas fa-archive"></i></button>
+              <button class="btn-action btn-edit" onclick="editarCartucho('${
+                cartucho.id
+              }')" title="Editar/Vincular"><i class="fas fa-edit"></i></button>
+              <button class="btn-action btn-delete" onclick="excluirCartucho('${
+                cartucho.id
+              }')" title="Excluir"><i class="fas fa-trash"></i></button>
+            </div>
+          </td>
+        </tr>`;
+      })
+      .join("");
+  }
+  verificarSelecao("cartuchos"); // Garante estado inicial do botão de apagar
 }
 
 function editarCartucho(id) {
   const cartucho = cartuchos.find((c) => c.id === id);
   if (!cartucho) return;
 
-  const form = document.getElementById("form-cartucho");
-  form.dataset.editId = id;
-  document.getElementById("form-title-cartucho").textContent =
-    "Editar Cartucho";
-  document.getElementById("btn-salvar-cartucho").textContent =
-    "Atualizar Cartucho";
-  document.getElementById("btn-cancelar-edicao-cartucho").style.display =
-    "inline-block";
+  const container = document.getElementById("edit-cartucho-form-container");
+  container.innerHTML = criarFormularioEdicaoCartucho(cartucho);
 
-  document.getElementById("cartucho-modelo").value = cartucho.modelo || "";
-  document.getElementById("cartucho-tipo").value = cartucho.tipo || "";
-  document.getElementById("cartucho-cor").value = cartucho.cor || "";
-  document.getElementById("cartucho-status").value = cartucho.status || "";
-  document.getElementById("cartucho-observacao").value =
-    cartucho.observacao || "";
+  if (!cartucho.isArchived) {
+    document
+      .getElementById("edit-cartucho-status")
+      .addEventListener("change", (e) => {
+        const select = document.getElementById("edit-cartucho-impressora");
+        select.disabled = e.target.value !== "Em uso";
+        if (select.disabled) {
+          select.value = "";
+        }
+      });
+  }
 
-  form.scrollIntoView();
+  document.getElementById("edit-cartucho-modal").classList.add("active");
 }
 
-function confirmarExclusaoCartucho(id) {
-  abrirModalConfirm(
-    "Tem certeza que deseja excluir este cartucho?",
-    "Esta ação não pode ser desfeita.",
-    () => excluirCartucho(id)
+function criarFormularioEdicaoCartucho(cartucho) {
+  const impressoras = equipamentos.filter(
+    (eq) =>
+      eq.tipoEquipamento === "Impressora" && !eq.isArchived && !eq.isDeleted
   );
+  const impressoraOptions = impressoras
+    .map((imp) => {
+      const textoOpcao = `${imp.sala} (${imp.ip || "Sem IP"})`;
+      const isSelected =
+        cartucho.impressoraVinculada === imp.sala ? "selected" : "";
+      return `<option value="${imp.sala}" ${isSelected}>${textoOpcao}</option>`;
+    })
+    .join("");
+
+  const cores = ["Preto (BK)", "Ciano (C)", "Magenta (M)", "Amarelo (Y)"];
+  const corOptions = cores
+    .map(
+      (cor) =>
+        `<option value="${cor}" ${
+          cartucho.cor === cor ? "selected" : ""
+        }>${cor}</option>`
+    )
+    .join("");
+
+  const isArchived = cartucho.isArchived;
+  const isEmUso = cartucho.status === "Em uso";
+
+  let statusFieldHtml;
+  if (isArchived) {
+    statusFieldHtml = `
+      <label>Status</label>
+      <input type="text" class="form-control" value="${
+        cartucho.status || "Trocado"
+      }" readonly>
+    `;
+  } else {
+    statusFieldHtml = `
+      <label>Status</label>
+      <select id="edit-cartucho-status" name="status" class="form-control">
+        <option value="Disponível" ${
+          !isEmUso ? "selected" : ""
+        }>Disponível</option>
+        <option value="Em uso" ${isEmUso ? "selected" : ""}>Em uso</option>
+      </select>
+    `;
+  }
+
+  let impressoraFieldHtml;
+  if (isArchived) {
+    impressoraFieldHtml = `
+      <label>Esteve Vinculado a</label>
+      <input type="text" class="form-control" value="${
+        cartucho.impressoraVinculada || "Nenhum"
+      }" readonly>
+    `;
+  } else {
+    impressoraFieldHtml = `
+      <label>Vincular à Impressora</label>
+      <select id="edit-cartucho-impressora" name="impressoraVinculada" class="form-control" ${
+        !isEmUso ? "disabled" : ""
+      }>
+        <option value="">Nenhuma</option>
+        ${impressoraOptions}
+      </select>
+    `;
+  }
+
+  return `
+    <form id="edit-cartucho-form" class="equipment-form" onsubmit="salvarEdicaoCartucho(event, '${cartucho.id}')">
+      <fieldset class="form-section">
+        <legend>Editar Cartucho</legend>
+        <div class="form-row">
+          <div class="form-group"><label>Número de Série</label><input type="text" name="numeroSerie" class="form-control" value="${cartucho.numeroSerie}"></div>
+          <div class="form-group"><label>Patrimônio</label><input type="text" name="patrimonio" class="form-control" value="${cartucho.patrimonio}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Cor</label><select name="cor" class="form-control">${corOptions}</select></div>
+          <div class="form-group">${statusFieldHtml}</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full-width">${impressoraFieldHtml}</div>
+        </div>
+      </fieldset>
+      <div class="modal-actions">
+        <button type="button" class="btn btn--secondary" onclick="fecharModalCartucho()">Cancelar</button>
+        <button type="submit" class="btn btn--primary">Salvar</button>
+      </div>
+    </form>`;
+}
+
+function salvarEdicaoCartucho(event, id) {
+  event.preventDefault();
+  const index = cartuchos.findIndex((c) => c.id === id);
+  if (index === -1) return;
+
+  const form = new FormData(event.target);
+  const originalCartucho = cartuchos[index];
+
+  const updatedData = {
+    numeroSerie: form.get("numeroSerie"),
+    patrimonio: form.get("patrimonio"),
+    cor: form.get("cor"),
+  };
+
+  if (!originalCartucho.isArchived) {
+    const status = form.get("status");
+    const impressoraVinculada = form.get("impressoraVinculada");
+    updatedData.status = status;
+    updatedData.impressoraVinculada =
+      status === "Em uso" ? impressoraVinculada : null;
+  }
+
+  cartuchos[index] = { ...originalCartucho, ...updatedData };
+
+  salvarCartuchosParaLocalStorage();
+  setEstadoAlteracao(true);
+
+  if (cartuchos[index].isArchived) {
+    atualizarListaCartuchosArquivados();
+  } else {
+    atualizarListaCartuchos();
+  }
+
+  fecharModalCartucho();
+  mostrarMensagem("Cartucho atualizado com sucesso!", "success");
 }
 
 function excluirCartucho(id) {
-  cartuchos = cartuchos.filter((c) => c.id !== id);
-  dadosForamAlterados = true;
-  salvarCartuchosParaLocalStorage();
-  renderizarTabelaCartuchos();
-  mostrarAlerta("Cartucho excluído com sucesso!", "success");
-  fecharModalConfirm();
-}
+  // MODIFICAÇÃO (Goal 1): Adiciona modal de confirmação
+  abrirModalConfirmacao(
+    "Tem certeza que deseja mover este cartucho para a lixeira?",
+    () => {
+      // Lógica original movida para o callback
+      const cartucho = cartuchos.find((c) => c.id === id);
+      if (cartucho) {
+        cartucho.isDeleted = true;
+        cartucho.deletionDate = new Date().toISOString();
+        salvarCartuchosParaLocalStorage();
+        setEstadoAlteracao(true);
 
-function limparFormularioCartucho() {
-  const form = document.getElementById("form-cartucho");
-  form.reset();
-  form.dataset.editId = "";
-  document.getElementById("form-title-cartucho").textContent =
-    "Adicionar Novo Cartucho";
-  document.getElementById("btn-salvar-cartucho").textContent =
-    "Salvar Cartucho";
-  document.getElementById("btn-cancelar-edicao-cartucho").style.display =
-    "none";
-}
+        // Atualiza a lista correta de onde o item saiu
+        if (cartucho.isArchived) {
+          atualizarListaCartuchosArquivados();
+        } else {
+          atualizarListaCartuchos();
+        }
 
-function cancelarEdicaoCartucho() {
-  limparFormularioCartucho();
-}
-
-function renderizarTabelaCartuchos(lista = cartuchos) {
-  const tabelaBody = document
-    .getElementById("tabela-cartuchos")
-    .querySelector("tbody");
-  tabelaBody.innerHTML = "";
-
-  if (lista.length === 0) {
-    tabelaBody.innerHTML =
-      '<tr><td colspan="7" class="text-center">Nenhum cartucho encontrado.</td></tr>';
-    return;
-  }
-
-  lista.forEach((cartucho) => {
-    const row = document.createElement("tr");
-    row.dataset.id = cartucho.id;
-
-    row.innerHTML = `
-      <td data-label="Modelo">${cartucho.modelo || "N/A"}</td>
-      <td data-label="Tipo">${cartucho.tipo || "N/A"}</td>
-      <td data-label="Cor">${cartucho.cor || "N/A"}</td>
-      <td data-label="Status">
-        <span class="status-badge status-${normalizarString(cartucho.status)}">
-          ${cartucho.status || "N/A"}
-        </span>
-      </td>
-      <td data-label="Observação" class="obs-cell">
-        </td>
-      <td data-label="Ações">
-        <button class="btn-icon" title="Editar" onclick="editarCartucho('${
-          cartucho.id
-        }')">
-          <i class="fas fa-edit"></i>
-        </button>
-        <button class="btn-icon btn-icon--danger" title="Excluir" onclick="confirmarExclusaoCartucho('${
-          cartucho.id
-        }')">
-          <i class="fas fa-trash"></i>
-        </button>
-      </td>
-    `;
-    
-    // ****** INÍCIO DA CORREÇÃO ******
-    // Inserir observações de forma segura para evitar quebra de HTML
-    const obsCell = row.querySelector(".obs-cell");
-    if (obsCell) {
-      obsCell.textContent = cartucho.observacao || "";
+        mostrarMensagem("Cartucho movido para a lixeira.", "success");
+      }
     }
-    // ****** FIM DA CORREÇÃO ******
-
-    tabelaBody.appendChild(row);
-  });
+  );
 }
 
-function filtrarTabelaCartuchos() {
+function fecharModalCartucho() {
+  document.getElementById("edit-cartucho-modal").classList.remove("active");
+}
+
+function arquivarCartucho(id) {
+  abrirModalConfirmacao(
+    "Tem certeza que deseja arquivar este cartucho?",
+    () => {
+      const cartucho = cartuchos.find((c) => c.id === id);
+      if (cartucho) {
+        cartucho.isArchived = true;
+        cartucho.status = "Trocado";
+        cartucho.archiveDate = new Date().toISOString();
+        salvarCartuchosParaLocalStorage();
+        setEstadoAlteracao(true);
+        atualizarListaCartuchos();
+        atualizarListaCartuchosArquivados();
+        mostrarMensagem("Cartucho arquivado com sucesso!", "success");
+      }
+    }
+  );
+}
+
+function desarquivarCartucho(id) {
+  const cartucho = cartuchos.find((c) => c.id === id);
+  if (cartucho) {
+    cartucho.isArchived = false;
+    cartucho.status = "Disponível";
+    cartucho.impressoraVinculada = null;
+    salvarCartuchosParaLocalStorage();
+    setEstadoAlteracao(true);
+    atualizarListaCartuchosArquivados();
+    atualizarListaCartuchos();
+    mostrarMensagem("Cartucho restaurado com sucesso!", "success");
+  }
+}
+
+function atualizarListaCartuchosArquivados() {
   const termo = document
-    .getElementById("pesquisa-cartucho")
+    .getElementById("search-input-cartuchos-arquivados")
     .value.toLowerCase();
-  const filtrados = cartuchos.filter((c) => {
-    return (
-      (c.modelo && c.modelo.toLowerCase().includes(termo)) ||
-      (c.tipo && c.tipo.toLowerCase().includes(termo)) ||
-      (c.cor && c.cor.toLowerCase().includes(termo)) ||
-      (c.status && c.status.toLowerCase().includes(termo))
-    );
-  });
-  renderizarTabelaCartuchos(filtrados);
-}
-
-// ===========================================
-// GERENCIAMENTO DE ACESSÓRIOS VINCULADOS
-// ===========================================
-
-function abrirModalVincularAcessorios() {
-  const modalBody = document.getElementById("lista-acessorios-modal");
-  modalBody.innerHTML = ""; // Limpar lista anterior
-
-  const acessoriosDisponiveis = acessorios.filter(
-    (a) => a.status === "Disponível"
+  const tbody = document.getElementById("archived-cartridges-list");
+  const emptyState = document.getElementById("archived-cartridges-empty-state");
+  const cartuchosFiltrados = cartuchos.filter(
+    (c) =>
+      c.isArchived &&
+      !c.isDeleted &&
+      (c.numeroSerie.toLowerCase().includes(termo) ||
+        c.patrimonio.toLowerCase().includes(termo))
   );
 
-  if (acessoriosDisponiveis.length === 0) {
-    modalBody.innerHTML = "<p>Nenhum acessório disponível para vincular.</p>";
+  if (cartuchos.filter((c) => c.isArchived && !c.isDeleted).length === 0) {
+    tbody.innerHTML = "";
+    tbody.closest(".table-container").style.display = "none";
+    emptyState.style.display = "block";
   } else {
-    acessoriosDisponiveis.forEach((acessorio) => {
-      const isChecked = acessoriosSelecionadosTemporariamente.some(
-        (a) => a.id === acessorio.id
-      );
-      const label = document.createElement("label");
-      label.className = "checkbox-container";
-      label.innerHTML = `
-        <input type="checkbox" 
-               data-id="${acessorio.id}" 
-               onchange="toggleAcessorioTemp(this)"
-               ${isChecked ? "checked" : ""}>
-        <span class="checkmark"></span>
-        ${acessorio.tipo} - ${acessorio.modelo || "N/A"} (S/N: ${
-        acessorio.numeroSerie || "N/A"
+    tbody.closest(".table-container").style.display = "block";
+    emptyState.style.display = "none";
+    tbody.innerHTML = cartuchosFiltrados
+      .map((cartucho) => {
+        const corClasse = cartucho.cor
+          .split(" ")[0]
+          .toLowerCase()
+          .replace(/[()]/g, "");
+        const statusClasse = "arquivado";
+        return `
+        <tr>
+          <td>${cartucho.id}</td>
+          <td>${cartucho.numeroSerie}</td>
+          <td><span class="cor-badge ${corClasse}">${cartucho.cor}</span></td>
+          <td><span class="status-badge ${statusClasse}">${
+          cartucho.status
+        }</span></td>
+          <td>${formatarData(cartucho.archiveDate)}</td>
+          <td>${cartucho.impressoraVinculada || "Nenhum"}</td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn-action btn-restore" onclick="desarquivarCartucho('${
+                cartucho.id
+              }')" title="Restaurar"><i class="fas fa-box-open"></i></button>
+              <button class="btn-action btn-edit" onclick="editarCartucho('${
+                cartucho.id
+              }')" title="Editar"><i class="fas fa-edit"></i></button>
+              <button class="btn-action btn-delete" onclick="excluirCartucho('${
+                cartucho.id
+              }')" title="Excluir"><i class="fas fa-trash"></i></button>
+            </div>
+          </td>
+        </tr>`;
       })
-      `;
-      modalBody.appendChild(label);
+      .join("");
+  }
+}
+
+// ===========================================
+// FILTROS, BUSCA E SELETORES
+// ===========================================
+
+function aplicarFiltrosEquipamentos() {
+  const tipo = document.getElementById("filtro-tipo-equipamento").value;
+  const termo = document.getElementById("search-input").value;
+  atualizarLista(tipo, termo);
+}
+
+function aplicarFiltrosAcessorios() {
+  const categoria = document.getElementById("filtro-categoria-acessorio").value;
+  const termo = document.getElementById("search-input-acessorios").value;
+  atualizarListaAcessorios(categoria, termo);
+}
+
+function popularFiltroCategorias() {
+  const filtro = document.getElementById("filtro-categoria-acessorio");
+  const valorAtual = filtro.value;
+  const categoriasUnicas = [
+    ...new Set(acessorios.filter((a) => !a.isDeleted).map((a) => a.categoria)),
+  ].sort();
+  filtro.innerHTML =
+    '<option value="todos">Todas as Categorias</option>' +
+    categoriasUnicas.map((c) => `<option value="${c}">${c}</option>`).join("");
+  filtro.value = valorAtual;
+}
+
+function inicializarBuscaAcessorios(prefix = "") {
+  const input = document.getElementById(`${prefix}acessorio-search-input`);
+  if (!input) return;
+  input.addEventListener("input", (e) =>
+    renderizarResultadosBuscaAcessorios(
+      e.target.value.toLowerCase().trim(),
+      prefix
+    )
+  );
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".acessorio-search-component")) {
+      document.querySelectorAll(".search-results-container").forEach((c) => {
+        c.innerHTML = "";
+        c.classList.remove("active");
+      });
+    }
+  });
+}
+
+function renderizarResultadosBuscaAcessorios(termo, prefix = "") {
+  const results = document.getElementById(`${prefix}acessorio-search-results`);
+  results.innerHTML = "";
+  if (termo.length < 2) {
+    results.classList.remove("active");
+    return;
+  }
+  const disponiveis = acessorios.filter(
+    (a) =>
+      a.disponivel &&
+      !a.isDeleted &&
+      !acessoriosSelecionadosTemporariamente.includes(String(a.id)) &&
+      (a.categoria.toLowerCase().includes(termo) ||
+        a.modelo.toLowerCase().includes(termo) ||
+        (a.patrimonio && a.patrimonio.toLowerCase().includes(termo)))
+  );
+  if (disponiveis.length) {
+    disponiveis.forEach((acessorio) => {
+      const item = document.createElement("div");
+      item.className = "search-result-item";
+      item.textContent = `${acessorio.categoria} - ${acessorio.modelo} (Pat: ${
+        acessorio.patrimonio || "N/A"
+      })`;
+      item.onclick = () => selecionarAcessorio(acessorio.id, prefix);
+      results.appendChild(item);
+    });
+    results.classList.add("active");
+  } else {
+    results.classList.remove("active");
+  }
+}
+
+function selecionarAcessorio(id, prefix = "") {
+  acessoriosSelecionadosTemporariamente.push(String(id));
+  const input = document.getElementById(`${prefix}acessorio-search-input`);
+  const results = document.getElementById(`${prefix}acessorio-search-results`);
+  input.value = "";
+  input.focus();
+  results.innerHTML = "";
+  results.classList.remove("active");
+  renderizarAcessoriosSelecionados(prefix);
+}
+
+function deselecionarAcessorio(id, prefix = "") {
+  acessoriosSelecionadosTemporariamente =
+    acessoriosSelecionadosTemporariamente.filter((i) => i !== String(id));
+  renderizarAcessoriosSelecionados(prefix);
+}
+
+function renderizarAcessoriosSelecionados(prefix = "") {
+  const container = document.getElementById(
+    `${prefix}acessorios-selecionados-container`
+  );
+  if (!container) return;
+  const emptyText = container.querySelector(".empty-selection-text");
+  container.querySelectorAll(".selected-item-pill").forEach((p) => p.remove());
+  if (acessoriosSelecionadosTemporariamente.length === 0) {
+    emptyText.style.display = "block";
+  } else {
+    emptyText.style.display = "none";
+    acessoriosSelecionadosTemporariamente.forEach((id) => {
+      const acessorio = acessorios.find((a) => String(a.id) === id);
+      if (acessorio) {
+        const pill = document.createElement("div");
+        pill.className = "selected-item-pill";
+        pill.innerHTML = `<span>${acessorio.modelo}</span><button type="button" class="remove-pill-btn">&times;</button>`;
+        pill.querySelector("button").onclick = () =>
+          deselecionarAcessorio(id, prefix);
+        container.appendChild(pill);
+      }
     });
   }
-
-  document.getElementById("modal-vincular-acessorios").style.display = "flex";
 }
 
-function fecharModalVincularAcessorios() {
-  document.getElementById("modal-vincular-acessorios").style.display = "none";
+// ===========================================
+// GERENCIAMENTO DE EQUIPAMENTOS
+// ===========================================
+
+function gerarIdUnico() {
+  let id;
+  do {
+    id = `#E${Math.floor(100000 + Math.random() * 900000)}`;
+  } while (equipamentos.some((eq) => eq.registro === id));
+  return id;
 }
 
-function toggleAcessorioTemp(checkbox) {
-  const id = checkbox.dataset.id;
-  if (checkbox.checked) {
-    const acessorio = acessorios.find((a) => a.id === id);
-    if (
-      acessorio &&
-      !acessoriosSelecionadosTemporariamente.some((a) => a.id === id)
-    ) {
-      acessoriosSelecionadosTemporariamente.push(acessorio);
-    }
-  } else {
-    acessoriosSelecionadosTemporariamente =
-      acessoriosSelecionadosTemporariamente.filter((a) => a.id !== id);
-  }
-}
-
-function salvarVinculoAcessorios() {
-  // A lista 'acessoriosSelecionadosTemporariamente' já está atualizada.
-  // Apenas renderizamos os ícones/tags no formulário.
-  renderizarAcessoriosTemporarios();
-  fecharModalVincularAcessorios();
-}
-
-function renderizarAcessoriosTemporarios() {
-  const container = document.getElementById(
-    "acessorios-vinculados-container"
-  );
-  container.innerHTML = "";
-
-  if (acessoriosSelecionadosTemporariamente.length === 0) {
-    container.innerHTML =
-      '<p class="text-muted">Nenhum acessório vinculado.</p>';
+function salvarEquipamento(e) {
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const camposObrigatorios = [
+    "tipoEquipamento",
+    "numeroSerie",
+    "numeroPatrimonio",
+    "statusOperacional",
+  ];
+  if (!camposObrigatorios.every((c) => validarCampo(c))) {
+    mostrarMensagem("Preencha todos os campos obrigatórios.", "error");
     return;
   }
 
-  acessoriosSelecionadosTemporariamente.forEach((acessorio) => {
-    const tag = document.createElement("span");
-    tag.className = "acessorio-tag";
-    tag.innerHTML = `
-      ${getIconeAcessorio(acessorio.tipo, true)} 
-      ${acessorio.tipo} ${
-      acessorio.modelo ? `(${acessorio.modelo})` : ""
+  // --- INÍCIO DA VERIFICAÇÃO DE PATRIMÔNIO (Série já foi checada por validarCampo) ---
+  const novoPatrimonio = form.get("numeroPatrimonio").trim();
+
+  if (novoPatrimonio) {
+    const matchPatrimonio = equipamentos.find(
+      (eq) =>
+        eq.numeroPatrimonio === novoPatrimonio &&
+        !eq.isArchived &&
+        !eq.isDeleted
+    );
+
+    if (matchPatrimonio) {
+      mostrarMensagem(
+        `Equipamento já cadastrado com o Patrimônio: ${novoPatrimonio}.`,
+        "error"
+      );
+      mostrarErro(
+        "numeroPatrimonio",
+        "Patrimônio já cadastrado em um item ativo."
+      );
+      return; // Para a execução
     }
-      <button type="button" class="btn-remover-tag" onclick="removerAcessorioTemp('${
-        acessorio.id
-      }')">&times;</button>
-    `;
-    container.appendChild(tag);
+  }
+  const equipamento = Object.fromEntries(form.entries());
+
+  // *** CORREÇÃO DASHBOARD ***
+  if (
+    equipamento.statusOperacional === "Disponível" &&
+    !equipamento.nomeUsuario
+  ) {
+    equipamento.departamento = "";
+  }
+
+  if (equipamento.tipoEquipamento === "Outro") {
+    const tipoCustomizado = form.get("outroTipoEquipamento").trim();
+    if (!tipoCustomizado) {
+      mostrarMensagem("Por favor, especifique o tipo de equipamento.", "error");
+      mostrarErro("outroTipoEquipamento", "Campo obrigatório");
+      return;
+    }
+    equipamento.tipoEquipamento = tipoCustomizado;
+  }
+  delete equipamento.outroTipoEquipamento;
+
+  equipamento.registro = gerarIdUnico();
+  equipamento.acessorios = [...acessoriosSelecionadosTemporariamente];
+  equipamento.valor = parseMoeda(equipamento.valor);
+  equipamento.termoResponsabilidade = form.has("termoResponsabilidade");
+  equipamento.fotoNotebook = form.has("fotoNotebook");
+  // *** INÍCIO DA MODIFICAÇÃO ***
+  equipamento.mochila = form.has("mochila");
+  equipamento.case = form.has("case");
+  // O campo 'pacoteOffice' (radio) já é pego pelo Object.fromEntries
+  // *** FIM DA MODIFICAÇÃO ***
+  equipamento.isArchived = false;
+  equipamento.isDeleted = false;
+
+  equipamentos.push(equipamento);
+  salvarParaLocalStorage();
+
+  equipamento.acessorios.forEach((id) => {
+    const acc = acessorios.find((a) => a.id == id);
+    if (acc) acc.disponivel = false;
   });
+  salvarAcessoriosParaLocalStorage();
+
+  setEstadoAlteracao(true);
+  mostrarMensagem("Equipamento cadastrado com sucesso!", "success");
+  limparFormularioEquipamento();
+  if (document.getElementById("acessorios").classList.contains("active"))
+    aplicarFiltrosAcessorios();
+  if (document.getElementById("impressoras").classList.contains("active"))
+    atualizarListaImpressoras();
 }
 
-function removerAcessorioTemp(id) {
-  acessoriosSelecionadosTemporariamente =
-    acessoriosSelecionadosTemporariamente.filter((a) => a.id !== id);
-  renderizarAcessoriosTemporarios();
+function editarEquipamento(registro) {
+  const equipamento = equipamentos.find((eq) => eq.registro === registro);
+  if (!equipamento) return;
+  const container = document.getElementById("edit-form-container");
+  container.innerHTML = criarFormularioEdicao(equipamento);
+  if (container.querySelector("#edit-cpf"))
+    container
+      .querySelector("#edit-cpf")
+      .addEventListener("input", aplicarMascaraCPF);
+  if (container.querySelector("#edit-valor"))
+    container
+      .querySelector("#edit-valor")
+      .addEventListener("input", aplicarMascaraValor);
+  acessoriosSelecionadosTemporariamente = [...(equipamento.acessorios || [])];
+  inicializarBuscaAcessorios("edit-");
+  renderizarAcessoriosSelecionados("edit-");
+  handleTipoEquipamentoChange(container.querySelector("#edit-tipoEquipamento"));
+  document.getElementById("edit-modal").classList.add("active");
 }
 
-function renderizarIconesAcessorios(listaIds = [], tooltipId) {
-  if (!listaIds || listaIds.length === 0) {
-    return "-";
-  }
+function criarFormularioEdicao(equipamento) {
+  const safe = (val) => String(val || "").replace(/"/g, "&quot;");
+  const opts = (arr, sel) =>
+    arr
+      .map(
+        (i) =>
+          `<option value="${i}" ${sel === i ? "selected" : ""}>${i}</option>`
+      )
+      .join("");
+  const radios = (name, opts, sel, fn) =>
+    opts
+      .map(
+        (o) =>
+          `<label class="radio-label"><input type="radio" name="${name}" value="${o}" ${
+            sel === o ? "checked" : ""
+          } onchange="${
+            fn || ""
+          }"><span class="radio-custom"></span>${o}</label>`
+      )
+      .join("");
+  const departamentos = [
+    "Administrativo",
+    "Comunicação",
+    "Cursos",
+    "Diretoria",
+    "Eventos",
+    "Financeiro",
+    "Projetos",
+    "Relações Corporativas",
+    "Relações Externas",
+    "Relações Institucionais",
+    "Revista",
+    "RH",
+    "TI",
+  ];
+  const salas = ["Casa COP", "COPA", "EVENTOS", "FINANCEIRO", "PROJETOS"];
 
-  const acessoriosVinculados = listaIds
-    .map((id) => acessorios.find((a) => a.id === id))
-    .filter(Boolean); // Filtra os que não foram encontrados
+  const tiposPadrao = [
+    "Desktop",
+    "Notebook",
+    "Tablet",
+    "Impressora",
+    "Servidor",
+    "Roteador",
+    "Switch",
+  ];
+  const isTipoOutro = !tiposPadrao.includes(equipamento.tipoEquipamento);
+  const tipoSelecionado = isTipoOutro ? "Outro" : equipamento.tipoEquipamento;
+  const valorOutro = isTipoOutro ? equipamento.tipoEquipamento : "";
 
-  if (acessoriosVinculados.length === 0) {
-    return "-";
-  }
+  const isImpressora = equipamento.tipoEquipamento === "Impressora";
+  const isNotebookOrDesktop = ["Notebook", "Desktop"].includes(
+    tipoSelecionado // <-- Corrigido para usar o tipo base
+  );
 
-  // Criar o conteúdo do tooltip
-  const tooltipContent = acessoriosVinculados
-    .map(
-      (a) =>
-        `<strong>${a.tipo}</strong>: ${a.modelo || "N/A"} (S/N: ${
-          a.numeroSerie || "N/A"
-        })`
-    )
-    .join("<br>");
+  // <-- ALTERAÇÃO: Verifica se o usuário é CEBRI para exibir o campo correto
+  const isCebriUser =
+    (equipamento.nomeUsuario || "").trim().toLowerCase() === "cebri";
 
   return `
-    <span class="acessorios-icon-wrapper" 
-          data-tooltip-id="${tooltipId}" 
-          data-tooltip-content="${escapeHTML(tooltipContent)}">
-      ${getIconeAcessorio(acessoriosVinculados[0].tipo, false)}
-      ${
-        acessoriosVinculados.length > 1
-          ? `<span class="acessorio-count">+${
-              acessoriosVinculados.length - 1
-            }</span>`
-          : ""
-      }
-    </span>
-  `;
-}
-
-function getIconeAcessorio(tipo, comClasse = false) {
-  const tipoNorm = normalizarString(tipo);
-  let icone = "fa-question-circle"; // Padrão
-  let classeCor = "icon-outros";
-
-  if (tipoNorm.includes("mouse")) {
-    icone = "fa-mouse";
-    classeCor = "icon-mouses";
-  } else if (tipoNorm.includes("teclado") || tipoNorm.includes("kit")) {
-    icone = "fa-keyboard";
-    classeCor = "icon-kit";
-  } else if (tipoNorm.includes("monitor")) {
-    icone = "fa-desktop";
-    classeCor = "icon-monitores";
-  } else if (tipoNorm.includes("headset") || tipoNorm.includes("fone")) {
-    icone = "fa-headset";
-    classeCor = "icon-headsets";
-  } else if (tipoNorm.includes("suporte")) {
-    icone = "fa-laptop-medical"; // Ícone sugestivo
-    classeCor = "icon-suportes";
-  }
-
-  return `<i class="fas ${icone} ${comClasse ? classeCor : ""}"></i>`;
-}
-
-// ===========================================
-// IMPORTAÇÃO / EXPORTAÇÃO
-// ===========================================
-
-function exportarParaCSV(dados, nomeArquivo) {
-  if (dados.length === 0) {
-    mostrarAlerta("Não há dados para exportar.", "warning");
-    return;
-  }
-
-  const colunas = Object.keys(dados[0]);
-  let csvContent = "data:text/csv;charset=utf-8,";
-  csvContent += colunas.join(",") + "\r\n"; // Cabeçalho
-
-  dados.forEach((linha) => {
-    const valores = colunas.map((col) => {
-      let val = linha[col];
-      if (val === null || val === undefined) {
-        val = "";
-      } else if (typeof val === "object") {
-        val = JSON.stringify(val); // Converte arrays (ex: acessorios)
-      } else {
-        val = String(val);
-      }
-      // Trata valores que contêm vírgula, aspas ou quebras de linha
-      if (val.includes(",") || val.includes('"') || val.includes("\n")) {
-        val = `"${val.replace(/"/g, '""')}"`; // Escapa aspas duplicando-as
-      }
-      return val;
-    });
-    csvContent += valores.join(",") + "\r\n";
-  });
-
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", `${nomeArquivo}_${new Date().toISOString()}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  mostrarAlerta("Dados exportados para CSV com sucesso!", "success");
-}
-
-function exportarParaJSON(dados, nomeArquivo) {
-  if (dados.length === 0) {
-    mostrarAlerta("Não há dados para exportar.", "warning");
-    return;
-  }
-  const dataStr = JSON.stringify(dados, null, 2);
-  const dataUri =
-    "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
-  const link = document.createElement("a");
-  link.setAttribute("href", dataUri);
-  link.setAttribute("download", `${nomeArquivo}_${new Date().toISOString()}.json`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  mostrarAlerta("Dados exportados para JSON com sucesso!", "success");
-}
-
-function importarDeCSV(event) {
-  const file = event.target.files[0];
-  if (!file) {
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const texto = e.target.result;
-      const linhas = texto.split(/[\r\n]+/); // Divide por quebra de linha
-      if (linhas.length < 2) {
-        throw new Error("Arquivo CSV vazio ou sem cabeçalho.");
-      }
-
-      // Detecta a seção de equipamentos
-      let inicioEquipamentos = linhas.findIndex((l) =>
-        l.startsWith("###EQUIPAMENTOS###")
-      );
-      if (inicioEquipamentos === -1) {
-        // Tenta importar sem o marcador, assumindo que é só de equipamentos
-        inicioEquipamentos = 0;
-      } else {
-        inicioEquipamentos++; // Pula a linha do marcador
-      }
-
-      // Pega o cabeçalho
-      const cabecalho = parseCSVLine(linhas[inicioEquipamentos]);
-      const novosEquipamentos = [];
-
-      for (let i = inicioEquipamentos + 1; i < linhas.length; i++) {
-        const linha = linhas[i];
-        if (!linha || linha.startsWith("###")) break; // Para se não houver linha ou encontrar outra seção
-
-        const valores = parseCSVLine(linha);
-        if (valores.length !== cabecalho.length) continue; // Ignora linhas mal formatadas
-
-        const equipamento = {};
-        cabecalho.forEach((key, index) => {
-          equipamento[key] = valores[index];
-        });
-        novosEquipamentos.push(equipamento);
-      }
-
-      // (Lógica para Acessórios e Cartuchos seria adicionada aqui)
-
-      if (novosEquipamentos.length > 0) {
-        // Substitui ou mescla os dados
-        equipamentos = mesclarDados(
-          equipamentos,
-          novosEquipamentos,
-          "registro"
-        );
-        dadosForamAlterados = true;
-        salvarParaLocalStorage();
-        renderizarTabelaEquipamentos();
-        renderizarDashboard();
-        mostrarAlerta(
-          `${novosEquipamentos.length} equipamentos importados/atualizados!`,
-          "success"
-        );
-      } else {
-        throw new Error("Nenhum equipamento válido encontrado no arquivo.");
-      }
-    } catch (error) {
-      mostrarAlerta(`Erro ao importar CSV: ${error.message}`, "error");
-    } finally {
-      event.target.value = null; // Limpa o input
-    }
-  };
-  reader.readAsText(file);
-}
-
-function importarDeJSON(event) {
-  const file = event.target.files[0];
-  if (!file) {
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const dadosImportados = JSON.parse(e.target.result);
-      if (Array.isArray(dadosImportados)) {
-        // Substitui ou mescla os dados
-        equipamentos = mesclarDados(equipamentos, dadosImportados, "registro");
-        dadosForamAlterados = true;
-        salvarParaLocalStorage();
-        renderizarTabelaEquipamentos();
-        renderizarDashboard();
-        mostrarAlerta(
-          `${dadosImportados.length} equipamentos importados/atualizados!`,
-          "success"
-        );
-      } else if (typeof dadosImportados === "object" && dadosImportados !== null) {
-        // Tenta importar estrutura complexa (ex: { equipamentos: [], acessorios: [] })
-        let count = 0;
-        if (Array.isArray(dadosImportados.equipamentos)) {
-          equipamentos = mesclarDados(
-            equipamentos,
-            dadosImportados.equipamentos,
-            "registro"
-          );
-          count += dadosImportados.equipamentos.length;
-        }
-        if (Array.isArray(dadosImportados.acessorios)) {
-          acessorios = mesclarDados(
-            acessorios,
-            dadosImportados.acessorios,
-            "id"
-          );
-        }
-        if (Array.isArray(dadosImportados.cartuchos)) {
-          cartuchos = mesclarDados(
-            cartuchos,
-            dadosImportados.cartuchos,
-            "id"
-          );
-        }
+    <form id="edit-form" class="equipment-form" onsubmit="salvarEdicao(event, '${
+      equipamento.registro
+    }')">
+      <fieldset class="form-section"><legend>Detalhes</legend>
+        <div class="form-row">
+          <div class="form-group"><label>Tipo</label><select id="edit-tipoEquipamento" name="tipoEquipamento" class="form-control" onchange="handleTipoEquipamentoChange(this)">${opts(
+            [...tiposPadrao, "Outro"],
+            tipoSelecionado
+          )}</select></div>
+          <div class="form-group"><label>Nº Série</label><input type="text" name="numeroSerie" class="form-control" value="${safe(
+            equipamento.numeroSerie
+          )}"></div>
+        </div>
+        <div class="form-row" id="outroTipoEquipamentoGroup" style="display: ${
+          isTipoOutro ? "grid" : "none"
+        };">
+            <div class="form-group full-width">
+                <label class="form-label" for="edit-outroTipoEquipamento">Especifique o Tipo</label>
+                <input type="text" id="edit-outroTipoEquipamento" name="outroTipoEquipamento" class="form-control" placeholder="Ex: Scanner, Projetor..." value="${safe(
+                  valorOutro
+                )}">
+            </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Fabricante</label><input type="text" name="fabricante" class="form-control" value="${safe(
+            equipamento.fabricante
+          )}"></div>
+          <div class="form-group"><label>Modelo</label><input type="text" name="modelo" class="form-control" value="${safe(
+            equipamento.modelo
+          )}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Patrimônio</label><input type="text" name="numeroPatrimonio" class="form-control" value="${safe(
+            equipamento.numeroPatrimonio
+          )}"></div>
+          <div class="form-group"><label>Status</label><select name="statusOperacional" class="form-control">${opts(
+            ["Disponível", "Ativo", "Inativo", "Em manutenção", "Arquivado"],
+            equipamento.statusOperacional
+          )}</select></div>
+        </div>
+      </fieldset>
+      <fieldset id="fieldset-specs-edit"><legend>Especificações</legend>
+        <div class="form-row" id="specs-polegadas-group-edit"><div class="form-group"><label>Polegadas</label><input type="text" name="polegadas" class="form-control" value="${safe(
+          equipamento.polegadas
+        )}"></div></div>
+        <div class="form-row">
+          <div class="form-group"><label>RAM</label><input type="text" name="memoriaRam" class="form-control" value="${safe(
+            equipamento.memoriaRam
+          )}"></div>
+          <div class="form-group"><label>HD/SSD (GB)</label><input type="text" name="armazenamento" class="form-control" value="${safe(
+            equipamento.armazenamento
+          )}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Processador</label><input type="text" name="processador" class="form-control" value="${safe(
+            equipamento.processador
+          )}"></div>
+          <div class="form-group"><label>Windows</label><input type="text" name="versaoWindows" class="form-control" value="${safe(
+            equipamento.versaoWindows
+          )}"></div>
+        </div>
+        <div class="form-group"><label>Placa de Vídeo dedicada?</label><div class="radio-group">${radios(
+          "placaVideoDedicada",
+          ["Sim", "Não"],
+          equipamento.placaVideoDedicada || "Não"
+        )}</div></div>
+      </fieldset>
+      <fieldset id="fieldset-usuario-edit"><legend>Usuário</legend>
+        <div class="form-row">
+          <div class="form-group"><label>Nome</label><input type="text" name="nomeUsuario" class="form-control" oninput="handleNomeUsuarioChange(event)" value="${safe(
+            equipamento.nomeUsuario
+          )}"></div>
+          <div class="form-group"><label>Email</label><input type="email" name="email" class="form-control" value="${safe(
+            equipamento.email
+          )}"></div>
+        </div>
+         <div class="form-row">
+            <div class="form-group" id="edit-cpf-group" style="display: ${
+              isCebriUser ? "none" : "block"
+            }">
+                <label class="form-label" for="edit-cpf">CPF</label>
+                <input type="text" id="edit-cpf" name="cpf" class="form-control" value="${safe(
+                  equipamento.cpf
+                )}" placeholder="000.000.000-00" maxlength="14" />
+            </div>
+            <div class="form-group" id="edit-cnpj-group" style="display: ${
+              isCebriUser ? "block" : "none"
+            }">
+                <label class="form-label" for="edit-cnpj">CNPJ</label>
+                <input type="text" id="edit-cnpj" name="cnpj" class="form-control" value="02.673.153/0001-25" readonly />
+            </div>
+        </div>
+      </fieldset>
+      <fieldset id="fieldset-comercial-edit"><legend>Comercial</legend>
+        <div class="form-row">
+          <div class="form-group"><label>Aquisição / Instalação / Entrega</label><input type="date" name="dataAquisicao" class="form-control" value="${safe(
+            equipamento.dataAquisicao
+          )}"></div>
+          <div class="form-group"><label>Tipo</label><div class="radio-group">${radios(
+            "tipoAquisicao",
+            ["Patrimonial", "Alugado"],
+            equipamento.tipoAquisicao,
+            "handleTipoAquisicaoChange(this)"
+          )}</div></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" id="edit-valor-group" style="display:${
+            equipamento.tipoAquisicao === "Patrimonial" ? "none" : "block"
+          }"><label>Valor (R$)</label><input type="text" id="edit-valor" name="valor" class="form-control" value="${(
+    equipamento.valor || 0
+  )
+    .toFixed(2)
+    .replace(".", ",")}"></div>
+          <div class="form-group"><label>Fornecedor</label><input type="text" name="fornecedor" class="form-control" value="${safe(
+            equipamento.fornecedor
+          )}"></div>
+        </div>
+        <div class="form-row" id="edit-departamento-group" style="display:${
+          isImpressora ? "none" : "grid"
+        }"><div class="form-group"><label>Departamento</label><select name="departamento" class="form-control"><option value="" ${
+    equipamento.departamento === "" ? "selected" : ""
+  }>Nenhum</option>${opts(
+    departamentos,
+    equipamento.departamento
+  )}</select></div></div>
+        <div class="form-row" id="edit-sala-ip-group" style="display:${
+          isImpressora ? "grid" : "none"
+        }">
+          <div class="form-group"><label>Sala</label><select name="sala" class="form-control">${opts(
+            salas,
+            equipamento.sala
+          )}</select></div>
+          <div class="form-group"><label>IP</label><input type="text" name="ip" class="form-control" value="${safe(
+            equipamento.ip
+          )}"></div>
+        </div>
+      </fieldset>
+      
+      <fieldset id="fieldset-acessorios-edit" style="display:${
+        isNotebookOrDesktop ? "block" : "none"
+      }"><legend>Acessórios</legend>
+        <div class="acessorio-search-component">
+          <div class="form-group"><label>Buscar</label><input type="text" id="edit-acessorio-search-input" class="form-control" placeholder="Digite para buscar..." autocomplete="off"/>
+            <div id="edit-acessorio-search-results" class="search-results-container"></div>
+          </div>
+          <div id="edit-acessorios-selecionados-container" class="selected-items-container">
+            <p class="empty-selection-text">Nenhum acessório.</p>
+          </div>
+        </div>
         
-        if(count > 0) {
-            dadosForamAlterados = true;
-            salvarParaLocalStorage();
-            salvarAcessoriosParaLocalStorage();
-            salvarCartuchosParaLocalStorage();
-            renderizarTabelaEquipamentos();
-            renderizarTabelaAcessorios();
-            renderizarTabelaCartuchos();
-            renderizarDashboard();
-            mostrarAlerta("Dados importados/atualizados com sucesso!", "success");
-        } else {
-             throw new Error("Formato JSON não reconhecido.");
+        <div class="form-row" style="margin-top: 16px">
+            <div class="form-group">
+                <label class="form-label">Mochila / Case</label>
+                <div class="checkbox-item" style="margin-top: 8px">
+                    <input type="checkbox" id="edit-mochila" name="mochila" ${
+                      equipamento.mochila ? "checked" : ""
+                    } />
+                    <label for="edit-mochila">Mochila</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="edit-case" name="case" ${
+                      equipamento.case ? "checked" : ""
+                    } />
+                    <label for="edit-case">Case</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Pacote Office - 365</label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="pacoteOffice" value="Standard" ${
+                          equipamento.pacoteOffice === "Standard"
+                            ? "checked"
+                            : ""
+                        } />
+                        <span class="radio-custom"></span>Standard
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="pacoteOffice" value="Premium" ${
+                          equipamento.pacoteOffice === "Premium"
+                            ? "checked"
+                            : ""
+                        } />
+                        <span class="radio-custom"></span>Premium
+                    </label>
+                </div>
+            </div>
+        </div>
+        </fieldset>
+      <fieldset id="fieldset-documentos-edit"><legend>Documentos</legend><div class="checkbox-item"><input type="checkbox" id="edit-termo-responsabilidade" name="termoResponsabilidade" ${
+        equipamento.termoResponsabilidade ? "checked" : ""
+      }><label for="edit-termo-responsabilidade">Termo Assinado</label></div><div class="checkbox-item"><input type="checkbox" id="edit-foto-notebook" name="fotoNotebook" ${
+    equipamento.fotoNotebook ? "checked" : ""
+  }><label for="edit-foto-notebook">Foto do Notebook</label></div></fieldset>
+      <fieldset><legend>Observações</legend><div class="form-group"><textarea name="observacoes" class="form-control" rows="3">${safe(
+        equipamento.observacoes
+      )}</textarea></div></fieldset>
+      <div class="modal-actions"><button type="button" class="btn btn--secondary" onclick="fecharModal()">Cancelar</button><button type="submit" class="btn btn--primary">Salvar</button></div>
+    </form>`;
+}
+
+function salvarEdicao(event, registro) {
+  event.preventDefault();
+  const index = equipamentos.findIndex((eq) => eq.registro === registro);
+  if (index === -1) return;
+
+  const form = new FormData(event.target);
+  const equipamentoAntigo = equipamentos[index];
+  const acessoriosAntigos = new Set(equipamentoAntigo.acessorios || []);
+  const novosAcessorios = new Set(
+    acessoriosSelecionadosTemporariamente.map(String)
+  );
+
+  acessoriosAntigos.forEach((id) => {
+    if (!novosAcessorios.has(id)) {
+      const acc = acessorios.find((a) => String(a.id) === id);
+      if (acc) acc.disponivel = true;
+    }
+  });
+  novosAcessorios.forEach((id) => {
+    if (!acessoriosAntigos.has(id)) {
+      const acc = acessorios.find((a) => String(a.id) === id);
+      if (acc) acc.disponivel = false;
+    }
+  });
+
+  const updatedData = Object.fromEntries(form.entries());
+
+  // *** CORREÇÃO DASHBOARD ***
+  if (
+    updatedData.statusOperacional === "Disponível" &&
+    !updatedData.nomeUsuario
+  ) {
+    updatedData.departamento = "";
+  }
+
+  if (updatedData.tipoEquipamento === "Outro") {
+    const tipoCustomizado = form.get("outroTipoEquipamento").trim();
+    if (!tipoCustomizado) {
+      mostrarMensagem("Por favor, especifique o tipo de equipamento.", "error");
+      return;
+    }
+    updatedData.tipoEquipamento = tipoCustomizado;
+  }
+  delete updatedData.outroTipoEquipamento;
+
+  equipamentos[index] = {
+    ...equipamentoAntigo,
+    ...updatedData,
+    valor: parseMoeda(updatedData.valor),
+    acessorios: [...novosAcessorios],
+    termoResponsabilidade: form.has("termoResponsabilidade"),
+    fotoNotebook: form.has("fotoNotebook"),
+    // *** INÍCIO DA MODIFICAÇÃO ***
+    mochila: form.has("mochila"),
+    case: form.has("case"),
+    // 'pacoteOffice' já está em 'updatedData'
+    // *** FIM DA MODIFICAÇÃO ***
+  };
+
+  salvarParaLocalStorage();
+  salvarAcessoriosParaLocalStorage();
+  setEstadoAlteracao(true);
+
+  if (equipamentos[index].isArchived) {
+    atualizarListaArquivados();
+  } else {
+    aplicarFiltrosEquipamentos();
+    atualizarListaImpressoras();
+  }
+
+  if (document.getElementById("acessorios").classList.contains("active"))
+    aplicarFiltrosAcessorios();
+
+  fecharModal();
+  mostrarMensagem("Equipamento atualizado com sucesso!", "success");
+}
+
+function excluirEquipamento(registro) {
+  // MODIFICAÇÃO (Goal 1): Adiciona modal de confirmação
+  abrirModalConfirmacao(
+    "Tem certeza que deseja mover este item para a lixeira?",
+    () => {
+      // Esta é a função de callback que executa a exclusão
+      const eq = equipamentos.find((e) => e.registro === registro);
+      if (eq) {
+        // --- INÍCIO DA MODIFICAÇÃO (Goal 2) ---
+        // Se for um equipamento que pode ter acessórios, liberar os acessórios
+        if (
+          ["Notebook", "Desktop"].includes(eq.tipoEquipamento) &&
+          eq.acessorios &&
+          eq.acessorios.length > 0
+        ) {
+          eq.acessorios.forEach((acessorioId) => {
+            const acessorio = acessorios.find(
+              (a) => String(a.id) === String(acessorioId)
+            );
+            // Verifica se o acessório existe e não está, ele mesmo, na lixeira
+            if (acessorio && !acessorio.isDeleted) {
+              acessorio.disponivel = true;
+            }
+          });
+          salvarAcessoriosParaLocalStorage(); // Salva o novo estado dos acessórios
+          // Atualiza a lista de acessórios se o usuário estiver nela
+          if (
+            document.getElementById("acessorios").classList.contains("active")
+          ) {
+            aplicarFiltrosAcessorios();
+          }
         }
-      } else {
-        throw new Error("Arquivo JSON não contém um array de dados válido.");
+        // --- FIM DA MODIFICAÇÃO (Goal 2) ---
+
+        eq.isDeleted = true;
+        eq.deletionDate = new Date().toISOString();
+        salvarParaLocalStorage();
+        setEstadoAlteracao(true);
+
+        // Atualiza a lista correta de onde o item saiu
+        if (eq.isArchived) {
+          atualizarListaArquivados();
+        } else if (eq.tipoEquipamento === "Impressora") {
+          atualizarListaImpressoras();
+        } else {
+          aplicarFiltrosEquipamentos();
+        }
+
+        mostrarMensagem("Equipamento movido para a lixeira.", "success");
       }
-    } catch (error) {
-      mostrarAlerta(`Erro ao importar JSON: ${error.message}`, "error");
+    }
+  );
+}
+
+// ===========================================
+// EVENT LISTENERS
+// ===========================================
+
+function configurarEventListeners() {
+  document
+    .querySelectorAll(".tab-btn")
+    .forEach(
+      (btn) => (btn.onclick = (e) => mostrarTab(e.currentTarget.dataset.tab))
+    );
+  document.getElementById("equipamento-form").onsubmit = salvarEquipamento;
+  document.getElementById("acessorio-form").onsubmit = salvarAcessorio;
+  document.getElementById("cartucho-form").onsubmit = salvarCartucho;
+  document.getElementById("search-input").oninput = aplicarFiltrosEquipamentos;
+  document.getElementById("search-input-impressoras").oninput =
+    filtrarImpressoras;
+  document.getElementById("search-input-acessorios").oninput =
+    aplicarFiltrosAcessorios;
+  document.getElementById("search-input-cartuchos").oninput =
+    atualizarListaCartuchos;
+  document.getElementById("search-input-cartuchos-arquivados").oninput =
+    atualizarListaCartuchosArquivados;
+  document.getElementById("search-input-arquivados").oninput =
+    atualizarListaArquivados;
+  document.getElementById("tipoEquipamento").onchange = (e) =>
+    handleTipoEquipamentoChange(e.target);
+
+  document.getElementById("acessorio-categoria").onchange = () =>
+    handleCategoriaAcessorioChange();
+
+  document
+    .getElementById("fabricante")
+    .addEventListener("input", preencherPresetsFabricante);
+
+  document.getElementById("acessorio-tipo").onchange = () =>
+    handleTipoAcessorioChange();
+  configurarValidacaoTempoReal();
+  document.addEventListener("click", (e) => {
+    const tooltip = document.getElementById("acessorio-tooltip");
+    if (
+      tooltip.classList.contains("active") &&
+      !e.target.closest(
+        ".acessorio-badge, .disponibilidade-nao, .icon-doc-pending, .clickable-sala"
+      )
+    ) {
+      esconderTooltip();
+    }
+  });
+
+  document.getElementById("theme-toggle").onclick = toggleTheme; // <-- ADIÇÃO PARA TEMA
+}
+
+// ===========================================
+// CSV, ESTADO E PERSISTÊNCIA
+// ===========================================
+
+function atualizarEstadoBotaoSalvar() {
+  const btn = document.getElementById("btn-exportar-csv");
+  if (!btn) return;
+  btn.disabled =
+    equipamentos.length === 0 &&
+    acessorios.length === 0 &&
+    cartuchos.length === 0;
+  setEstadoAlteracao(dadosForamAlterados);
+}
+
+function setEstadoAlteracao(alterado) {
+  dadosForamAlterados = alterado;
+  const btn = document.getElementById("btn-exportar-csv");
+  if (!btn) return;
+  btn.classList.toggle("btn--warning", alterado && !btn.disabled);
+  btn.classList.toggle("btn--primary", !alterado || btn.disabled);
+  btn.innerHTML =
+    alterado && !btn.disabled
+      ? `<i class="fas fa-exclamation-triangle"></i> Salvar CSV`
+      : `<i class="fas fa-download"></i> Salvar CSV`;
+}
+
+// *** INÍCIO DA MODIFICAÇÃO ***
+const cabecalhoEquipamentosCSV = [
+  "registro",
+  "nomeUsuario",
+  "email",
+  "cpf",
+  "departamento",
+  "sala",
+  "ip",
+  "tipoEquipamento",
+  "fabricante",
+  "modelo",
+  "numeroSerie",
+  "numeroPatrimonio",
+  "statusOperacional",
+  "dataAquisicao",
+  "fornecedor",
+  "valor",
+  "tipoAquisicao",
+  "acessorios",
+  "observacoes",
+  "termoResponsabilidade",
+  "fotoNotebook",
+  "mochila", // NOVO
+  "case", // NOVO
+  "pacoteOffice", // NOVO
+  "isArchived",
+  "archiveDate",
+  "motivoArquivamento",
+  "isDeleted",
+  "deletionDate",
+  "polegadas",
+  "memoriaRam",
+  "armazenamento",
+  "processador",
+  "versaoWindows",
+  "placaVideoDedicada",
+  "dataEntradaManutencao",
+  "motivoManutencao",
+];
+// *** FIM DA MODIFICAÇÃO ***
+
+const cabecalhoAcessoriosCSV = [
+  "id",
+  "categoria",
+  "modelo",
+  "polegadas",
+  "patrimonio",
+  "numeroSerie",
+  "tipo",
+  "fornecedor",
+  "fabricante",
+  "valorMensal",
+  "disponivel",
+  "isDeleted",
+  "deletionDate",
+];
+const cabecalhoCartuchosCSV = [
+  "id",
+  "numeroSerie",
+  "patrimonio",
+  "cor",
+  "status",
+  "impressoraVinculada",
+  "isArchived",
+  "isDeleted",
+  "deletionDate",
+  "archiveDate",
+];
+
+function gerarCsv(dados, cabecalho) {
+  if (!dados || dados.length === 0) return "";
+  const linhas = dados.map((item) =>
+    cabecalho.map((key) => {
+      const valor = item[key];
+      if (Array.isArray(valor)) return valor.join(";");
+      return valor !== undefined && valor !== null ? valor : "";
+    })
+  );
+  return [
+    cabecalho.join(","),
+    ...linhas.map((l) =>
+      l.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")
+    ),
+  ].join("\n");
+}
+
+function salvarDadosCompletos() {
+  if (
+    equipamentos.length === 0 &&
+    acessorios.length === 0 &&
+    cartuchos.length === 0
+  ) {
+    mostrarMensagem("Não há dados para salvar.", "error");
+    return;
+  }
+
+  const equipamentosGerais = equipamentos.filter(
+    (eq) => eq.tipoEquipamento !== "Impressora"
+  );
+  const impressoras = equipamentos.filter(
+    (eq) => eq.tipoEquipamento === "Impressora"
+  );
+
+  const csvEquipamentos = gerarCsv(
+    equipamentosGerais,
+    cabecalhoEquipamentosCSV
+  );
+  const csvImpressoras = gerarCsv(impressoras, cabecalhoEquipamentosCSV);
+  const csvAcessorios = gerarCsv(acessorios, cabecalhoAcessoriosCSV);
+  const csvCartuchos = gerarCsv(cartuchos, cabecalhoCartuchosCSV);
+
+  const finalContent = `###EQUIPAMENTOS###\n${csvEquipamentos}\n\n###IMPRESSORAS###\n${csvImpressoras}\n\n###ACESSORIOS###\n${csvAcessorios}\n\n###CARTUCHOS###\n${csvCartuchos}`;
+
+  const blob = new Blob(["\uFEFF" + finalContent], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "inventario_completo.csv";
+  link.click();
+  URL.revokeObjectURL(link.href);
+  setEstadoAlteracao(false);
+  mostrarMensagem("Arquivo de inventário completo salvo!", "success");
+}
+
+function parseCsvData(csv, cabecalho) {
+  if (!csv || !csv.trim()) return [];
+  const linhas = csv
+    .trim()
+    .split("\n")
+    .filter((l) => l.trim() && !l.startsWith("###"));
+  if (linhas.length > 0 && linhas[0].includes(cabecalho[0])) linhas.shift();
+
+  return linhas.map((linha) => {
+    const valores = (linha.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g) || []).map(
+      (v) => v.replace(/^"|"$/g, "").replace(/""/g, '"')
+    );
+    const item = {};
+    cabecalho.forEach((key, index) => {
+      item[key] = valores[index] || "";
+    });
+
+    // *** INÍCIO DA MODIFICAÇÃO ***
+    [
+      "isArchived",
+      "isDeleted",
+      "termoResponsabilidade",
+      "fotoNotebook",
+      "disponivel",
+      "mochila", // NOVO
+      "case", // NOVO
+    ].forEach((key) => {
+      if (item[key] !== undefined) item[key] = item[key] === "true";
+    });
+    // *** FIM DA MODIFICAÇÃO ***
+
+    ["valor", "valorMensal"].forEach((key) => {
+      if (item[key] !== undefined) item[key] = parseFloat(item[key]) || 0;
+    });
+    if (item.acessorios) {
+      item.acessorios = String(item.acessorios)
+        .split(";")
+        .filter((id) => id);
+    } else {
+      item.acessorios = [];
+    }
+
+    return item;
+  });
+}
+
+function carregarDadosCompletos() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".csv";
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target.result;
+
+        const sections = text.split(
+          /###IMPRESSORAS###|###ACESSORIOS###|###CARTUCHOS###/
+        );
+
+        const eqCsv = sections[0]
+          ? sections[0].replace("###EQUIPAMENTOS###", "").trim()
+          : "";
+        const impCsv = sections[1] ? sections[1].trim() : "";
+        const accCsv = sections[2] ? sections[2].trim() : "";
+        const cartCsv = sections[3] ? sections[3].trim() : "";
+
+        const equipamentosGerais = parseCsvData(
+          eqCsv,
+          cabecalhoEquipamentosCSV
+        );
+        const impressoras = parseCsvData(impCsv, cabecalhoEquipamentosCSV);
+
+        equipamentos = [...equipamentosGerais, ...impressoras];
+        acessorios = parseCsvData(accCsv, cabecalhoAcessoriosCSV);
+        cartuchos = parseCsvData(cartCsv, cabecalhoCartuchosCSV);
+
+        salvarParaLocalStorage();
+        salvarAcessoriosParaLocalStorage();
+        salvarCartuchosParaLocalStorage();
+        setEstadoAlteracao(false);
+
+        const activeTab = document.querySelector(".tab-btn.active").dataset.tab;
+        mostrarTab(activeTab);
+
+        mostrarMensagem("Dados carregados com sucesso!", "success");
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+        mostrarMensagem("Erro ao ler o arquivo. Verifique o formato.", "error");
+      }
+    };
+    reader.readAsText(file, "UTF-8");
+  };
+  input.click();
+}
+
+// ===========================================
+// VALIDAÇÕES E MÁSCARAS
+// ===========================================
+
+function configurarMascaras() {
+  document.getElementById("cpf").oninput = aplicarMascaraCPF;
+  document.getElementById("valor").oninput = aplicarMascaraValor;
+  document.getElementById("acessorio-valor-mensal").oninput =
+    aplicarMascaraValor;
+}
+function aplicarMascaraCPF(e) {
+  let v = e.target.value.replace(/\D/g, "");
+  v = v
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+  e.target.value = v;
+}
+function aplicarMascaraValor(e) {
+  let v = e.target.value.replace(/\D/g, "");
+  v = (v / 100)
+    .toFixed(2)
+    .replace(".", ",")
+    .replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+  e.target.value = v;
+}
+function parseMoeda(valor) {
+  return (
+    parseFloat(
+      String(valor || "")
+        .replace(/\./g, "")
+        .replace(",", ".")
+    ) || 0
+  );
+}
+function configurarValidacaoTempoReal() {
+  [
+    "tipoEquipamento",
+    "numeroSerie",
+    "numeroPatrimonio",
+    "statusOperacional",
+    "email",
+    "cpf",
+  ].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.onblur = () => validarCampo(id);
+      el.oninput = () => limparErro(id);
+    }
+  });
+}
+function validarCampo(id, registroExcluido = null) {
+  const el = document.getElementById(id);
+  const valor = el ? el.value.trim() : "";
+  let erroMsg = "";
+  switch (id) {
+    case "email":
+      if (valor && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor))
+        erroMsg = "E-mail inválido";
+      break;
+    case "cpf":
+      if (valor && !validarCPF(valor)) erroMsg = "CPF inválido";
+      break;
+    case "tipoEquipamento":
+    case "statusOperacional":
+    case "numeroPatrimonio":
+      if (!valor) erroMsg = "Campo obrigatório";
+      break;
+    case "numeroSerie":
+      if (!valor) erroMsg = "Número de série é obrigatório";
+      else if (
+        equipamentos.some(
+          (eq) =>
+            !eq.isDeleted &&
+            !eq.isArchived && // <-- ADICIONE ESTA LINHA
+            eq.numeroSerie.toLowerCase() === valor.toLowerCase() &&
+            eq.registro !== registroExcluido
+        )
+      )
+        erroMsg = "Número de série já cadastrado";
+      break;
+  }
+  mostrarErro(id, erroMsg);
+  return !erroMsg;
+}
+function validarCPF(cpf) {
+  cpf = cpf.replace(/\D/g, "");
+  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+  let soma = 0,
+    resto;
+  for (let i = 1; i <= 9; i++)
+    soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(cpf.substring(9, 10))) return false;
+  soma = 0;
+  for (let i = 1; i <= 10; i++)
+    soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  return resto === parseInt(cpf.substring(10, 11));
+}
+
+// ===========================================
+// FUNÇÕES UTILITÁRIAS DE DATA
+// ===========================================
+function formatarData(isoString) {
+  if (!isoString) return "N/A";
+  try {
+    const data = new Date(isoString);
+    if (isNaN(data)) return "Data inválida";
+    return new Intl.DateTimeFormat("pt-BR", {
+      dateStyle: "short",
+      timeStyle: "short",
+    }).format(data);
+  } catch {
+    return "Data inválida";
+  }
+}
+
+// ===========================================
+// DASHBOARD E GRÁFICOS
+// ===========================================
+function atualizarDashboard() {
+  calcularMetricas();
+  criarGraficos();
+}
+function calcularMetricas() {
+  const eqAtivos = equipamentos.filter((e) => !e.isArchived && !e.isDeleted);
+  document.getElementById("equipamentos-ativos").textContent = eqAtivos.filter(
+    (e) => e.statusOperacional === "Ativo"
+  ).length;
+  document.getElementById("notebooks-disponiveis").textContent =
+    eqAtivos.filter(
+      (e) =>
+        e.tipoEquipamento === "Notebook" && e.statusOperacional === "Disponível"
+    ).length;
+  document.getElementById("equipamentos-manutencao").textContent =
+    eqAtivos.filter((e) => e.statusOperacional === "Em manutenção").length;
+  document.getElementById("equipamentos-arquivados").textContent =
+    equipamentos.filter((e) => e.isArchived && !e.isDeleted).length;
+}
+
+function criarGraficos() {
+  criarGrafico(
+    tipoChart,
+    "tipoChart",
+    "doughnut",
+    equipamentos.filter((e) => !e.isArchived && !e.isDeleted),
+    "tipoEquipamento",
+    "Distribuição por Tipo"
+  );
+  criarGrafico(
+    statusChart,
+    "statusChart",
+    "bar",
+    equipamentos.filter((e) => !e.isDeleted),
+    "statusOperacional",
+    "Status Operacional",
+    ["Ativo", "Disponível", "Inativo", "Em manutenção", "Arquivado"]
+  );
+  criarGrafico(
+    departamentoChart,
+    "departamentoChart",
+    "line",
+    // *** CORREÇÃO DASHBOARD ***
+    equipamentos.filter(
+      (e) => !e.isArchived && !e.isDeleted && e.tipoEquipamento !== "Impressora"
+    ),
+    "departamento",
+    "Equipamentos por Departamento"
+  );
+}
+
+function criarGrafico(
+  chartInstance,
+  canvasId,
+  type,
+  data,
+  groupBy,
+  label,
+  order
+) {
+  const ctx = document.getElementById(canvasId).getContext("2d");
+  if (chartInstance) chartInstance.destroy();
+
+  const counts = data.reduce((acc, item) => {
+    // *** CORREÇÃO DASHBOARD ***
+    const key = item[groupBy] || "Nenhum";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+
+  const labels = order
+    ? order.filter((key) => counts[key])
+    : Object.keys(counts);
+  const chartData = labels.map((key) => counts[key]);
+
+  // Cores baseadas nas variáveis CSS para consistência
+  const themeColors = {
+    disponivel: getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-primary")
+      .trim(),
+    ativo: getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-success")
+      .trim(),
+    inativo: getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-error")
+      .trim(),
+    manutencao: getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-warning")
+      .trim(),
+    arquivado: getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-info")
+      .trim(),
+  };
+
+  const colors = {
+    bar: {
+      Disponível: themeColors.disponivel,
+      Ativo: themeColors.ativo,
+      Inativo: themeColors.inativo,
+      "Em manutenção": themeColors.manutencao,
+      Arquivado: themeColors.arquivado,
+    },
+    // Paleta de cores para Doughnut (pode ser ajustada)
+    doughnut: [
+      themeColors.disponivel,
+      "#FFC185", // Laranja claro
+      "#B4413C", // Vermelho escuro
+      "#6b7280", // Cinza (Info)
+      "#d97706", // Laranja (Warning)
+      themeColors.ativo,
+    ],
+    line: themeColors.disponivel, // Cor da linha para gráfico de linha
+  };
+
+  chartInstance = new Chart(ctx, {
+    type,
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Quantidade",
+          data: chartData,
+          backgroundColor:
+            type === "bar"
+              ? labels.map((l) => colors.bar[l] || "#cccccc")
+              : type === "doughnut"
+              ? colors.doughnut
+              : "transparent", // Sem fundo para linha
+          borderColor:
+            type === "line"
+              ? colors.line
+              : type === "bar"
+              ? labels.map((l) => colors.bar[l] || "#cccccc") // Borda da mesma cor da barra
+              : "#ffffff", // Borda branca para doughnut
+          borderWidth: type === "doughnut" ? 2 : 1,
+          fill:
+            type === "line"
+              ? { target: "origin", above: "rgba(13, 110, 253, 0.1)" }
+              : false, // Preenchimento suave para linha
+          tension: 0.1, // Suaviza a linha
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: type !== "bar", position: "bottom" } },
+      scales:
+        type === "bar" || type === "line"
+          ? { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+          : {}, // Eixos apenas para bar/line
+    },
+  });
+}
+
+// ===========================================
+// UTILITÁRIOS (MODAIS, MENSAGENS, ETC.)
+// ===========================================
+
+function abrirModalConfirmacao(mensagem, callback, dynamicHtml = "") {
+  const modal = document.getElementById("confirm-modal");
+  document.getElementById("confirm-message").textContent = mensagem;
+  document.getElementById("confirm-dynamic-content").innerHTML = dynamicHtml;
+  const btn = document.getElementById("confirm-delete-btn");
+  const novoBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(novoBtn, btn);
+
+  novoBtn.onclick = () => {
+    const motivoArquivamentoInput = document.getElementById(
+      "motivo-arquivamento"
+    );
+    const motivoManutencaoInput = document.getElementById("motivo-manutencao");
+
+    const motivo =
+      motivoArquivamentoInput?.value.trim() ??
+      motivoManutencaoInput?.value.trim() ??
+      null;
+
+    try {
+      // Tenta executar a ação principal (excluir, arquivar, etc.)
+      callback(motivo);
+    } catch (e) {
+      // Se der erro, registra no console para depuração
+      console.error("Erro ao executar a ação de confirmação:", e);
     } finally {
-      event.target.value = null; // Limpa o input
+      // Garante que o modal SEMPRE feche, mesmo se o callback falhar.
+      fecharModalConfirm();
     }
   };
-  reader.readAsText(file);
+
+  modal.classList.add("active");
 }
 
-function mesclarDados(dadosAtuais, dadosNovos, chaveUnica) {
-  const mapa = new Map(dadosAtuais.map((item) => [item[chaveUnica], item]));
-  dadosNovos.forEach((item) => {
-    mapa.set(item[chaveUnica], item); // Sobrescreve antigos com novos
-  });
-  return Array.from(mapa.values());
+function limparFormularioEquipamento() {
+  document.getElementById("equipamento-form").reset();
+  acessoriosSelecionadosTemporariamente = [];
+  renderizarAcessoriosSelecionados();
+  limparTodosErros();
+  handleTipoEquipamentoChange(document.getElementById("tipoEquipamento"));
 }
-
-/**
- * Analisa uma única linha de um CSV, tratando campos com aspas.
- * @param {string} textline - A linha do CSV.
- * @returns {string[]} - Um array com os valores da linha.
- */
-function parseCSVLine(textline) {
-  const values = [];
-  let inQuote = false;
-  let currentValue = "";
-
-  for (let i = 0; i < textline.length; i++) {
-    const char = textline[i];
-    const nextChar = textline[i + 1];
-
-    if (char === '"') {
-      if (inQuote && nextChar === '"') {
-        // É uma aspa dupla escapada
-        currentValue += '"';
-        i++; // Pula a próxima aspa
-      } else {
-        // É o início ou fim de um campo entre aspas
-        inQuote = !inQuote;
-      }
-    } else if (char === "," && !inQuote) {
-      // Fim de um valor
-      values.push(currentValue);
-      currentValue = "";
-    } else {
-      currentValue += char;
-    }
-  }
-  // Adiciona o último valor
-  values.push(currentValue);
-  return values;
+function limparFormularioAcessorio() {
+  document.getElementById("acessorio-form").reset();
+  handleTipoAcessorioChange();
+  handleCategoriaAcessorioChange();
 }
-
-// ===========================================
-// MODAIS E ALERTAS
-// ===========================================
-
-// --- Tooltip de Acessórios ---
-let tooltipElement;
-let currentTooltipId = null;
-
-function configurarTooltipsAcessorios() {
-  if (!tooltipElement) {
-    tooltipElement = document.getElementById("acessorio-tooltip");
-  }
-
-  const wrappers = document.querySelectorAll(".acessorios-icon-wrapper");
-
-  wrappers.forEach((wrapper) => {
-    wrapper.addEventListener("mouseenter", (e) => {
-      const target = e.currentTarget;
-      const tooltipId = target.dataset.tooltipId;
-
-      // Evita piscar se o mouse se mover sobre o mesmo ícone
-      if (currentTooltipId === tooltipId) return;
-      currentTooltipId = tooltipId;
-
-      const content = target.dataset.tooltipContent;
-      tooltipElement.innerHTML = content;
-      tooltipElement.style.display = "block";
-      posicionarTooltip(target);
-    });
-
-    wrapper.addEventListener("mouseleave", () => {
-      tooltipElement.style.display = "none";
-      currentTooltipId = null;
-    });
-
-    wrapper.addEventListener("mousemove", () => {
-      if (currentTooltipId === wrapper.dataset.tooltipId) {
-        posicionarTooltip(wrapper);
-      }
-    });
-  });
-}
-
-function posicionarTooltip(target) {
-  const rect = target.getBoundingClientRect();
-  const tooltipRect = tooltipElement.getBoundingClientRect();
-  const scrollY = window.scrollY;
-  const scrollX = window.scrollX;
-
-  // Tenta posicionar acima
-  let top = rect.top + scrollY - tooltipRect.height - 8; // 8px de margem
-  let left = rect.left + scrollX + rect.width / 2 - tooltipRect.width / 2;
-
-  // Ajusta se sair pela esquerda
-  if (left < scrollX) {
-    left = scrollX + 8;
-  }
-  // Ajusta se sair pela direita
-  if (left + tooltipRect.width > scrollX + window.innerWidth) {
-    left = scrollX + window.innerWidth - tooltipRect.width - 8;
-  }
-  // Ajusta se sair por cima (posiciona abaixo)
-  if (top < scrollY) {
-    top = rect.bottom + scrollY + 8;
-  }
-
-  tooltipElement.style.top = `${top}px`;
-  tooltipElement.style.left = `${left}px`;
-}
-
-// --- Alertas (Toasts) ---
-function mostrarAlerta(mensagem, tipo = "info") {
-  const container = document.getElementById("alert-container") || createAlertContainer();
-  const alerta = document.createElement("div");
-  alerta.className = `alert alert-${tipo} show`;
-  alerta.innerHTML = `
-    <i class="fas ${getIconeAlerta(tipo)}"></i>
-    <span>${mensagem}</span>
-    <button class="alert-close" onclick="fecharAlerta(this)">&times;</button>
-  `;
-
-  container.prepend(alerta); // Adiciona no topo
-
-  // Auto-fechar
-  setTimeout(() => {
-    alerta.classList.remove("show");
-    alerta.classList.add("hide");
-    alerta.addEventListener("transitionend", () => {
-      if (alerta.parentElement) {
-        alerta.parentElement.removeChild(alerta);
-      }
-    });
-  }, 5000); // Fecha após 5 segundos
-}
-
-function createAlertContainer() {
-    const container = document.createElement("div");
-    container.id = "alert-container";
-    document.body.appendChild(container);
-    return container;
-}
-
-function fecharAlerta(button) {
-  const alerta = button.parentElement;
-  alerta.classList.remove("show");
-  alerta.classList.add("hide");
-  alerta.addEventListener("transitionend", () => {
-     if (alerta.parentElement) {
-        alerta.parentElement.removeChild(alerta);
-      }
-  });
-}
-
-function getIconeAlerta(tipo) {
-  switch (tipo) {
-    case "success":
-      return "fa-check-circle";
-    case "error":
-      return "fa-exclamation-circle";
-    case "warning":
-      return "fa-exclamation-triangle";
-    default:
-      return "fa-info-circle";
-  }
-}
-
-// --- Modal de Confirmação ---
-let confirmCallback = null;
-
-function abrirModalConfirm(
-  titulo,
-  mensagem,
-  callback,
-  dynamicContent = ""
-) {
-  confirmCallback = callback;
-  document.getElementById("confirm-title").textContent = titulo;
-  document.getElementById("confirm-message").textContent = mensagem;
-  document.getElementById("confirm-dynamic-content").innerHTML =
-    dynamicContent;
-  document.getElementById("modal-confirm").style.display = "flex";
+function limparTodosErros() {
   document
-    .getElementById("confirm-delete-btn")
-    .addEventListener("click", onConfirmClick);
+    .querySelectorAll(".error-message")
+    .forEach((el) => (el.textContent = ""));
+  document
+    .querySelectorAll(".form-control.error")
+    .forEach((el) => el.classList.remove("error"));
 }
-
-function onConfirmClick() {
-  if (typeof confirmCallback === "function") {
-    confirmCallback();
-  }
-  // Callback é responsável por fechar o modal
+function mostrarErro(id, msg) {
+  const elErro = document.getElementById(`error-${id}`);
+  if (elErro) elErro.textContent = msg;
+  document.getElementById(id)?.classList.toggle("error", !!msg);
 }
-
+function limparErro(id) {
+  mostrarErro(id, "");
+}
+function fecharModal() {
+  document.getElementById("edit-modal").classList.remove("active");
+}
+function fecharModalAcessorio() {
+  document.getElementById("edit-acessorio-modal").classList.remove("active");
+}
 function fecharModalConfirm() {
-  document.getElementById("modal-confirm").style.display = "none";
-  document
-    .getElementById("confirm-delete-btn")
-    .removeEventListener("click", onConfirmClick);
-  confirmCallback = null;
+  document.getElementById("confirm-modal").classList.remove("active");
   document.getElementById("confirm-dynamic-content").innerHTML = "";
 }
 
-// --- Fechamento de Modais (Genérico) ---
-window.onclick = function (event) {
-  if (event.target.classList.contains("modal")) {
-    event.target.style.display = "none";
-    if (event.target.id === "modal-confirm") {
-      fecharModalConfirm();
-    }
+function mostrarMensagem(msg, tipo) {
+  const container =
+    document.getElementById("form-messages") ||
+    document.querySelector(".container");
+  const div = document.createElement("div");
+  div.className = `message ${tipo}`;
+  div.innerHTML = `<i class="fas ${
+    tipo === "success" ? "fa-check-circle" : "fa-exclamation-circle"
+  }"></i> ${msg}`;
+  container.insertBefore(div, container.firstChild);
+  setTimeout(() => {
+    div.style.opacity = "0";
+    setTimeout(() => div.remove(), 500);
+  }, 5000);
+}
+
+function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
+  const tbody = document.getElementById("equipment-list");
+  const emptyState = document.getElementById("empty-state");
+  let equipamentosFiltrados = equipamentos.filter(
+    (eq) =>
+      !eq.isDeleted &&
+      eq.tipoEquipamento !== "Impressora" &&
+      !eq.isArchived &&
+      eq.statusOperacional !== "Em manutenção"
+  );
+  if (tipoFiltro !== "todos")
+    equipamentosFiltrados = equipamentosFiltrados.filter(
+      (eq) => eq.tipoEquipamento === tipoFiltro
+    );
+  if (termoBusca) {
+    const termo = termoBusca.toLowerCase();
+    equipamentosFiltrados = equipamentosFiltrados.filter((eq) =>
+      Object.values(eq).some((val) => String(val).toLowerCase().includes(termo))
+    );
   }
-};
 
-// ===========================================
-// UTILITÁRIOS
-// ===========================================
+  // *** INÍCIO DA MODIFICAÇÃO (NOVA LÓGICA DE ORDENAÇÃO) ***
+  equipamentosFiltrados.sort((a, b) => {
+    // Req 3: 'Disponível' vai para o topo
+    const aTopo = a.statusOperacional === "Disponível";
+    const bTopo = b.statusOperacional === "Disponível";
 
-function contarOcorrencias(array, chave) {
-  return array.reduce((acc, obj) => {
-    const valor = obj[chave] || "Não definido";
-    acc[valor] = (acc[valor] || 0) + 1;
-    return acc;
-  }, {});
+    if (aTopo && !bTopo) {
+      return -1; // 'a' (que é do topo) vem antes
+    }
+    if (!aTopo && bTopo) {
+      return 1; // 'b' (que é do topo) vem antes
+    }
+
+    // Req 1: Agrupar por Tipo de Equipamento (ordem alfabética)
+    const tipoA = a.tipoEquipamento || "";
+    const tipoB = b.tipoEquipamento || "";
+    const tipoCompare = tipoA.localeCompare(tipoB);
+
+    if (tipoCompare !== 0) {
+      return tipoCompare; // Tipos diferentes, ordena por tipo
+    }
+
+    // Req 2: Se os tipos são iguais, ordenar por Nome de Usuário (ordem alfabética)
+    const nomeA = a.nomeUsuario || ""; // Trata 'Nenhum' ou nulo como string vazia
+    const nomeB = b.nomeUsuario || "";
+    return nomeA.localeCompare(nomeB);
+  });
+  // *** FIM DA MODIFICAÇÃO ***
+
+  emptyState.style.display =
+    equipamentos.filter(
+      (eq) =>
+        !eq.isDeleted &&
+        eq.tipoEquipamento !== "Impressora" &&
+        !eq.isArchived &&
+        eq.statusOperacional !== "Em manutenção"
+    ).length === 0
+      ? "block"
+      : "none";
+  tbody.closest(".table-container").style.display =
+    equipamentosFiltrados.length > 0 ? "block" : "none";
+  tbody.innerHTML = equipamentosFiltrados
+    .map((eq) => criarLinhaEquipamento(eq))
+    .join("");
+  verificarSelecao("equipamentos");
 }
 
-function normalizarString(str) {
-  if (!str) return "";
-  return str
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-");
-}
+function criarLinhaEquipamento(eq) {
+  const statusClasses = {
+    Ativo: "ativo",
+    Inativo: "inativo",
+    "Em manutenção": "manutencao",
+    Arquivado: "arquivado",
+    Disponível: "disponivel",
+  };
 
-function escapeHTML(str) {
-  if (!str) return "";
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  // === Ícones Clicáveis e Classes de Cor ===
+  let acessoriosHtml = '<div class="acessorios-container">Nenhum</div>';
+  if (eq.acessorios && eq.acessorios.length) {
+    // Mapeamento de Categoria para Ícone Font Awesome E Classe de Estilo
+    const accessoryInfoMap = {
+      "Kit (teclado + mouse sem fio)": {
+        icon: "fas fa-keyboard",
+        styleClass: "icon-kit",
+      },
+      Headsets: { icon: "fas fa-headphones", styleClass: "icon-headsets" },
+      Monitores: { icon: "fas fa-desktop", styleClass: "icon-monitores" },
+      Mouses: { icon: "fas fa-computer-mouse", styleClass: "icon-mouses" },
+      "Suportes com Cooler": {
+        icon: "fas fa-fan",
+        styleClass: "icon-suportes",
+      },
+      Outros: { icon: "fas fa-puzzle-piece", styleClass: "icon-outros" },
+      // Adicione mais mapeamentos se tiver outras categorias
+    };
+
+    acessoriosHtml = `<div class="acessorios-container">${eq.acessorios
+      .map((id) => {
+        const acc = acessorios.find((a) => String(a.id) === String(id));
+        if (!acc) return ""; // Pula se o acessório não for encontrado
+
+        // Pega informações do mapeamento ou usa padrões
+        const info = accessoryInfoMap[acc.categoria] || {
+          icon: "fas fa-question-circle",
+          styleClass: "icon-outros",
+        };
+        const iconClass = info.icon;
+        const styleClass = info.styleClass; // Classe para a cor
+
+        const tooltipText = `${acc.categoria} (${acc.modelo || "Sem modelo"})`;
+
+        // Gera o HTML do ícone com tooltip, classe de estilo E ONCLICK
+        return `<i class="${iconClass} ${styleClass}"
+                  title="${tooltipText.replace(/"/g, "&quot;")}"
+                  onclick="mostrarTooltipAcessorio(event, '${acc.id}')"></i>`; // Adicionado onclick
+      })
+      .join("")}</div>`;
+  }
+
+  let documentosHtml = '<div class="documentos-container">N/A</div>';
+  if (eq.tipoEquipamento === "Notebook") {
+    const termoIcon = `<i class="fas ${
+      eq.termoResponsabilidade
+        ? "fa-check-circle icon-doc-ok"
+        : "fa-exclamation-triangle icon-doc-pending"
+    }" title="Termo de Responsabilidade ${
+      eq.termoResponsabilidade ? "OK" : "Pendente"
+    }" ${
+      !eq.termoResponsabilidade
+        ? "onclick=\"mostrarTooltipDocumento(event, 'Termo de Responsabilidade Pendente')\""
+        : ""
+    }></i>`;
+    const fotoIcon = `<i class="fas ${
+      eq.fotoNotebook
+        ? "fa-check-circle icon-doc-ok"
+        : "fa-exclamation-triangle icon-doc-pending"
+    }" title="Foto do Notebook ${eq.fotoNotebook ? "OK" : "Pendente"}" ${
+      !eq.fotoNotebook
+        ? "onclick=\"mostrarTooltipDocumento(event, 'Foto do Notebook Pendente')\""
+        : ""
+    }></i>`;
+    documentosHtml = `<div class="documentos-container">${termoIcon} ${fotoIcon}</div>`;
+  }
+
+  const isManutencaoTarget = ["Notebook", "Desktop"].includes(
+    eq.tipoEquipamento
+  );
+  const manutencaoBtn = isManutencaoTarget
+    ? `<button class="btn-action" onclick="enviarParaManutencao('${eq.registro}')" title="Enviar para Manutenção"><i class="fas fa-tools"></i></button>`
+    : "";
+
+  return `
+    <tr>
+      <td class="checkbox-cell"><input type="checkbox" class="checkbox-equipamentos" value="${
+        eq.registro
+      }" onclick="verificarSelecao('equipamentos')"></td>
+      <td>${eq.registro}</td>
+      <td>${eq.nomeUsuario || "Nenhum"}</td>
+      <td>${eq.tipoEquipamento || ""}</td>
+      <td>${eq.numeroSerie || ""}</td>
+      <td>${eq.numeroPatrimonio || "N/A"}</td>
+      <td><span class="status-badge ${
+        statusClasses[eq.statusOperacional] || ""
+      }">${eq.statusOperacional || ""}</span></td>
+      <td>${eq.departamento || "Nenhum"}</td>
+      <td>${acessoriosHtml}</td>
+      <td>${documentosHtml}</td>
+      <td>
+        <div class="action-buttons">
+          ${manutencaoBtn}
+          <button class="btn-action btn-archive" onclick="arquivarEquipamento('${
+            eq.registro
+          }')" title="Arquivar"><i class="fas fa-archive"></i></button>
+          <button class="btn-action btn-edit" onclick="editarEquipamento('${
+            eq.registro
+          }')" title="Editar"><i class="fas fa-edit"></i></button>
+          <button class="btn-action btn-delete" onclick="excluirEquipamento('${
+            eq.registro
+          }')" title="Mover para Lixeira"><i class="fas fa-trash"></i></button>
+        </div>
+      </td>
+    </tr>`;
 }
 
 // ===========================================
-// GERENCIAMENTO DE TEMA (Dark/Light)
+// SEÇÃO DE IMPRESSORAS
+// ===========================================
+
+function atualizarListaImpressoras() {
+  const impressoras = equipamentos.filter(
+    (eq) =>
+      eq.tipoEquipamento === "Impressora" && !eq.isArchived && !eq.isDeleted
+  );
+  const tbody = document.getElementById("impressoras-list");
+  const emptyState = document.getElementById("impressoras-empty-state");
+
+  if (
+    equipamentos.filter(
+      (eq) =>
+        eq.tipoEquipamento === "Impressora" && !eq.isArchived && !eq.isDeleted
+    ).length === 0
+  ) {
+    tbody.innerHTML = "";
+    tbody.closest(".table-container").style.display = "none";
+    emptyState.style.display = "block";
+  } else {
+    tbody.closest(".table-container").style.display = "block";
+    emptyState.style.display = "none";
+    tbody.innerHTML = impressoras
+      .map(
+        (imp) => `
+      <tr>
+        <td class="checkbox-cell"><input type="checkbox" class="checkbox-impressoras" value="${
+          imp.registro
+        }" onclick="verificarSelecao('impressoras')"></td>
+        <td>${imp.registro}</td>
+        <td>${imp.numeroSerie || ""}</td>
+        <td>${imp.numeroPatrimonio || "N/A"}</td>
+        <td><span class="clickable-sala" onclick="mostrarTooltipCartuchos(event, '${
+          imp.sala
+        }')">${imp.sala || "N/A"}</span></td>
+        <td>${imp.ip || "N/A"}</td>
+        <td>${imp.observacoes || ""}</td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn-action btn-archive" onclick="arquivarEquipamento('${
+              imp.registro
+            }')" title="Arquivar"><i class="fas fa-archive"></i></button>
+            <button class="btn-action btn-edit" onclick="editarEquipamento('${
+              imp.registro
+            }')" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="btn-action btn-delete" onclick="excluirEquipamento('${
+              imp.registro
+            }')" title="Mover para Lixeira"><i class="fas fa-trash"></i></button>
+          </div>
+        </td>
+      </tr>`
+      )
+      .join("");
+  }
+  verificarSelecao("impressoras");
+}
+
+function filtrarImpressoras() {
+  const termo = document
+    .getElementById("search-input-impressoras")
+    .value.toLowerCase();
+  document.querySelectorAll("#impressoras-list tr").forEach((row) => {
+    row.style.display = row.textContent.toLowerCase().includes(termo)
+      ? ""
+      : "none";
+  });
+}
+
+// ===========================================
+// SEÇÃO DE MANUTENÇÃO
+// ===========================================
+function enviarParaManutencao(registro) {
+  const eq = equipamentos.find((e) => e.registro === registro);
+  if (!eq) return;
+
+  const motivoHtml = `<div class="form-group" style="margin-top: 16px; text-align: left;"><label class="form-label">Motivo da Manutenção:</label><textarea id="motivo-manutencao" class="form-control" rows="3" placeholder="Ex: Tela quebrada, não liga, etc."></textarea></div>`;
+
+  abrirModalConfirmacao(
+    "Enviar este equipamento para manutenção?",
+    (motivo) => {
+      if (motivo !== null && motivo.trim() !== "") {
+        // Verifica se motivo não é nulo e não está vazio
+        eq.motivoManutencao = motivo;
+        eq.statusOperacional = "Em manutenção";
+        eq.dataEntradaManutencao = new Date().toISOString();
+
+        salvarParaLocalStorage();
+        setEstadoAlteracao(true);
+
+        aplicarFiltrosEquipamentos();
+        atualizarListaManutencao(); // Adicionado para atualizar a lista de manutenção
+        atualizarDashboard();
+        mostrarMensagem(
+          "Equipamento enviado para manutenção com sucesso.",
+          "success"
+        );
+      } else {
+        mostrarMensagem("O motivo da manutenção é obrigatório.", "error"); // Mensagem de erro se motivo estiver vazio
+      }
+    },
+    motivoHtml
+  );
+}
+
+function concluirManutencao(registro) {
+  abrirModalConfirmacao(
+    "Marcar a manutenção deste equipamento como concluída?",
+    () => {
+      const eq = equipamentos.find((e) => e.registro === registro);
+      if (eq) {
+        eq.statusOperacional = "Disponível";
+        delete eq.dataEntradaManutencao;
+        delete eq.motivoManutencao;
+
+        salvarParaLocalStorage();
+        setEstadoAlteracao(true);
+
+        atualizarListaManutencao();
+        atualizarDashboard();
+        mostrarMensagem("Manutenção concluída com sucesso.", "success");
+      }
+    }
+  );
+}
+
+function atualizarListaManutencao() {
+  const tbody = document.getElementById("manutencao-list");
+  const emptyState = document.getElementById("manutencao-empty-state");
+  const emManutencao = equipamentos.filter(
+    (eq) => eq.statusOperacional === "Em manutenção" && !eq.isDeleted
+  );
+
+  emptyState.style.display = emManutencao.length === 0 ? "block" : "none";
+  tbody.closest(".table-container").style.display =
+    emManutencao.length > 0 ? "block" : "none";
+
+  tbody.innerHTML = emManutencao
+    .map(
+      (eq) => `
+    <tr>
+      <td>${eq.registro}</td>
+      <td>${eq.nomeUsuario || "Nenhum"}</td>
+      <td>${eq.tipoEquipamento || ""}</td>
+      <td>${eq.numeroSerie || ""}</td>
+      <td>${eq.numeroPatrimonio || "N/A"}</td>
+      <td>${formatarData(eq.dataEntradaManutencao)}</td>
+      <td>${eq.motivoManutencao || "N/A"}</td>
+      <td>
+        <div class="action-buttons">
+          <button class="btn-action btn-restore" onclick="concluirManutencao('${
+            eq.registro
+          }')" title="Concluir Manutenção"><i class="fas fa-check-circle"></i></button>
+          <button class="btn-action btn-edit" onclick="editarEquipamento('${
+            eq.registro
+          }')" title="Editar"><i class="fas fa-edit"></i></button>
+        </div>
+      </td>
+    </tr>`
+    )
+    .join("");
+}
+
+// ===========================================
+// SEÇÃO DE ARQUIVADOS
+// ===========================================
+
+function arquivarEquipamento(registro) {
+  const eq = equipamentos.find((e) => e.registro === registro);
+  if (!eq) return;
+
+  const motivoHtml = `<div class="form-group" style="margin-top: 16px; text-align: left;"><label class="form-label">Motivo do Arquivamento (Opcional):</label><textarea id="motivo-arquivamento" class="form-control" rows="3" placeholder="Ex: Equipamento obsoleto, devolução, etc."></textarea></div>`;
+
+  abrirModalConfirmacao(
+    "Tem certeza que deseja arquivar este equipamento?",
+    (motivo) => {
+      // O callback agora recebe o motivo (pode ser null se o campo não existir ou vazio)
+      eq.motivoArquivamento = motivo || ""; // Define como string vazia se for null
+
+      if (
+        ["Notebook", "Desktop"].includes(eq.tipoEquipamento) &&
+        eq.acessorios &&
+        eq.acessorios.length > 0
+      ) {
+        eq.acessorios.forEach((acessorioId) => {
+          const acessorio = acessorios.find(
+            (a) => String(a.id) === String(acessorioId)
+          );
+          if (acessorio) {
+            acessorio.disponivel = true;
+          }
+        });
+        eq.acessorios = [];
+        salvarAcessoriosParaLocalStorage();
+      }
+
+      eq.isArchived = true;
+      eq.archiveDate = new Date().toISOString();
+      eq.statusOperacional = "Arquivado"; // Garante que o status seja Arquivado
+
+      salvarParaLocalStorage();
+      setEstadoAlteracao(true);
+
+      // Atualiza as listas relevantes
+      if (eq.tipoEquipamento === "Impressora") {
+        atualizarListaImpressoras();
+      } else {
+        aplicarFiltrosEquipamentos();
+      }
+      aplicarFiltrosAcessorios(); // Atualiza acessórios caso tenham sido desvinculados
+      atualizarListaArquivados();
+      atualizarDashboard();
+
+      mostrarMensagem("Equipamento arquivado com sucesso.", "success");
+    },
+    motivoHtml // Passa o HTML do campo de motivo para o modal
+  );
+}
+
+function desarquivarEquipamento(registro) {
+  const eq = equipamentos.find((e) => e.registro === registro);
+  if (eq) {
+    eq.isArchived = false;
+    delete eq.archiveDate;
+    eq.motivoArquivamento = "";
+    eq.statusOperacional = "Disponível"; // Volta para disponível
+    salvarParaLocalStorage();
+    setEstadoAlteracao(true);
+    atualizarListaArquivados();
+
+    // Atualiza a lista correta dependendo do tipo
+    if (eq.tipoEquipamento === "Impressora") {
+      atualizarListaImpressoras();
+    } else {
+      aplicarFiltrosEquipamentos();
+    }
+    atualizarDashboard();
+    mostrarMensagem("Equipamento restaurado!", "success");
+  }
+}
+
+function confirmarExclusaoEquipamento(registro) {
+  abrirModalConfirmacao(
+    "Tem certeza que deseja mover este item para a lixeira?",
+    () => excluirEquipamento(registro)
+  );
+}
+
+function atualizarListaArquivados() {
+  const termo = document
+    .getElementById("search-input-arquivados")
+    .value.toLowerCase();
+  const tbody = document.getElementById("archived-equipment-list");
+  const emptyState = document.getElementById("archived-empty-state");
+  const arquivados = equipamentos.filter(
+    (eq) =>
+      eq.isArchived &&
+      !eq.isDeleted &&
+      Object.values(eq).some((val) => String(val).toLowerCase().includes(termo))
+  );
+
+  emptyState.style.display =
+    equipamentos.filter((eq) => eq.isArchived && !eq.isDeleted).length === 0
+      ? "block"
+      : "none";
+  tbody.closest(".table-container").style.display =
+    arquivados.length > 0 ? "block" : "none";
+  tbody.innerHTML = arquivados
+    .map(
+      (eq) => `
+    <tr>
+      <td>${eq.registro}</td>
+      <td>${eq.nomeUsuario || "Nenhum"}</td>
+      <td>${eq.tipoEquipamento || ""}</td>
+      <td>${eq.numeroSerie || ""}</td>
+      <td>${eq.numeroPatrimonio || "N/A"}</td>
+      <td><span class="status-badge arquivado">${
+        eq.statusOperacional || "" /* Exibe status Arquivado */
+      }</span></td>
+      <td>${formatarData(eq.archiveDate)}</td>
+      <td>${eq.motivoArquivamento || "N/A"}</td>
+      <td>
+        <div class="action-buttons">
+          <button class="btn-action btn-restore" onclick="desarquivarEquipamento('${
+            eq.registro
+          }')" title="Restaurar"><i class="fas fa-box-open"></i></button>
+          <button class="btn-action btn-edit" onclick="editarEquipamento('${
+            eq.registro
+          }')" title="Editar"><i class="fas fa-edit"></i></button>
+          <button class="btn-action btn-delete" onclick="excluirEquipamento('${
+            eq.registro
+          }')" title="Mover para Lixeira"><i class="fas fa-trash"></i></button>
+        </div>
+      </td>
+    </tr>`
+    )
+    .join("");
+}
+
+// ===========================================
+// LIXEIRA
+// ===========================================
+
+function atualizarLixeira() {
+  atualizarLixeiraEquipamentos();
+  atualizarLixeiraAcessorios();
+  atualizarLixeiraCartuchos();
+}
+
+function atualizarLixeiraEquipamentos() {
+  const tbody = document.getElementById("lixeira-equipment-list");
+  const emptyState = document.getElementById(
+    "lixeira-equipamentos-empty-state"
+  );
+  const deletados = equipamentos.filter((eq) => eq.isDeleted);
+
+  if (deletados.length === 0) {
+    tbody.innerHTML = "";
+    tbody.closest(".table-container").style.display = "none";
+    emptyState.style.display = "block";
+  } else {
+    tbody.innerHTML = deletados
+      .map(
+        (eq) => `
+            <tr>
+                <td class="checkbox-cell"><input type="checkbox" class="checkbox-lixeira-equipamentos" value="${
+                  eq.registro
+                }" onclick="verificarSelecao('lixeira-equipamentos')"></td>
+                <td>${eq.registro}</td>
+                <td>${eq.tipoEquipamento}</td>
+                <td>${eq.numeroSerie}</td>
+                <td>${eq.numeroPatrimonio}</td>
+                <td>${formatarData(eq.deletionDate)}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-action btn-restore" onclick="restaurarEquipamento('${
+                          eq.registro
+                        }')" title="Restaurar"><i class="fas fa-undo"></i></button>
+                        <button class="btn-action btn-delete" onclick="excluirPermanenteEquipamento('${
+                          eq.registro
+                        }')" title="Excluir Permanentemente"><i class="fas fa-times-circle"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `
+      )
+      .join("");
+    tbody.closest(".table-container").style.display = "table";
+    emptyState.style.display = "none";
+  }
+  verificarSelecao("lixeira-equipamentos"); // <-- MODIFICAÇÃO
+}
+
+function restaurarEquipamento(registro) {
+  // MODIFICAÇÃO (Goal 1): Adiciona modal de confirmação
+  abrirModalConfirmacao(
+    "Tem certeza que deseja restaurar este equipamento?",
+    () => {
+      // Esta é a função de callback que executa a restauração
+      const eq = equipamentos.find((e) => e.registro === registro);
+      if (eq) {
+        eq.isDeleted = false;
+        delete eq.deletionDate;
+
+        // --- INÍCIO DA MODIFICAÇÃO (Goal 2) ---
+        // Se o equipamento restaurado tiver acessórios, marcar os acessórios como "Não disponíveis"
+        if (eq.acessorios && eq.acessorios.length > 0) {
+          eq.acessorios.forEach((acessorioId) => {
+            const acessorio = acessorios.find(
+              (a) => String(a.id) === String(acessorioId)
+            );
+            // Só marca como 'Não disponível' se o acessório ainda existir E não estiver na lixeira
+            if (acessorio && !acessorio.isDeleted) {
+              acessorio.disponivel = false; // Define como "Não"
+            }
+          });
+          salvarAcessoriosParaLocalStorage(); // Salva o novo estado dos acessórios
+          // Atualiza a lista de acessórios se o usuário estiver nela
+          if (
+            document.getElementById("acessorios").classList.contains("active")
+          ) {
+            aplicarFiltrosAcessorios();
+          }
+        }
+        // --- FIM DA MODIFICAÇÃO (Goal 2) ---
+
+        salvarParaLocalStorage();
+        setEstadoAlteracao(true);
+        atualizarLixeira(); // Atualiza a lixeira (item some de lá)
+
+        // Atualiza a lista correta para onde o item foi restaurado
+        if (eq.isArchived) {
+          atualizarListaArquivados();
+        } else if (eq.tipoEquipamento === "Impressora") {
+          atualizarListaImpressoras();
+        } else {
+          aplicarFiltrosEquipamentos();
+        }
+        if (eq.statusOperacional === "Em manutenção") {
+          atualizarListaManutencao();
+        }
+
+        atualizarDashboard();
+        mostrarMensagem("Equipamento restaurado.", "success");
+      }
+    }
+  );
+}
+
+function excluirPermanenteEquipamento(registro) {
+  abrirModalConfirmacao(
+    "Esta ação é irreversível. Deseja excluir permanentemente este equipamento?",
+    () => {
+      const eq = equipamentos.find((e) => e.registro === registro);
+      if (eq && eq.acessorios) {
+        eq.acessorios.forEach((id) => {
+          const acc = acessorios.find((a) => String(a.id) === String(id));
+          // Só marca como disponível se o acessório ainda existir e não estiver na lixeira
+          if (acc && !acc.isDeleted) {
+            acc.disponivel = true;
+          }
+        });
+        salvarAcessoriosParaLocalStorage();
+        // Atualiza a lista de acessórios se estiver visível
+        if (
+          document.getElementById("acessorios").classList.contains("active")
+        ) {
+          aplicarFiltrosAcessorios();
+        }
+      }
+
+      equipamentos = equipamentos.filter((e) => e.registro !== registro);
+      salvarParaLocalStorage();
+      setEstadoAlteracao(true);
+      atualizarLixeira();
+      atualizarDashboard(); // Atualiza contagens do dashboard
+      mostrarMensagem("Equipamento excluído permanentemente.", "success");
+    }
+  );
+}
+
+function atualizarLixeiraAcessorios() {
+  const tbody = document.getElementById("lixeira-acessorios-list");
+  const emptyState = document.getElementById("lixeira-acessorios-empty-state");
+  const deletados = acessorios.filter((a) => a.isDeleted);
+
+  if (deletados.length === 0) {
+    tbody.innerHTML = "";
+    tbody.closest(".table-container").style.display = "none";
+    emptyState.style.display = "block";
+  } else {
+    tbody.innerHTML = deletados
+      .map(
+        (ac) => `
+            <tr>
+                <td class="checkbox-cell"><input type="checkbox" class="checkbox-lixeira-acessorios" value="${
+                  ac.id
+                }" onclick="verificarSelecao('lixeira-acessorios')"></td>
+                <td>${ac.id}</td>
+                <td>${ac.categoria}</td>
+                <td>${ac.modelo}</td>
+                <td>${formatarData(ac.deletionDate)}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-action btn-restore" onclick="restaurarAcessorio('${
+                          ac.id
+                        }')" title="Restaurar"><i class="fas fa-undo"></i></button>
+                        <button class="btn-action btn-delete" onclick="excluirPermanenteAcessorio('${
+                          ac.id
+                        }')" title="Excluir Permanentemente"><i class="fas fa-times-circle"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `
+      )
+      .join("");
+    tbody.closest(".table-container").style.display = "table";
+    emptyState.style.display = "none";
+  }
+  verificarSelecao("lixeira-acessorios"); // <-- MODIFICAÇÃO
+}
+
+function restaurarAcessorio(id) {
+  // MODIFICAÇÃO (Goal 1): Adiciona modal de confirmação
+  abrirModalConfirmacao(
+    "Tem certeza que deseja restaurar este acessório?",
+    () => {
+      // Lógica de restauração movida para o callback
+      const acc = acessorios.find((a) => String(a.id) === String(id));
+      if (acc) {
+        acc.isDeleted = false;
+        delete acc.deletionDate;
+
+        // MODIFICAÇÃO (Goal 2): Verifica se o acessório deve voltar como 'Disponível' ou 'Não'
+        // Ele estará 'Não disponível' (disponivel = false) se estiver vinculado a um equipamento ATIVO (não-deletado e não-arquivado)
+        const vinculadoEquipamentoAtivo = equipamentos.some(
+          (eq) =>
+            !eq.isDeleted && // Não está na lixeira
+            !eq.isArchived && // Não está no arquivo
+            eq.acessorios?.includes(String(id)) // E está vinculado a este acessório
+        );
+
+        // Se estiver vinculado a um equipamento ativo, 'disponivel' é false (Não)
+        // Se não estiver vinculado, 'disponivel' é true (Sim)
+        acc.disponivel = !vinculadoEquipamentoAtivo;
+
+        salvarAcessoriosParaLocalStorage();
+        setEstadoAlteracao(true);
+        atualizarLixeira();
+        aplicarFiltrosAcessorios(); // Atualiza a lista principal de acessórios
+
+        // Atualiza a lista de equipamentos também, pois o ícone de acessório pode ter mudado
+        if (document.getElementById("lista").classList.contains("active")) {
+          aplicarFiltrosEquipamentos();
+        }
+
+        mostrarMensagem("Acessório restaurado.", "success");
+      }
+    }
+  );
+}
+
+function excluirPermanenteAcessorio(id) {
+  abrirModalConfirmacao(
+    "Esta ação é irreversível. Deseja excluir permanentemente este acessório? Ele será desvinculado de qualquer equipamento.",
+    () => {
+      // Desvincular de equipamentos antes de excluir
+      equipamentos.forEach((eq) => {
+        if (eq.acessorios?.includes(id)) {
+          eq.acessorios = eq.acessorios.filter((accId) => accId !== id);
+        }
+      });
+      salvarParaLocalStorage(); // Salva equipamentos sem o acessório
+
+      acessorios = acessorios.filter((a) => String(a.id) !== String(id));
+      salvarAcessoriosParaLocalStorage();
+      setEstadoAlteracao(true);
+      atualizarLixeira();
+      // Atualizar lista principal de equipamentos se estiver visível (para mostrar desvinculação)
+      if (document.getElementById("lista").classList.contains("active")) {
+        aplicarFiltrosEquipamentos();
+      }
+      mostrarMensagem("Acessório excluído permanentemente.", "success");
+    }
+  );
+}
+
+function atualizarLixeiraCartuchos() {
+  const tbody = document.getElementById("lixeira-cartuchos-list");
+  const emptyState = document.getElementById("lixeira-cartuchos-empty-state");
+  const deletados = cartuchos.filter((c) => c.isDeleted);
+
+  if (deletados.length === 0) {
+    tbody.innerHTML = "";
+    tbody.closest(".table-container").style.display = "none";
+    emptyState.style.display = "block";
+  } else {
+    tbody.innerHTML = deletados
+      .map(
+        (ca) => `
+            <tr>
+                <td class="checkbox-cell"><input type="checkbox" class="checkbox-lixeira-cartuchos" value="${
+                  ca.id
+                }" onclick="verificarSelecao('lixeira-cartuchos')"></td>
+                <td>${ca.id}</td>
+                <td>${ca.numeroSerie}</td>
+                <td>${ca.cor}</td>
+                <td>${formatarData(ca.deletionDate)}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-action btn-restore" onclick="restaurarCartucho('${
+                          ca.id
+                        }')" title="Restaurar"><i class="fas fa-undo"></i></button>
+                        <button class="btn-action btn-delete" onclick="excluirPermanenteCartucho('${
+                          ca.id
+                        }')" title="Excluir Permanentemente"><i class="fas fa-times-circle"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `
+      )
+      .join("");
+    tbody.closest(".table-container").style.display = "table";
+    emptyState.style.display = "none";
+  }
+  verificarSelecao("lixeira-cartuchos"); // <-- MODIFICAÇÃO
+}
+
+function restaurarCartucho(id) {
+  // MODIFICAÇÃO (Goal 1): Adiciona modal de confirmação
+  abrirModalConfirmacao(
+    "Tem certeza que deseja restaurar este cartucho?",
+    () => {
+      // Lógica de restauração movida para o callback
+      const cartucho = cartuchos.find((c) => c.id === id);
+      if (cartucho) {
+        cartucho.isDeleted = false;
+        delete cartucho.deletionDate;
+        salvarCartuchosParaLocalStorage();
+        setEstadoAlteracao(true);
+        atualizarLixeira();
+
+        // Restaura para a lista correta
+        if (cartucho.isArchived) {
+          atualizarListaCartuchosArquivados();
+        } else {
+          atualizarListaCartuchos();
+        }
+        mostrarMensagem("Cartucho restaurado.", "success");
+      }
+    }
+  );
+}
+
+function excluirPermanenteCartucho(id) {
+  abrirModalConfirmacao(
+    "Esta ação é irreversível. Deseja excluir permanentemente este cartucho?",
+    () => {
+      cartuchos = cartuchos.filter((c) => c.id !== id);
+      salvarCartuchosParaLocalStorage();
+      setEstadoAlteracao(true);
+      atualizarLixeira();
+      // Atualiza contagem no header da lista principal se estiver visível
+      if (document.getElementById("cartuchos").classList.contains("active")) {
+        atualizarContagemCartuchosDisponiveis();
+      }
+      mostrarMensagem("Cartucho excluído permanentemente.", "success");
+    }
+  );
+}
+
+// ===========================================
+// LIXEIRA - EXCLUSÃO PERMANENTE EM MASSA
+// ===========================================
+
+function excluirEquipamentosSelecionadosLixeira() {
+  const idsParaExcluir = Array.from(
+    document.querySelectorAll(".checkbox-lixeira-equipamentos:checked")
+  ).map((cb) => cb.value);
+
+  if (idsParaExcluir.length === 0) return;
+
+  abrirModalConfirmacao(
+    `Esta ação é irreversível. Deseja excluir permanentemente ${idsParaExcluir.length} equipamento(s)?`,
+    () => {
+      // Lógica de desvinculação de acessórios
+      idsParaExcluir.forEach((registro) => {
+        const eq = equipamentos.find((e) => e.registro === registro);
+        if (eq && eq.acessorios) {
+          eq.acessorios.forEach((id) => {
+            const acc = acessorios.find((a) => String(a.id) === String(id));
+            if (acc && !acc.isDeleted) {
+              acc.disponivel = true;
+            }
+          });
+        }
+      });
+      salvarAcessoriosParaLocalStorage(); // Salva acessórios desvinculados
+
+      // Filtra e remove os equipamentos
+      equipamentos = equipamentos.filter(
+        (e) => !idsParaExcluir.includes(e.registro)
+      );
+      salvarParaLocalStorage();
+      setEstadoAlteracao(true);
+      atualizarLixeira(); // Atualiza a lixeira
+      atualizarDashboard();
+      mostrarMensagem(
+        `${idsParaExcluir.length} equipamento(s) excluído(s) permanentemente.`,
+        "success"
+      );
+    }
+  );
+}
+
+function excluirAcessoriosSelecionadosLixeira() {
+  const idsParaExcluir = Array.from(
+    document.querySelectorAll(".checkbox-lixeira-acessorios:checked")
+  ).map((cb) => cb.value);
+
+  if (idsParaExcluir.length === 0) return;
+
+  abrirModalConfirmacao(
+    `Esta ação é irreversível. Deseja excluir permanentemente ${idsParaExcluir.length} acessório(s)? Eles serão desvinculados de qualquer equipamento.`,
+    () => {
+      // Desvincular de equipamentos antes de excluir
+      equipamentos.forEach((eq) => {
+        if (eq.acessorios?.length) {
+          eq.acessorios = eq.acessorios.filter(
+            (accId) => !idsParaExcluir.includes(String(accId))
+          );
+        }
+      });
+      salvarParaLocalStorage(); // Salva equipamentos
+
+      // Filtra e remove os acessórios
+      acessorios = acessorios.filter(
+        (a) => !idsParaExcluir.includes(String(a.id))
+      );
+      salvarAcessoriosParaLocalStorage();
+      setEstadoAlteracao(true);
+      atualizarLixeira();
+      mostrarMensagem(
+        `${idsParaExcluir.length} acessório(s) excluído(s) permanentemente.`,
+        "success"
+      );
+    }
+  );
+}
+
+function excluirCartuchosSelecionadosLixeira() {
+  const idsParaExcluir = Array.from(
+    document.querySelectorAll(".checkbox-lixeira-cartuchos:checked")
+  ).map((cb) => cb.value);
+
+  if (idsParaExcluir.length === 0) return;
+
+  abrirModalConfirmacao(
+    `Esta ação é irreversível. Deseja excluir permanentemente ${idsParaExcluir.length} cartucho(s)?`,
+    () => {
+      // Filtra e remove os cartuchos
+      cartuchos = cartuchos.filter((c) => !idsParaExcluir.includes(c.id));
+      salvarCartuchosParaLocalStorage();
+      setEstadoAlteracao(true);
+      atualizarLixeira();
+      mostrarMensagem(
+        `${idsParaExcluir.length} cartucho(s) excluído(s) permanentemente.`,
+        "success"
+      );
+    }
+  );
+}
+
+// ===========================================
+// TOOLTIPS
+// ===========================================
+
+function mostrarTooltipAcessorio(event, id) {
+  event.stopPropagation();
+  const tooltip = document.getElementById("acessorio-tooltip");
+  const acc = acessorios.find((a) => String(a.id) === String(id));
+  if (!acc) return;
+  tooltip.innerHTML = `<h4>Detalhes do Acessório</h4><p><strong>Modelo:</strong> ${
+    acc.modelo
+  }</p><p><strong>Patrimônio:</strong> ${
+    acc.patrimonio || "N/A"
+  }</p><p><strong>Série:</strong> ${acc.numeroSerie || "N/A"}</p>`;
+  posicionarTooltip(event, tooltip);
+}
+
+function mostrarTooltipUsuario(event, acessorioId) {
+  event.stopPropagation();
+  const tooltip = document.getElementById("acessorio-tooltip");
+  // Procura em equipamentos não deletados e não arquivados
+  const eq = equipamentos.find(
+    (e) =>
+      !e.isDeleted &&
+      !e.isArchived &&
+      e.acessorios &&
+      e.acessorios.includes(String(acessorioId))
+  );
+  tooltip.innerHTML = eq
+    ? `<h4>Vinculado a</h4><p><strong>Usuário:</strong> ${
+        eq.nomeUsuario || "N/A"
+      }</p><p><strong>Equipamento (Pat):</strong> ${
+        eq.numeroPatrimonio || "N/A"
+      }</p>`
+    : `<h4>Acessório Disponível</h4><p>Não vinculado a um equipamento ativo.</p>`;
+  posicionarTooltip(event, tooltip);
+}
+
+function mostrarTooltipDocumento(event, texto) {
+  event.stopPropagation();
+  const tooltip = document.getElementById("acessorio-tooltip");
+  tooltip.innerHTML = `<h4>Documento Pendente</h4><p>${texto}</p>`;
+  posicionarTooltip(event, tooltip);
+}
+
+function mostrarTooltipCartuchos(event, sala) {
+  event.stopPropagation();
+  const tooltip = document.getElementById("acessorio-tooltip");
+
+  // Busca cartuchos não deletados, não arquivados, em uso e vinculados à sala específica
+  const cartuchosNaImpressora = cartuchos.filter(
+    (c) =>
+      !c.isDeleted &&
+      !c.isArchived &&
+      c.impressoraVinculada === sala &&
+      c.status === "Em uso"
+  );
+
+  let tooltipContent;
+  if (cartuchosNaImpressora.length > 0) {
+    tooltipContent = "<h4>Cartuchos Instalados</h4>";
+    const colorOrder = {
+      "Ciano (C)": 1,
+      "Magenta (M)": 2,
+      "Amarelo (Y)": 3,
+      "Preto (BK)": 4,
+    };
+    cartuchosNaImpressora.sort(
+      (a, b) => (colorOrder[a.cor] || 99) - (colorOrder[b.cor] || 99)
+    );
+
+    tooltipContent += cartuchosNaImpressora
+      .map((cartucho) => {
+        const corBase = cartucho.cor.split(" ")[0];
+        const corClasse = corBase.toLowerCase().replace(/[()]/g, "");
+        // Mostra ID ou Patrimônio se disponível
+        const identificador =
+          cartucho.patrimonio && cartucho.patrimonio !== "N/A"
+            ? cartucho.patrimonio
+            : cartucho.id;
+        return `<p><span class="tooltip-cor ${corClasse}">${corBase}</span> (${identificador})</p>`;
+      })
+      .join("");
+  } else {
+    tooltipContent =
+      "<h4>Cartuchos Instalados</h4><p>Nenhum cartucho ativo vinculado.</p>";
+  }
+
+  tooltip.innerHTML = tooltipContent;
+  posicionarTooltip(event, tooltip);
+}
+
+function posicionarTooltip(event, tooltip) {
+  tooltip.style.left = `${event.pageX + 15}px`;
+  tooltip.style.top = `${event.pageY + 15}px`;
+  tooltip.classList.add("active");
+}
+
+function esconderTooltip() {
+  document.getElementById("acessorio-tooltip").classList.remove("active");
+}
+
+// ===========================================
+// LÓGICA DE EXCLUSÃO EM MASSA
+// ===========================================
+
+function toggleAllCheckboxes(tipo) {
+  const master = document.getElementById(`select-all-${tipo}`);
+  document
+    .querySelectorAll(`.checkbox-${tipo}`)
+    .forEach((cb) => (cb.checked = master.checked));
+  verificarSelecao(tipo);
+}
+
+function verificarSelecao(tipo) {
+  const checked = document.querySelectorAll(`.checkbox-${tipo}:checked`);
+  const btn = document.getElementById(`btn-apagar-${tipo}`);
+  if (btn) btn.style.display = checked.length >= 2 ? "inline-flex" : "none";
+
+  const all = document.querySelectorAll(`.checkbox-${tipo}`);
+  const master = document.getElementById(`select-all-${tipo}`);
+  if (master) {
+    master.indeterminate = checked.length > 0 && checked.length < all.length;
+    // Marca o checkbox principal apenas se TODOS estiverem marcados e houver pelo menos um item
+    master.checked = all.length > 0 && checked.length === all.length;
+  }
+}
+
+function excluirEquipamentosSelecionados() {
+  const idsParaExcluir = Array.from(
+    document.querySelectorAll(".checkbox-equipamentos:checked")
+  ).map((cb) => cb.value);
+  if (idsParaExcluir.length === 0) return;
+  abrirModalConfirmacao(
+    `Mover ${idsParaExcluir.length} equipamentos para a lixeira?`,
+    () => {
+      idsParaExcluir.forEach((id) => {
+        const eq = equipamentos.find((e) => e.registro === id);
+        if (eq) {
+          eq.isDeleted = true;
+          eq.deletionDate = new Date().toISOString();
+        }
+      });
+      salvarParaLocalStorage();
+      setEstadoAlteracao(true);
+      aplicarFiltrosEquipamentos();
+      mostrarMensagem(
+        `${idsParaExcluir.length} equipamentos movidos para a lixeira.`,
+        "success"
+      );
+    }
+  );
+}
+
+function excluirImpressorasSelecionadas() {
+  const idsParaExcluir = Array.from(
+    document.querySelectorAll(".checkbox-impressoras:checked")
+  ).map((cb) => cb.value);
+  if (idsParaExcluir.length === 0) return;
+  abrirModalConfirmacao(
+    `Mover ${idsParaExcluir.length} impressoras para a lixeira?`,
+    () => {
+      idsParaExcluir.forEach((id) => {
+        const eq = equipamentos.find((e) => e.registro === id);
+        if (eq) {
+          eq.isDeleted = true;
+          eq.deletionDate = new Date().toISOString();
+        }
+      });
+      salvarParaLocalStorage();
+      setEstadoAlteracao(true);
+      atualizarListaImpressoras();
+      mostrarMensagem(
+        `${idsParaExcluir.length} impressoras movidas para a lixeira.`,
+        "success"
+      );
+    }
+  );
+}
+
+function excluirAcessoriosSelecionados() {
+  const idsParaExcluir = Array.from(
+    document.querySelectorAll(".checkbox-acessorios:checked")
+  ).map((cb) => cb.value);
+  if (idsParaExcluir.length === 0) return;
+  abrirModalConfirmacao(
+    `Mover ${idsParaExcluir.length} acessórios para a lixeira?`,
+    () => {
+      idsParaExcluir.forEach((id) => {
+        const acc = acessorios.find((a) => String(a.id) === String(id));
+        if (acc) {
+          acc.isDeleted = true;
+          acc.deletionDate = new Date().toISOString();
+        }
+      });
+      salvarAcessoriosParaLocalStorage();
+      setEstadoAlteracao(true);
+      aplicarFiltrosAcessorios();
+      mostrarMensagem(
+        `${idsParaExcluir.length} acessórios movidos para a lixeira.`,
+        "success"
+      );
+    }
+  );
+}
+
+// === NOVA FUNÇÃO ===
+function excluirCartuchosSelecionados() {
+  const idsParaExcluir = Array.from(
+    document.querySelectorAll(".checkbox-cartuchos:checked")
+  ).map((cb) => cb.value);
+
+  if (idsParaExcluir.length === 0) return;
+
+  abrirModalConfirmacao(
+    `Mover ${idsParaExcluir.length} cartuchos para a lixeira?`,
+    () => {
+      idsParaExcluir.forEach((id) => {
+        const cartucho = cartuchos.find((c) => c.id === id);
+        if (cartucho) {
+          cartucho.isDeleted = true;
+          cartucho.deletionDate = new Date().toISOString();
+        }
+      });
+      salvarCartuchosParaLocalStorage();
+      setEstadoAlteracao(true);
+      atualizarListaCartuchos(); // Atualiza a lista visível
+      mostrarMensagem(
+        `${idsParaExcluir.length} cartuchos movidos para a lixeira.`,
+        "success"
+      );
+    }
+  );
+}
+
+// ===========================================
+// GERENCIAMENTO DE TEMA (DARK/LIGHT)
 // ===========================================
 
 /**
