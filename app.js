@@ -364,7 +364,7 @@ function preencherPresetsFabricante(event) {
         radioAlugado.checked = true;
         handleTipoAquisicaoChange(radioAlugado);
       }
-      valor.value = "285,98";
+      valor.value = "314,45";
     } else {
       modelo.value = "";
       polegadas.value = "";
