@@ -1499,6 +1499,7 @@ function criarFormularioEdicao(equipamento) {
     "Relações Institucionais",
     "Revista",
     "RH",
+    "Serviços Gerais",
     "TI",
   ];
   const salas = ["Casa COP", "COPA", "EVENTOS", "FINANCEIRO", "PROJETOS"];
