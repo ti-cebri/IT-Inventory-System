@@ -81,9 +81,23 @@
       <div class="tab-content active" id="dashboard">
         <div class="dashboard-header">
           <h2>Dashboard - Visão Geral</h2>
-          <button class="btn btn--secondary" onclick="atualizarDashboard()">
-            <i class="fas fa-sync-alt"></i> Atualizar
-          </button>
+
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 10px;
+              align-items: flex-end;
+            "
+          >
+            <button class="btn btn--danger" onclick="confirmarLimpezaDados()">
+              <i class="fas fa-trash"></i> Limpar Dados
+            </button>
+
+            <button class="btn btn--secondary" onclick="atualizarDashboard()">
+              <i class="fas fa-sync-alt"></i> Atualizar
+            </button>
+          </div>
         </div>
         <div class="metrics-grid">
           <div class="metric-card">
@@ -543,9 +557,7 @@
                     <option value="Relações Corporativas">
                       Relações Corporativas
                     </option>
-                    <option value="Relações Externas">
-                      Relações Externas
-                    </option>
+                    <option value="Relações Externas">Relações Externas</option>
                     <option value="Relações Institucionais">
                       Relações Institucionais
                     </option>
