@@ -1352,7 +1352,8 @@ button:disabled i,
 }
 /* Força a quebra de linha para Usuário (3) e Tipo (4) */
 #equipment-table td:nth-child(3),
-#equipment-table td:nth-child(4) {
+#equipment-table td:nth-child(4)
+#equipment-table td:nth-child(9) {
   white-space: normal;       /* Permite quebra de linha */
   word-wrap: break-word;     /* Quebra palavras muito longas se necessário */
   max-width: 180px;          /* Define um limite para não alargar a tabela */
@@ -1716,8 +1717,8 @@ button:disabled i,
 
 .acessorios-container {
   display: flex;
-  flex-wrap: nowrap; /* Impede que quebre a linha */
-  gap: var(--space-12); /* Aumenta o espaço entre ícones */
+  flex-wrap: wrap; /* Impede que quebre a linha */
+  gap: 6px; /* Aumenta o espaço entre ícones */
   align-items: center; /* Centraliza verticalmente se a linha ficar alta por outro motivo */
   font-size: var(--font-size-lg); /* Tamanho dos ícones */
   color: var(--color-text-secondary); /* Cor padrão dos ícones */
