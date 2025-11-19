@@ -2648,10 +2648,29 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
   );
 
   // 2. Aplica o filtro por Tipo (se selecionado)
-  if (tipoFiltro !== "todos")
-    equipamentosFiltrados = equipamentosFiltrados.filter(
-      (eq) => eq.tipoEquipamento === tipoFiltro
-    );
+  if (tipoFiltro !== "todos") {
+    // Lista dos tipos "Padrão" que existem no select
+    const tiposPadrao = [
+      "Desktop",
+      "Notebook",
+      "Tablet",
+      "Servidor",
+      "Roteador",
+      "Switch"
+    ];
+
+    if (tipoFiltro === "Outro") {
+      // CORREÇÃO: Se filtrar por "Outro", mostra tudo que NÃO é um dos tipos padrão
+      equipamentosFiltrados = equipamentosFiltrados.filter(
+        (eq) => !tiposPadrao.includes(eq.tipoEquipamento)
+      );
+    } else {
+      // Filtro normal (busca exata)
+      equipamentosFiltrados = equipamentosFiltrados.filter(
+        (eq) => eq.tipoEquipamento === tipoFiltro
+      );
+    }
+  }
 
   // 3. Aplica o filtro de Busca
   if (termoBusca) {
