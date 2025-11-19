@@ -93,22 +93,31 @@ function mostrarTab(tabId) {
   document.querySelector(`[data-tab="${tabId}"]`).classList.add("active");
 
   // 2. Lógica de Visibilidade dos Botões do Topo
-
-  // Lista de abas onde o botão "Salvar CSV" deve aparecer
-  const abasComSalvar = ["lista", "impressoras", "cartuchos", "acessorios"];
-
+  
+  // --- ALTERAÇÃO AQUI: Adicionei manutencao, arquivados e lixeira na lista ---
+  const abasComSalvar = [
+    "lista", 
+    "impressoras", 
+    "cartuchos", 
+    "acessorios", 
+    "manutencao", 
+    "arquivados", 
+    "lixeira"
+  ];
+  
   // Reset: Esconde tudo primeiro
-  globalActions.style.display = "none";
+  if (globalActions) globalActions.style.display = "none";
   if (btnCarregar) btnCarregar.style.display = "none";
   if (btnSalvar) btnSalvar.style.display = "none";
 
   if (tabId === "dashboard") {
-    // No Dashboard: Mostra o container e APENAS o botão Carregar
-    globalActions.style.display = ""; // Usa o display flex do CSS
+    // No Dashboard: Mostra container + Botão Carregar
+    if (globalActions) globalActions.style.display = ""; 
     if (btnCarregar) btnCarregar.style.display = "inline-flex";
+    
   } else if (abasComSalvar.includes(tabId)) {
-    // Nas Listas: Mostra o container e APENAS o botão Salvar
-    globalActions.style.display = ""; // Usa o display flex do CSS
+    // Nas Listas (Agoras incluindo Manutenção/Arq/Lixeira): Mostra container + Botão Salvar
+    if (globalActions) globalActions.style.display = "";
     if (btnSalvar) btnSalvar.style.display = "inline-flex";
   }
 
