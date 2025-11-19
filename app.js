@@ -2381,17 +2381,27 @@ function atualizarDashboard() {
   criarGraficos();
 }
 function calcularMetricas() {
-  const eqAtivos = equipamentos.filter((e) => !e.isArchived && !e.isDeleted);
-  document.getElementById("equipamentos-ativos").textContent = eqAtivos.filter(
-    (e) => e.statusOperacional === "Ativo"
+  // --- ALTERAÇÃO PEDIDO 1: Contar Total da Lista de Equipamentos ---
+  // Filtra: Não arquivado, Não deletado e NÃO Impressora (pois impressora tem lista separada)
+  const totalEquipamentos = equipamentos.filter(
+    (e) => !e.isArchived && !e.isDeleted && e.tipoEquipamento !== "Impressora"
   ).length;
+
+  document.getElementById("equipamentos-ativos").textContent =
+    totalEquipamentos;
+  // ----------------------------------------------------------------
+
+  const eqAtivos = equipamentos.filter((e) => !e.isArchived && !e.isDeleted);
+
   document.getElementById("notebooks-disponiveis").textContent =
     eqAtivos.filter(
       (e) =>
         e.tipoEquipamento === "Notebook" && e.statusOperacional === "Disponível"
     ).length;
+
   document.getElementById("equipamentos-manutencao").textContent =
     eqAtivos.filter((e) => e.statusOperacional === "Em manutenção").length;
+
   document.getElementById("equipamentos-arquivados").textContent =
     equipamentos.filter((e) => e.isArchived && !e.isDeleted).length;
 }
