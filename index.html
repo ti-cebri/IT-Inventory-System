@@ -65,8 +65,13 @@
         </nav>
 
         <div class="global-actions">
-          <button class="btn btn--secondary" onclick="carregarDadosCompletos()">
-            <i class="fas fa-upload"></i> Carregar
+          <button
+            class="btn btn--primary"
+            id="btn-global-carregar"
+            onclick="carregarDadosCompletos()"
+            style="display: none"
+          >
+            <i class="fas fa-upload"></i> Carregar Dados
           </button>
           <button
             class="btn btn--primary"
@@ -975,7 +980,10 @@
 
       <div class="tab-content" id="lista">
         <div class="list-header">
-          <h2>Lista de Equipamentos</h2>
+          <div class="title-with-summary">
+            <h2>Lista de Equipamentos</h2>
+            <p id="equipamentos-summary" class="summary-text"></p>
+          </div>
           <div class="list-actions">
             <div class="filter-container">
               <label for="filtro-tipo-equipamento" class="form-label"
