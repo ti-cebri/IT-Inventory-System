@@ -1344,11 +1344,19 @@ button:disabled i,
   width: 250px;
 }
 #equipment-table td:nth-child(2),
-#equipment-table td:nth-child(3),
-#equipment-table td:nth-child(4),
+/*#equipment-table td:nth-child(3),*/
+/*#equipment-table td:nth-child(4),*/
 #equipment-table td:nth-child(5),
 #equipment-table td:nth-child(6) {
   white-space: nowrap;
+}
+/* Força a quebra de linha para Usuário (3) e Tipo (4) */
+#equipment-table td:nth-child(3),
+#equipment-table td:nth-child(4) {
+  white-space: normal;       /* Permite quebra de linha */
+  word-wrap: break-word;     /* Quebra palavras muito longas se necessário */
+  max-width: 180px;          /* Define um limite para não alargar a tabela */
+  vertical-align: middle;    /* Mantém o texto centralizado verticalmente */
 }
 .bulk-actions-container {
   margin-bottom: var(--space-16);
