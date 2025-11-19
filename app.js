@@ -76,7 +76,12 @@ function carregarCartuchosDeLocalStorage() {
 // ===========================================
 
 function mostrarTab(tabId) {
+  // Elementos globais
   const globalActions = document.querySelector(".global-actions");
+  const btnCarregar = document.getElementById("btn-global-carregar");
+  const btnSalvar = document.getElementById("btn-exportar-csv");
+
+  // 1. Gestão de abas e botões de navegação
   document
     .querySelectorAll(".tab-content")
     .forEach((tab) => tab.classList.remove("active"));
@@ -87,22 +92,27 @@ function mostrarTab(tabId) {
   document.getElementById(tabId).classList.add("active");
   document.querySelector(`[data-tab="${tabId}"]`).classList.add("active");
 
-  // --- ALTERAÇÃO PEDIDO 1: Lógica de visibilidade dos botões globais ---
-  // Apenas exibe Carregar/Salvar nas listas principais de cadastro ativo
-  const abasComBotoesGlobais = [
-    "lista",
-    "impressoras",
-    "cartuchos",
-    "acessorios",
-  ];
+  // 2. Lógica de Visibilidade dos Botões do Topo
 
-  if (abasComBotoesGlobais.includes(tabId)) {
-    globalActions.style.display = ""; // Exibe (usa o display padrão do CSS)
-  } else {
-    globalActions.style.display = "none"; // Esconde
+  // Lista de abas onde o botão "Salvar CSV" deve aparecer
+  const abasComSalvar = ["lista", "impressoras", "cartuchos", "acessorios"];
+
+  // Reset: Esconde tudo primeiro
+  globalActions.style.display = "none";
+  if (btnCarregar) btnCarregar.style.display = "none";
+  if (btnSalvar) btnSalvar.style.display = "none";
+
+  if (tabId === "dashboard") {
+    // No Dashboard: Mostra o container e APENAS o botão Carregar
+    globalActions.style.display = ""; // Usa o display flex do CSS
+    if (btnCarregar) btnCarregar.style.display = "inline-flex";
+  } else if (abasComSalvar.includes(tabId)) {
+    // Nas Listas: Mostra o container e APENAS o botão Salvar
+    globalActions.style.display = ""; // Usa o display flex do CSS
+    if (btnSalvar) btnSalvar.style.display = "inline-flex";
   }
-  // ---------------------------------------------------------------------
 
+  // 3. Atualizações específicas de cada aba
   if (tabId === "dashboard") atualizarDashboard();
   if (tabId === "lista") aplicarFiltrosEquipamentos();
   if (tabId === "impressoras") atualizarListaImpressoras();
@@ -2608,6 +2618,8 @@ function mostrarMensagem(msg, tipo) {
 function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
   const tbody = document.getElementById("equipment-list");
   const emptyState = document.getElementById("empty-state");
+
+  // 1. Filtra os equipamentos (excluindo deletados, impressoras, arquivados e em manutenção)
   let equipamentosFiltrados = equipamentos.filter(
     (eq) =>
       !eq.isDeleted &&
@@ -2615,10 +2627,14 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
       !eq.isArchived &&
       eq.statusOperacional !== "Em manutenção"
   );
+
+  // 2. Aplica o filtro por Tipo (se selecionado)
   if (tipoFiltro !== "todos")
     equipamentosFiltrados = equipamentosFiltrados.filter(
       (eq) => eq.tipoEquipamento === tipoFiltro
     );
+
+  // 3. Aplica o filtro de Busca
   if (termoBusca) {
     const termo = termoBusca.toLowerCase();
     equipamentosFiltrados = equipamentosFiltrados.filter((eq) =>
@@ -2626,50 +2642,69 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
     );
   }
 
-  // *** INÍCIO DA MODIFICAÇÃO (NOVA LÓGICA DE ORDENAÇÃO) ***
+  // --- NOVO CÓDIGO: Atualiza o texto de contagem no Header ---
+  const summaryElement = document.getElementById("equipamentos-summary");
+  if (summaryElement) {
+    const quantidade = equipamentosFiltrados.length;
+    let textoLabel = tipoFiltro === "todos" ? "Itens Listados" : tipoFiltro;
+
+    // Lógica simples de plural (adiciona 's' se não terminar em 's' ou 'r')
+    if (quantidade !== 1 && tipoFiltro !== "todos") {
+      if (!textoLabel.endsWith("s") && !textoLabel.endsWith("r")) {
+        textoLabel += "s";
+      }
+    }
+
+    // Insere o HTML com a cor de destaque
+    summaryElement.innerHTML = `Quantidade: <span class="summary-color">${quantidade} ${textoLabel}</span>`;
+  }
+  // -----------------------------------------------------------
+
+  // 4. Ordenação (Disponível primeiro -> Tipo -> Usuário)
   equipamentosFiltrados.sort((a, b) => {
-    // Req 3: 'Disponível' vai para o topo
+    // Prioridade: 'Disponível' vai para o topo
     const aTopo = a.statusOperacional === "Disponível";
     const bTopo = b.statusOperacional === "Disponível";
 
-    if (aTopo && !bTopo) {
-      return -1; // 'a' (que é do topo) vem antes
-    }
-    if (!aTopo && bTopo) {
-      return 1; // 'b' (que é do topo) vem antes
-    }
+    if (aTopo && !bTopo) return -1;
+    if (!aTopo && bTopo) return 1;
 
-    // Req 1: Agrupar por Tipo de Equipamento (ordem alfabética)
+    // Agrupar por Tipo de Equipamento
     const tipoA = a.tipoEquipamento || "";
     const tipoB = b.tipoEquipamento || "";
     const tipoCompare = tipoA.localeCompare(tipoB);
 
-    if (tipoCompare !== 0) {
-      return tipoCompare; // Tipos diferentes, ordena por tipo
-    }
+    if (tipoCompare !== 0) return tipoCompare;
 
-    // Req 2: Se os tipos são iguais, ordenar por Nome de Usuário (ordem alfabética)
-    const nomeA = a.nomeUsuario || ""; // Trata 'Nenhum' ou nulo como string vazia
+    // Ordenar por Nome de Usuário
+    const nomeA = a.nomeUsuario || "";
     const nomeB = b.nomeUsuario || "";
     return nomeA.localeCompare(nomeB);
   });
-  // *** FIM DA MODIFICAÇÃO ***
 
-  emptyState.style.display =
-    equipamentos.filter(
-      (eq) =>
-        !eq.isDeleted &&
-        eq.tipoEquipamento !== "Impressora" &&
-        !eq.isArchived &&
-        eq.statusOperacional !== "Em manutenção"
-    ).length === 0
-      ? "block"
-      : "none";
-  tbody.closest(".table-container").style.display =
-    equipamentosFiltrados.length > 0 ? "block" : "none";
-  tbody.innerHTML = equipamentosFiltrados
-    .map((eq) => criarLinhaEquipamento(eq))
-    .join("");
+  // 5. Verifica se deve mostrar o "Empty State" (se não houver nenhum item no banco)
+  const totalItensValidos = equipamentos.filter(
+    (eq) =>
+      !eq.isDeleted &&
+      eq.tipoEquipamento !== "Impressora" &&
+      !eq.isArchived &&
+      eq.statusOperacional !== "Em manutenção"
+  ).length;
+
+  emptyState.style.display = totalItensValidos === 0 ? "block" : "none";
+
+  // 6. Controla visibilidade da tabela e renderiza as linhas
+  if (equipamentosFiltrados.length > 0) {
+    tbody.closest(".table-container").style.display = "block";
+    tbody.innerHTML = equipamentosFiltrados
+      .map((eq) => criarLinhaEquipamento(eq))
+      .join("");
+  } else {
+    tbody.closest(".table-container").style.display = "none";
+    tbody.innerHTML = "";
+  }
+
+  // 7. Atualiza os checkboxes de seleção em massa
   verificarSelecao("equipamentos");
 }
 
