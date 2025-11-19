@@ -87,11 +87,21 @@ function mostrarTab(tabId) {
   document.getElementById(tabId).classList.add("active");
   document.querySelector(`[data-tab="${tabId}"]`).classList.add("active");
 
-  if (["dashboard", "cadastro"].includes(tabId)) {
-    globalActions.style.display = "none";
+  // --- ALTERAÇÃO PEDIDO 1: Lógica de visibilidade dos botões globais ---
+  // Apenas exibe Carregar/Salvar nas listas principais de cadastro ativo
+  const abasComBotoesGlobais = [
+    "lista",
+    "impressoras",
+    "cartuchos",
+    "acessorios",
+  ];
+
+  if (abasComBotoesGlobais.includes(tabId)) {
+    globalActions.style.display = ""; // Exibe (usa o display padrão do CSS)
   } else {
-    globalActions.style.display = "";
+    globalActions.style.display = "none"; // Esconde
   }
+  // ---------------------------------------------------------------------
 
   if (tabId === "dashboard") atualizarDashboard();
   if (tabId === "lista") aplicarFiltrosEquipamentos();
@@ -2094,7 +2104,7 @@ function parseCsvData(csv, cabecalho) {
 
     // Se o caractere for um newline E não estivermos dentro de aspas,
     // encontramos o fim de uma linha de dados.
-    if (char === '\n' && !inQuotes) {
+    if (char === "\n" && !inQuotes) {
       currentLine = csvData.substring(start, i).trim();
       if (currentLine && !currentLine.startsWith("###")) {
         linhas.push(currentLine);
@@ -2122,7 +2132,7 @@ function parseCsvData(csv, cabecalho) {
     const regex = /(?:(?:"((?:[^"]|"")*)")|([^,]*))(?:,|$)/g;
     let match;
 
-    while (match = regex.exec(linha)) {
+    while ((match = regex.exec(linha))) {
       if (match[1] !== undefined) {
         // Campo com aspas (grupo 1)
         // Desescapa as aspas ("" -> ")
@@ -2132,7 +2142,7 @@ function parseCsvData(csv, cabecalho) {
         valores.push(match[2]);
       }
       // Se a correspondência não terminar com uma vírgula, é o fim da linha
-      if (match[0].slice(-1) !== ',') {
+      if (match[0].slice(-1) !== ",") {
         break;
       }
     }
@@ -2156,9 +2166,10 @@ function parseCsvData(csv, cabecalho) {
     });
 
     ["valor", "valorMensal"].forEach((key) => {
-      if (item[key] !== undefined) item[key] = parseFloat(String(item[key]).replace(",", ".")) || 0;
+      if (item[key] !== undefined)
+        item[key] = parseFloat(String(item[key]).replace(",", ".")) || 0;
     });
-    
+
     if (item.acessorios) {
       item.acessorios = String(item.acessorios)
         .split(";")
@@ -3797,4 +3808,20 @@ function atualizarIconeTema(theme) {
     moonIcon.style.display = "inline";
     sunIcon.style.display = "none";
   }
+}
+
+// --- ALTERAÇÃO PEDIDO 2: Função para Limpar Dados ---
+function confirmarLimpezaDados() {
+  abrirModalConfirmacao(
+    "ATENÇÃO: Isso apagará TODOS os dados do LocalStorage. Deseja continuar?",
+    () => {
+      // Remove apenas as chaves de dados, mantendo a preferência de tema
+      localStorage.removeItem("inventarioEquipamentos");
+      localStorage.removeItem("inventarioAcessorios");
+      localStorage.removeItem("inventarioCartuchos");
+
+      // Recarrega a página para limpar a memória e o estado da aplicação
+      location.reload();
+    }
+  );
 }
