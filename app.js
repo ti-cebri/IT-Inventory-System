@@ -262,12 +262,15 @@ function handleTipoEquipamentoChange(selectElement) {
   const salaIpGroup = form.querySelector('[id$="sala-ip-group"]');
   const outroTipoGroup = form.querySelector('[id="outroTipoEquipamentoGroup"]');
 
-  // Seleciona especificamente o container do IP para poder escondê-lo individualmente
+  // Seleciona o container do IP para ocultá-lo individualmente
   const ipInput = form.querySelector('[name="ip"]');
   const ipGroup = ipInput ? ipInput.closest(".form-group") : null;
 
   const tipo = selectElement.value;
-  const tiposInfra = ["Servidor", "Roteador", "Switch"];
+
+  // --- ALTERAÇÃO: Adicionei "Outro" nesta lista ---
+  // Esses tipos acionam: Mostrar Sala (sem IP) e Auto-preenchimento CEBRI
+  const tiposComAutomacao = ["Servidor", "Roteador", "Switch", "Outro"];
 
   // Funções auxiliares
   const show = (el) => el && (el.style.display = "block");
@@ -275,7 +278,7 @@ function handleTipoEquipamentoChange(selectElement) {
   const showFlex = (el) => el && (el.style.display = "flex");
   const showGrid = (el) => el && (el.style.display = "grid");
 
-  // 1. Controle do campo "Outro"
+  // 1. Controle do campo "Especifique o Tipo" (Exclusivo do Outro)
   if (outroTipoGroup) {
     if (tipo === "Outro") {
       show(outroTipoGroup);
@@ -326,43 +329,47 @@ function handleTipoEquipamentoChange(selectElement) {
 
   // 3. Lógica de Visibilidade: Sala, IP e Departamento
   if (departamentoGroup && salaIpGroup) {
-    // Reset: garante que o IP apareça por padrão se o grupo for mostrado
+    // Reset: garante que o IP apareça por padrão antes de testar
     if (ipGroup) show(ipGroup);
 
     if (tipo === "Impressora") {
-      // Impressora: Sem Departamento, Com Sala, Com IP
+      // Impressora: Sem Dept, Com Sala, Com IP
       hide(departamentoGroup);
       showGrid(salaIpGroup);
-    } else if (tiposInfra.includes(tipo)) {
-      // Infra: Com Departamento, Com Sala, SEM IP
+    } else if (tiposComAutomacao.includes(tipo)) {
+      // Infra + Outro: Com Dept, Com Sala, SEM IP
       showGrid(departamentoGroup);
       showGrid(salaIpGroup);
-      if (ipGroup) hide(ipGroup); // <--- Oculta apenas o IP aqui
+      if (ipGroup) hide(ipGroup); // Oculta o IP
     } else {
-      // Padrão: Com Departamento, Sem Sala/IP
+      // Padrão: Com Dept, Sem Sala/IP
       showGrid(departamentoGroup);
       hide(salaIpGroup);
     }
   }
 
-  // 4. Automação de Preenchimento
-  if (tiposInfra.includes(tipo)) {
+  // 4. Automação de Preenchimento (Infra + Outro)
+  if (tiposComAutomacao.includes(tipo)) {
     const nomeInput = form.querySelector('[name="nomeUsuario"]');
     const emailInput = form.querySelector('[name="email"]');
 
+    // Define Usuário CEBRI (o que aciona o CNPJ automaticamente)
     if (nomeInput) {
       nomeInput.value = "CEBRI";
       handleNomeUsuarioChange({ target: nomeInput });
     }
+    // Define E-mail
     if (emailInput) {
       emailInput.value = "ti@cebri.org.br";
     }
 
+    // Define Departamento como TI (Padrão para equipamentos CEBRI/Infra)
     const deptSelect = form.querySelector('[name="departamento"]');
     if (deptSelect) {
       deptSelect.value = "TI";
     }
 
+    // Define Aquisição como Patrimonial
     const radioPatrimonial = form.querySelector(
       'input[name="tipoAquisicao"][value="Patrimonial"]'
     );
@@ -2674,7 +2681,7 @@ function mostrarMensagem(msg, tipo) {
 }
 
 function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
-  // Elementos das seções
+  // Elementos das seções e tbodys
   const sectionComp = document.getElementById("section-computing");
   const sectionInfra = document.getElementById("section-infra");
   const sectionOthers = document.getElementById("section-others");
@@ -2694,7 +2701,7 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
       eq.statusOperacional !== "Em manutenção"
   );
 
-  // Filtro de Tipo (Dropdown)
+  // Filtro de Tipo
   if (tipoFiltro !== "todos") {
     const tiposPadrao = [
       "Desktop",
@@ -2715,7 +2722,7 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
     }
   }
 
-  // Filtro de Busca (Texto)
+  // Filtro de Busca
   if (termoBusca) {
     const termo = termoBusca.toLowerCase();
     dadosFiltrados = dadosFiltrados.filter((eq) =>
@@ -2734,10 +2741,9 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
     summaryElement.innerHTML = `Quantidade: <span class="summary-color">${qtde} ${label}</span>`;
   }
 
-  // Função auxiliar de ordenação
+  // Ordenação
   const ordenar = (lista) => {
     return lista.sort((a, b) => {
-      // Prioridade: Disponível no topo
       if (
         a.statusOperacional === "Disponível" &&
         b.statusOperacional !== "Disponível"
@@ -2748,14 +2754,10 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
         b.statusOperacional === "Disponível"
       )
         return 1;
-
-      // Depois por Tipo
       const tipoCompare = (a.tipoEquipamento || "").localeCompare(
         b.tipoEquipamento || ""
       );
       if (tipoCompare !== 0) return tipoCompare;
-
-      // Depois por Usuário
       return (a.nomeUsuario || "").localeCompare(b.nomeUsuario || "");
     });
   };
@@ -2776,17 +2778,17 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
       !tiposInfra.includes(eq.tipoEquipamento)
   );
 
-  // Ordena cada lista
   ordenar(listComp);
   ordenar(listInfra);
   ordenar(listOthers);
 
   // 3. Renderização
-  const renderTabela = (lista, tbody, section, checkboxClass) => {
+  // ALTERAÇÃO: Agora passamos 'tipoTabela' para saber quais colunas desenhar
+  const renderTabela = (lista, tbody, section, checkboxClass, tipoTabela) => {
     if (lista.length > 0) {
       section.style.display = "block";
       tbody.innerHTML = lista
-        .map((eq) => criarLinhaEquipamento(eq, checkboxClass))
+        .map((eq) => criarLinhaEquipamento(eq, checkboxClass, tipoTabela))
         .join("");
     } else {
       section.style.display = "none";
@@ -2794,25 +2796,36 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
     }
   };
 
-  // Renderiza passando uma "sub-classe" para os checkboxes saberem quem é quem
-  renderTabela(listComp, tbodyComp, sectionComp, "checkbox-computing");
-  renderTabela(listInfra, tbodyInfra, sectionInfra, "checkbox-infra");
-  renderTabela(listOthers, tbodyOthers, sectionOthers, "checkbox-others");
+  renderTabela(
+    listComp,
+    tbodyComp,
+    sectionComp,
+    "checkbox-computing",
+    "computing"
+  );
+  renderTabela(listInfra, tbodyInfra, sectionInfra, "checkbox-infra", "infra");
+  renderTabela(
+    listOthers,
+    tbodyOthers,
+    sectionOthers,
+    "checkbox-others",
+    "others"
+  );
 
-  // Empty State Global
   const totalVisivel = listComp.length + listInfra.length + listOthers.length;
   emptyState.style.display = totalVisivel === 0 ? "block" : "none";
 
-  // Reseta os checkboxes "Select All"
   document.getElementById("select-all-computing").checked = false;
   document.getElementById("select-all-infra").checked = false;
   document.getElementById("select-all-others").checked = false;
-
-  // Atualiza botão de apagar globalmente (esconde se renderizou de novo)
   document.getElementById("btn-apagar-equipamentos").style.display = "none";
 }
 
-function criarLinhaEquipamento(eq, checkboxClass = "checkbox-equipamentos") {
+function criarLinhaEquipamento(
+  eq,
+  checkboxClass = "checkbox-equipamentos",
+  tipoTabela = "computing"
+) {
   const statusClasses = {
     Ativo: "ativo",
     Inativo: "inativo",
@@ -2821,72 +2834,79 @@ function criarLinhaEquipamento(eq, checkboxClass = "checkbox-equipamentos") {
     Disponível: "disponivel",
   };
 
-  // === Ícones Clicáveis e Classes de Cor (Acessórios) ===
-  let acessoriosHtml = '<div class="acessorios-container">Nenhum</div>';
-  if (eq.acessorios && eq.acessorios.length) {
-    // Mapeamento de Categoria para Ícone Font Awesome E Classe de Estilo
-    const accessoryInfoMap = {
-      "Kit (teclado + mouse sem fio)": {
-        icon: "fas fa-keyboard",
-        styleClass: "icon-kit",
-      },
-      Headsets: { icon: "fas fa-headphones", styleClass: "icon-headsets" },
-      Monitores: { icon: "fas fa-desktop", styleClass: "icon-monitores" },
-      Mouses: { icon: "fas fa-computer-mouse", styleClass: "icon-mouses" },
-      "Suportes com Cooler": {
-        icon: "fas fa-fan",
-        styleClass: "icon-suportes",
-      },
-      Outros: { icon: "fas fa-puzzle-piece", styleClass: "icon-outros" },
-    };
+  // Define o conteúdo das colunas variáveis (Meio da tabela)
+  let colunasVariaveis = "";
 
-    acessoriosHtml = `<div class="acessorios-container">${eq.acessorios
-      .map((id) => {
-        const acc = acessorios.find((a) => String(a.id) === String(id));
-        if (!acc) return ""; // Pula se o acessório não for encontrado
+  if (tipoTabela === "computing") {
+    // === Lógica para Computadores: Mostra Acessórios e Documentos ===
 
-        // Pega informações do mapeamento ou usa padrões
-        const info = accessoryInfoMap[acc.categoria] || {
-          icon: "fas fa-question-circle",
-          styleClass: "icon-outros",
-        };
-        const iconClass = info.icon;
-        const styleClass = info.styleClass; // Classe para a cor
+    // 1. Acessórios
+    let acessoriosHtml = '<div class="acessorios-container">Nenhum</div>';
+    if (eq.acessorios && eq.acessorios.length) {
+      const accessoryInfoMap = {
+        "Kit (teclado + mouse sem fio)": {
+          icon: "fas fa-keyboard",
+          styleClass: "icon-kit",
+        },
+        Headsets: { icon: "fas fa-headphones", styleClass: "icon-headsets" },
+        Monitores: { icon: "fas fa-desktop", styleClass: "icon-monitores" },
+        Mouses: { icon: "fas fa-computer-mouse", styleClass: "icon-mouses" },
+        "Suportes com Cooler": {
+          icon: "fas fa-fan",
+          styleClass: "icon-suportes",
+        },
+        Outros: { icon: "fas fa-puzzle-piece", styleClass: "icon-outros" },
+      };
+      acessoriosHtml = `<div class="acessorios-container">${eq.acessorios
+        .map((id) => {
+          const acc = acessorios.find((a) => String(a.id) === String(id));
+          if (!acc) return "";
+          const info = accessoryInfoMap[acc.categoria] || {
+            icon: "fas fa-question-circle",
+            styleClass: "icon-outros",
+          };
+          const tooltipText = `${acc.categoria} (${
+            acc.modelo || "Sem modelo"
+          })`;
+          return `<i class="${info.icon} ${
+            info.styleClass
+          }" title="${tooltipText.replace(
+            /"/g,
+            "&quot;"
+          )}" onclick="mostrarTooltipAcessorio(event, '${acc.id}')"></i>`;
+        })
+        .join("")}</div>`;
+    }
 
-        const tooltipText = `${acc.categoria} (${acc.modelo || "Sem modelo"})`;
+    // 2. Documentos
+    let documentosHtml = '<div class="documentos-container">N/A</div>';
+    if (eq.tipoEquipamento === "Notebook") {
+      const termoIcon = `<i class="fas ${
+        eq.termoResponsabilidade
+          ? "fa-check-circle icon-doc-ok"
+          : "fa-exclamation-triangle icon-doc-pending"
+      }" title="Termo ${eq.termoResponsabilidade ? "OK" : "Pendente"}" ${
+        !eq.termoResponsabilidade
+          ? "onclick=\"mostrarTooltipDocumento(event, 'Termo Pendente')\""
+          : ""
+      }></i>`;
+      const fotoIcon = `<i class="fas ${
+        eq.fotoNotebook
+          ? "fa-check-circle icon-doc-ok"
+          : "fa-exclamation-triangle icon-doc-pending"
+      }" title="Foto ${eq.fotoNotebook ? "OK" : "Pendente"}" ${
+        !eq.fotoNotebook
+          ? "onclick=\"mostrarTooltipDocumento(event, 'Foto Pendente')\""
+          : ""
+      }></i>`;
+      documentosHtml = `<div class="documentos-container">${termoIcon} ${fotoIcon}</div>`;
+    }
 
-        // Gera o HTML do ícone com tooltip, classe de estilo E ONCLICK
-        return `<i class="${iconClass} ${styleClass}"
-                  title="${tooltipText.replace(/"/g, "&quot;")}"
-                  onclick="mostrarTooltipAcessorio(event, '${acc.id}')"></i>`;
-      })
-      .join("")}</div>`;
-  }
-
-  // === Ícones de Documentos ===
-  let documentosHtml = '<div class="documentos-container">N/A</div>';
-  if (eq.tipoEquipamento === "Notebook") {
-    const termoIcon = `<i class="fas ${
-      eq.termoResponsabilidade
-        ? "fa-check-circle icon-doc-ok"
-        : "fa-exclamation-triangle icon-doc-pending"
-    }" title="Termo de Responsabilidade ${
-      eq.termoResponsabilidade ? "OK" : "Pendente"
-    }" ${
-      !eq.termoResponsabilidade
-        ? "onclick=\"mostrarTooltipDocumento(event, 'Termo de Responsabilidade Pendente')\""
-        : ""
-    }></i>`;
-    const fotoIcon = `<i class="fas ${
-      eq.fotoNotebook
-        ? "fa-check-circle icon-doc-ok"
-        : "fa-exclamation-triangle icon-doc-pending"
-    }" title="Foto do Notebook ${eq.fotoNotebook ? "OK" : "Pendente"}" ${
-      !eq.fotoNotebook
-        ? "onclick=\"mostrarTooltipDocumento(event, 'Foto do Notebook Pendente')\""
-        : ""
-    }></i>`;
-    documentosHtml = `<div class="documentos-container">${termoIcon} ${fotoIcon}</div>`;
+    colunasVariaveis = `<td>${acessoriosHtml}</td><td>${documentosHtml}</td>`;
+  } else {
+    // === Lógica para Infra e Outros: Mostra APENAS a Sala ===
+    // Se a sala não estiver preenchida, mostra N/A ou vazio
+    colunasVariaveis = `<td>${eq.sala || "N/A"}</td>`;
   }
 
   // === Botão de Manutenção ===
@@ -2914,9 +2934,8 @@ function criarLinhaEquipamento(eq, checkboxClass = "checkbox-equipamentos") {
         statusClasses[eq.statusOperacional] || ""
       }">${eq.statusOperacional || ""}</span></td>
       <td>${eq.departamento || "Nenhum"}</td>
-      <td>${acessoriosHtml}</td>
-      <td>${documentosHtml}</td>
-      <td>
+      
+      ${colunasVariaveis} <td>
         <div class="action-buttons">
           ${manutencaoBtn}
           <button class="btn-action btn-archive" onclick="arquivarEquipamento('${
