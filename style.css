@@ -1350,14 +1350,34 @@ button:disabled i,
 #equipment-table td:nth-child(6) {
   white-space: nowrap;
 }
-/* Força a quebra de linha para Usuário (3) e Tipo (4) */
-#equipment-table td:nth-child(3),
-#equipment-table td:nth-child(4)
-#equipment-table td:nth-child(9) {
-  white-space: normal;       /* Permite quebra de linha */
-  word-wrap: break-word;     /* Quebra palavras muito longas se necessário */
-  max-width: 180px;          /* Define um limite para não alargar a tabela */
-  vertical-align: middle;    /* Mantém o texto centralizado verticalmente */
+/* Força a quebra de linha para Usuário (3), Tipo (4) e Acessórios (9)*/
+/* APLICA A REGRA DE QUEBRA DE LINHA NAS 3 NOVAS TABELAS */
+#table-computing td:nth-child(3),
+#table-computing td:nth-child(4),
+#table-computing td:nth-child(9),
+#table-infra td:nth-child(3),
+#table-infra td:nth-child(4),
+#table-infra td:nth-child(9),
+#table-others td:nth-child(3),
+#table-others td:nth-child(4),
+#table-others td:nth-child(9) {
+  white-space: normal;
+  word-wrap: break-word;
+  max-width: 180px;
+  vertical-align: middle;
+}
+
+/* MANTÉM ID, SÉRIE E PATRIMÔNIO EM UMA LINHA SÓ */
+#table-computing td:nth-child(2),
+#table-computing td:nth-child(5),
+#table-computing td:nth-child(6),
+#table-infra td:nth-child(2),
+#table-infra td:nth-child(5),
+#table-infra td:nth-child(6),
+#table-others td:nth-child(2),
+#table-others td:nth-child(5),
+#table-others td:nth-child(6) {
+  white-space: nowrap;
 }
 .bulk-actions-container {
   margin-bottom: var(--space-16);
