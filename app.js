@@ -256,17 +256,26 @@ function handleTipoEquipamentoChange(selectElement) {
   const polegadasGroup = form.querySelector('[id$="specs-polegadas-group"]');
   const formActionsContainer = form.querySelector("#form-actions-container");
   const modalActions = form.querySelector(".modal-actions");
+
+  // Grupos de visibilidade específicos
   const departamentoGroup = form.querySelector('[id$="departamento-group"]');
   const salaIpGroup = form.querySelector('[id$="sala-ip-group"]');
   const outroTipoGroup = form.querySelector('[id="outroTipoEquipamentoGroup"]');
 
-  const tipo = selectElement.value;
+  // Seleciona especificamente o container do IP para poder escondê-lo individualmente
+  const ipInput = form.querySelector('[name="ip"]');
+  const ipGroup = ipInput ? ipInput.closest(".form-group") : null;
 
+  const tipo = selectElement.value;
+  const tiposInfra = ["Servidor", "Roteador", "Switch"];
+
+  // Funções auxiliares
   const show = (el) => el && (el.style.display = "block");
   const hide = (el) => el && (el.style.display = "none");
   const showFlex = (el) => el && (el.style.display = "flex");
   const showGrid = (el) => el && (el.style.display = "grid");
 
+  // 1. Controle do campo "Outro"
   if (outroTipoGroup) {
     if (tipo === "Outro") {
       show(outroTipoGroup);
@@ -277,6 +286,7 @@ function handleTipoEquipamentoChange(selectElement) {
     }
   }
 
+  // 2. Controle Geral dos Fieldsets
   if (!tipo) {
     hide(fieldsetUsuario);
     hide(fieldsetComercial);
@@ -285,8 +295,8 @@ function handleTipoEquipamentoChange(selectElement) {
     hide(fieldsetSpecs);
     if (formActionsContainer) hide(formActionsContainer);
   } else {
-    show(fieldsetUsuario); // <-- ALTERAÇÃO: Sempre mostra as informações do usuário
-    // Garante que o estado de CPF/CNPJ esteja correto ao mudar o tipo
+    show(fieldsetUsuario);
+
     const nomeUsuarioInput = form.querySelector('[name="nomeUsuario"]');
     if (nomeUsuarioInput) {
       handleNomeUsuarioChange({ target: nomeUsuarioInput });
@@ -295,7 +305,7 @@ function handleTipoEquipamentoChange(selectElement) {
     show(fieldsetComercial);
 
     if (["Notebook", "Desktop"].includes(tipo)) {
-      show(fieldsetAcessorios); // <-- Exibe o fieldset (que contém os novos campos)
+      show(fieldsetAcessorios);
       show(fieldsetSpecs);
     } else {
       hide(fieldsetAcessorios);
@@ -314,13 +324,51 @@ function handleTipoEquipamentoChange(selectElement) {
     if (modalActions) showFlex(modalActions);
   }
 
+  // 3. Lógica de Visibilidade: Sala, IP e Departamento
   if (departamentoGroup && salaIpGroup) {
+    // Reset: garante que o IP apareça por padrão se o grupo for mostrado
+    if (ipGroup) show(ipGroup);
+
     if (tipo === "Impressora") {
+      // Impressora: Sem Departamento, Com Sala, Com IP
       hide(departamentoGroup);
       showGrid(salaIpGroup);
+    } else if (tiposInfra.includes(tipo)) {
+      // Infra: Com Departamento, Com Sala, SEM IP
+      showGrid(departamentoGroup);
+      showGrid(salaIpGroup);
+      if (ipGroup) hide(ipGroup); // <--- Oculta apenas o IP aqui
     } else {
+      // Padrão: Com Departamento, Sem Sala/IP
       showGrid(departamentoGroup);
       hide(salaIpGroup);
+    }
+  }
+
+  // 4. Automação de Preenchimento
+  if (tiposInfra.includes(tipo)) {
+    const nomeInput = form.querySelector('[name="nomeUsuario"]');
+    const emailInput = form.querySelector('[name="email"]');
+
+    if (nomeInput) {
+      nomeInput.value = "CEBRI";
+      handleNomeUsuarioChange({ target: nomeInput });
+    }
+    if (emailInput) {
+      emailInput.value = "ti@cebri.org.br";
+    }
+
+    const deptSelect = form.querySelector('[name="departamento"]');
+    if (deptSelect) {
+      deptSelect.value = "TI";
+    }
+
+    const radioPatrimonial = form.querySelector(
+      'input[name="tipoAquisicao"][value="Patrimonial"]'
+    );
+    if (radioPatrimonial) {
+      radioPatrimonial.checked = true;
+      handleTipoAquisicaoChange(radioPatrimonial);
     }
   }
 }
