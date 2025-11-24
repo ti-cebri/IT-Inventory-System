@@ -93,31 +93,22 @@ function mostrarTab(tabId) {
   document.querySelector(`[data-tab="${tabId}"]`).classList.add("active");
 
   // 2. Lógica de Visibilidade dos Botões do Topo
-  
-  // --- ALTERAÇÃO AQUI: Adicionei manutencao, arquivados e lixeira na lista ---
-  const abasComSalvar = [
-    "lista", 
-    "impressoras", 
-    "cartuchos", 
-    "acessorios", 
-    "manutencao", 
-    "arquivados", 
-    "lixeira"
-  ];
-  
+
+  // Lista de abas onde o botão "Salvar CSV" deve aparecer
+  const abasComSalvar = ["lista", "impressoras", "cartuchos", "acessorios"];
+
   // Reset: Esconde tudo primeiro
-  if (globalActions) globalActions.style.display = "none";
+  globalActions.style.display = "none";
   if (btnCarregar) btnCarregar.style.display = "none";
   if (btnSalvar) btnSalvar.style.display = "none";
 
   if (tabId === "dashboard") {
-    // No Dashboard: Mostra container + Botão Carregar
-    if (globalActions) globalActions.style.display = ""; 
+    // No Dashboard: Mostra o container e APENAS o botão Carregar
+    globalActions.style.display = ""; // Usa o display flex do CSS
     if (btnCarregar) btnCarregar.style.display = "inline-flex";
-    
   } else if (abasComSalvar.includes(tabId)) {
-    // Nas Listas (Agoras incluindo Manutenção/Arq/Lixeira): Mostra container + Botão Salvar
-    if (globalActions) globalActions.style.display = "";
+    // Nas Listas: Mostra o container e APENAS o botão Salvar
+    globalActions.style.display = ""; // Usa o display flex do CSS
     if (btnSalvar) btnSalvar.style.display = "inline-flex";
   }
 
@@ -2635,11 +2626,19 @@ function mostrarMensagem(msg, tipo) {
 }
 
 function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
-  const tbody = document.getElementById("equipment-list");
+  // Elementos das seções
+  const sectionComp = document.getElementById("section-computing");
+  const sectionInfra = document.getElementById("section-infra");
+  const sectionOthers = document.getElementById("section-others");
+
+  const tbodyComp = document.getElementById("list-computing");
+  const tbodyInfra = document.getElementById("list-infra");
+  const tbodyOthers = document.getElementById("list-others");
+
   const emptyState = document.getElementById("empty-state");
 
-  // 1. Filtra os equipamentos (excluindo deletados, impressoras, arquivados e em manutenção)
-  let equipamentosFiltrados = equipamentos.filter(
+  // 1. Filtra os dados gerais
+  let dadosFiltrados = equipamentos.filter(
     (eq) =>
       !eq.isDeleted &&
       eq.tipoEquipamento !== "Impressora" &&
@@ -2647,106 +2646,125 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
       eq.statusOperacional !== "Em manutenção"
   );
 
-  // 2. Aplica o filtro por Tipo (se selecionado)
+  // Filtro de Tipo (Dropdown)
   if (tipoFiltro !== "todos") {
-    // Lista dos tipos "Padrão" que existem no select
     const tiposPadrao = [
       "Desktop",
       "Notebook",
       "Tablet",
       "Servidor",
       "Roteador",
-      "Switch"
+      "Switch",
     ];
-
     if (tipoFiltro === "Outro") {
-      // CORREÇÃO: Se filtrar por "Outro", mostra tudo que NÃO é um dos tipos padrão
-      equipamentosFiltrados = equipamentosFiltrados.filter(
+      dadosFiltrados = dadosFiltrados.filter(
         (eq) => !tiposPadrao.includes(eq.tipoEquipamento)
       );
     } else {
-      // Filtro normal (busca exata)
-      equipamentosFiltrados = equipamentosFiltrados.filter(
+      dadosFiltrados = dadosFiltrados.filter(
         (eq) => eq.tipoEquipamento === tipoFiltro
       );
     }
   }
 
-  // 3. Aplica o filtro de Busca
+  // Filtro de Busca (Texto)
   if (termoBusca) {
     const termo = termoBusca.toLowerCase();
-    equipamentosFiltrados = equipamentosFiltrados.filter((eq) =>
+    dadosFiltrados = dadosFiltrados.filter((eq) =>
       Object.values(eq).some((val) => String(val).toLowerCase().includes(termo))
     );
   }
 
-  // --- NOVO CÓDIGO: Atualiza o texto de contagem no Header ---
+  // Atualiza contador no header
   const summaryElement = document.getElementById("equipamentos-summary");
   if (summaryElement) {
-    const quantidade = equipamentosFiltrados.length;
-    let textoLabel = tipoFiltro === "todos" ? "Itens Listados" : tipoFiltro;
-
-    // Lógica simples de plural (adiciona 's' se não terminar em 's' ou 'r')
-    if (quantidade !== 1 && tipoFiltro !== "todos") {
-      if (!textoLabel.endsWith("s") && !textoLabel.endsWith("r")) {
-        textoLabel += "s";
-      }
+    const qtde = dadosFiltrados.length;
+    let label = tipoFiltro === "todos" ? "Itens Listados" : tipoFiltro;
+    if (qtde !== 1 && tipoFiltro !== "todos") {
+      if (!label.endsWith("s") && !label.endsWith("r")) label += "s";
     }
-
-    // Insere o HTML com a cor de destaque
-    summaryElement.innerHTML = `Quantidade: <span class="summary-color">${quantidade} ${textoLabel}</span>`;
+    summaryElement.innerHTML = `Quantidade: <span class="summary-color">${qtde} ${label}</span>`;
   }
-  // -----------------------------------------------------------
 
-  // 4. Ordenação (Disponível primeiro -> Tipo -> Usuário)
-  equipamentosFiltrados.sort((a, b) => {
-    // Prioridade: 'Disponível' vai para o topo
-    const aTopo = a.statusOperacional === "Disponível";
-    const bTopo = b.statusOperacional === "Disponível";
+  // Função auxiliar de ordenação
+  const ordenar = (lista) => {
+    return lista.sort((a, b) => {
+      // Prioridade: Disponível no topo
+      if (
+        a.statusOperacional === "Disponível" &&
+        b.statusOperacional !== "Disponível"
+      )
+        return -1;
+      if (
+        a.statusOperacional !== "Disponível" &&
+        b.statusOperacional === "Disponível"
+      )
+        return 1;
 
-    if (aTopo && !bTopo) return -1;
-    if (!aTopo && bTopo) return 1;
+      // Depois por Tipo
+      const tipoCompare = (a.tipoEquipamento || "").localeCompare(
+        b.tipoEquipamento || ""
+      );
+      if (tipoCompare !== 0) return tipoCompare;
 
-    // Agrupar por Tipo de Equipamento
-    const tipoA = a.tipoEquipamento || "";
-    const tipoB = b.tipoEquipamento || "";
-    const tipoCompare = tipoA.localeCompare(tipoB);
+      // Depois por Usuário
+      return (a.nomeUsuario || "").localeCompare(b.nomeUsuario || "");
+    });
+  };
 
-    if (tipoCompare !== 0) return tipoCompare;
+  // 2. Separação em 3 Grupos
+  const tiposComputing = ["Desktop", "Notebook", "Tablet"];
+  const tiposInfra = ["Servidor", "Roteador", "Switch"];
 
-    // Ordenar por Nome de Usuário
-    const nomeA = a.nomeUsuario || "";
-    const nomeB = b.nomeUsuario || "";
-    return nomeA.localeCompare(nomeB);
-  });
-
-  // 5. Verifica se deve mostrar o "Empty State" (se não houver nenhum item no banco)
-  const totalItensValidos = equipamentos.filter(
+  let listComp = dadosFiltrados.filter((eq) =>
+    tiposComputing.includes(eq.tipoEquipamento)
+  );
+  let listInfra = dadosFiltrados.filter((eq) =>
+    tiposInfra.includes(eq.tipoEquipamento)
+  );
+  let listOthers = dadosFiltrados.filter(
     (eq) =>
-      !eq.isDeleted &&
-      eq.tipoEquipamento !== "Impressora" &&
-      !eq.isArchived &&
-      eq.statusOperacional !== "Em manutenção"
-  ).length;
+      !tiposComputing.includes(eq.tipoEquipamento) &&
+      !tiposInfra.includes(eq.tipoEquipamento)
+  );
 
-  emptyState.style.display = totalItensValidos === 0 ? "block" : "none";
+  // Ordena cada lista
+  ordenar(listComp);
+  ordenar(listInfra);
+  ordenar(listOthers);
 
-  // 6. Controla visibilidade da tabela e renderiza as linhas
-  if (equipamentosFiltrados.length > 0) {
-    tbody.closest(".table-container").style.display = "block";
-    tbody.innerHTML = equipamentosFiltrados
-      .map((eq) => criarLinhaEquipamento(eq))
-      .join("");
-  } else {
-    tbody.closest(".table-container").style.display = "none";
-    tbody.innerHTML = "";
-  }
+  // 3. Renderização
+  const renderTabela = (lista, tbody, section, checkboxClass) => {
+    if (lista.length > 0) {
+      section.style.display = "block";
+      tbody.innerHTML = lista
+        .map((eq) => criarLinhaEquipamento(eq, checkboxClass))
+        .join("");
+    } else {
+      section.style.display = "none";
+      tbody.innerHTML = "";
+    }
+  };
 
-  // 7. Atualiza os checkboxes de seleção em massa
-  verificarSelecao("equipamentos");
+  // Renderiza passando uma "sub-classe" para os checkboxes saberem quem é quem
+  renderTabela(listComp, tbodyComp, sectionComp, "checkbox-computing");
+  renderTabela(listInfra, tbodyInfra, sectionInfra, "checkbox-infra");
+  renderTabela(listOthers, tbodyOthers, sectionOthers, "checkbox-others");
+
+  // Empty State Global
+  const totalVisivel = listComp.length + listInfra.length + listOthers.length;
+  emptyState.style.display = totalVisivel === 0 ? "block" : "none";
+
+  // Reseta os checkboxes "Select All"
+  document.getElementById("select-all-computing").checked = false;
+  document.getElementById("select-all-infra").checked = false;
+  document.getElementById("select-all-others").checked = false;
+
+  // Atualiza botão de apagar globalmente (esconde se renderizou de novo)
+  document.getElementById("btn-apagar-equipamentos").style.display = "none";
 }
 
-function criarLinhaEquipamento(eq) {
+function criarLinhaEquipamento(eq, checkboxClass = "checkbox-equipamentos") {
   const statusClasses = {
     Ativo: "ativo",
     Inativo: "inativo",
@@ -2755,7 +2773,7 @@ function criarLinhaEquipamento(eq) {
     Disponível: "disponivel",
   };
 
-  // === Ícones Clicáveis e Classes de Cor ===
+  // === Ícones Clicáveis e Classes de Cor (Acessórios) ===
   let acessoriosHtml = '<div class="acessorios-container">Nenhum</div>';
   if (eq.acessorios && eq.acessorios.length) {
     // Mapeamento de Categoria para Ícone Font Awesome E Classe de Estilo
@@ -2772,7 +2790,6 @@ function criarLinhaEquipamento(eq) {
         styleClass: "icon-suportes",
       },
       Outros: { icon: "fas fa-puzzle-piece", styleClass: "icon-outros" },
-      // Adicione mais mapeamentos se tiver outras categorias
     };
 
     acessoriosHtml = `<div class="acessorios-container">${eq.acessorios
@@ -2793,11 +2810,12 @@ function criarLinhaEquipamento(eq) {
         // Gera o HTML do ícone com tooltip, classe de estilo E ONCLICK
         return `<i class="${iconClass} ${styleClass}"
                   title="${tooltipText.replace(/"/g, "&quot;")}"
-                  onclick="mostrarTooltipAcessorio(event, '${acc.id}')"></i>`; // Adicionado onclick
+                  onclick="mostrarTooltipAcessorio(event, '${acc.id}')"></i>`;
       })
       .join("")}</div>`;
   }
 
+  // === Ícones de Documentos ===
   let documentosHtml = '<div class="documentos-container">N/A</div>';
   if (eq.tipoEquipamento === "Notebook") {
     const termoIcon = `<i class="fas ${
@@ -2823,6 +2841,7 @@ function criarLinhaEquipamento(eq) {
     documentosHtml = `<div class="documentos-container">${termoIcon} ${fotoIcon}</div>`;
   }
 
+  // === Botão de Manutenção ===
   const isManutencaoTarget = ["Notebook", "Desktop"].includes(
     eq.tipoEquipamento
   );
@@ -2830,11 +2849,14 @@ function criarLinhaEquipamento(eq) {
     ? `<button class="btn-action" onclick="enviarParaManutencao('${eq.registro}')" title="Enviar para Manutenção"><i class="fas fa-tools"></i></button>`
     : "";
 
+  // === Renderização da Linha ===
   return `
     <tr>
-      <td class="checkbox-cell"><input type="checkbox" class="checkbox-equipamentos" value="${
-        eq.registro
-      }" onclick="verificarSelecao('equipamentos')"></td>
+      <td class="checkbox-cell">
+        <input type="checkbox" class="checkbox-equipamentos ${checkboxClass}" value="${
+    eq.registro
+  }" onclick="verificarSelecao('equipamentos')">
+      </td>
       <td>${eq.registro}</td>
       <td>${eq.nomeUsuario || "Nenhum"}</td>
       <td>${eq.tipoEquipamento || ""}</td>
