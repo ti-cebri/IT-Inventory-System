@@ -577,14 +577,23 @@
               <div class="form-row" id="sala-ip-group" style="display: none">
                 <div class="form-group">
                   <label class="form-label" for="sala">Sala</label>
-                  <select id="sala" name="sala" class="form-control">
+                  <select id="sala" name="sala" class="form-control" onchange="handleSalaChange(this)">
                     <option value="">Selecione a sala</option>
                     <option value="Casa COP">Casa COP</option>
                     <option value="COPA">COPA</option>
                     <option value="EVENTOS">EVENTOS</option>
                     <option value="FINANCEIRO">FINANCEIRO</option>
                     <option value="PROJETOS">PROJETOS</option>
+                    <option value="Outra">Outra</option>
                   </select>
+                  <input
+                    type="text"
+                    id="outraSala"
+                    name="outraSala"
+                    class="form-control"
+                    placeholder="Digite o nome da sala..."
+                    style="display: none; margin-top: 8px"
+                  />
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="ip">Endereço IP</label>
