@@ -380,6 +380,23 @@ function handleTipoEquipamentoChange(selectElement) {
   }
 }
 
+function handleSalaChange(selectElement) {
+  const form = selectElement.closest("form");
+  // Tenta achar o campo "outraSala" pelo ID (cadastro) ou pelo nome (edição)
+  let inputOutra =
+    form.querySelector("#outraSala") ||
+    form.querySelector('[name="outraSala"]');
+
+  if (selectElement.value === "Outra") {
+    inputOutra.style.display = "block";
+    inputOutra.setAttribute("required", "true"); // Torna obrigatório se selecionou "Outra"
+  } else {
+    inputOutra.style.display = "none";
+    inputOutra.removeAttribute("required");
+    inputOutra.value = ""; // Limpa o valor se mudar de ideia
+  }
+}
+
 function handleTipoAquisicaoChange(radioElement) {
   const form = radioElement.closest("form");
   if (!form) return;
@@ -1471,6 +1488,19 @@ function salvarEquipamento(e) {
   }
   const equipamento = Object.fromEntries(form.entries());
 
+  // --- LÓGICA PARA SALA "OUTRA" ---
+  if (equipamento.sala === "Outra") {
+    const outraSalaValor = form.get("outraSala").trim();
+    if (!outraSalaValor) {
+      mostrarMensagem("Por favor, digite o nome da sala.", "error");
+      return;
+    }
+    equipamento.sala = outraSalaValor; // Substitui "Outra" pelo que foi digitado
+  }
+  // Remove o campo auxiliar do objeto final para não sujar o banco
+  delete equipamento.outraSala;
+  // ---------------------------------------
+
   // *** CORREÇÃO DASHBOARD ***
   if (
     equipamento.statusOperacional === "Disponível" &&
@@ -1561,6 +1591,7 @@ function criarFormularioEdicao(equipamento) {
           }"><span class="radio-custom"></span>${o}</label>`
       )
       .join("");
+
   const departamentos = [
     "Administrativo",
     "Comunicação",
@@ -1577,7 +1608,22 @@ function criarFormularioEdicao(equipamento) {
     "Serviços Gerais",
     "TI",
   ];
-  const salas = ["Casa COP", "COPA", "EVENTOS", "FINANCEIRO", "PROJETOS"];
+
+  // --- ALTERAÇÃO SALA (1/2): Define as salas padrão para comparar ---
+  const salasPadrao = ["Casa COP", "COPA", "EVENTOS", "FINANCEIRO", "PROJETOS"];
+
+  // Verifica se a sala atual é personalizada (não está na lista padrão e não é vazia)
+  const isSalaPersonalizada =
+    equipamento.sala && !salasPadrao.includes(equipamento.sala);
+
+  // Se for personalizada, o select deve mostrar "Outra". Se não, mostra o valor salvo.
+  const salaSelecionada = isSalaPersonalizada
+    ? "Outra"
+    : equipamento.sala || "";
+
+  // O valor do input de texto será a sala salva (se for personalizada)
+  const valorOutraSala = isSalaPersonalizada ? equipamento.sala : "";
+  // ------------------------------------------------------------------
 
   const tiposPadrao = [
     "Desktop",
@@ -1593,11 +1639,8 @@ function criarFormularioEdicao(equipamento) {
   const valorOutro = isTipoOutro ? equipamento.tipoEquipamento : "";
 
   const isImpressora = equipamento.tipoEquipamento === "Impressora";
-  const isNotebookOrDesktop = ["Notebook", "Desktop"].includes(
-    tipoSelecionado // <-- Corrigido para usar o tipo base
-  );
+  const isNotebookOrDesktop = ["Notebook", "Desktop"].includes(tipoSelecionado);
 
-  // <-- ALTERAÇÃO: Verifica se o usuário é CEBRI para exibir o campo correto
   const isCebriUser =
     (equipamento.nomeUsuario || "").trim().toLowerCase() === "cebri";
 
@@ -1719,6 +1762,7 @@ function criarFormularioEdicao(equipamento) {
             equipamento.fornecedor
           )}"></div>
         </div>
+        
         <div class="form-row" id="edit-departamento-group" style="display:${
           isImpressora ? "none" : "grid"
         }"><div class="form-group"><label>Departamento</label><select name="departamento" class="form-control"><option value="" ${
@@ -1727,13 +1771,32 @@ function criarFormularioEdicao(equipamento) {
     departamentos,
     equipamento.departamento
   )}</select></div></div>
+        
         <div class="form-row" id="edit-sala-ip-group" style="display:${
           isImpressora ? "grid" : "none"
         }">
-          <div class="form-group"><label>Sala</label><select name="sala" class="form-control">${opts(
-            salas,
-            equipamento.sala
-          )}</select></div>
+          
+          <div class="form-group">
+            <label>Sala</label>
+            <select name="sala" class="form-control" onchange="handleSalaChange(this)">
+                <option value="">Selecione</option>
+                ${opts(salasPadrao, salaSelecionada)}
+                <option value="Outra" ${
+                  isSalaPersonalizada ? "selected" : ""
+                }>Outra</option>
+            </select>
+            <input 
+                type="text" 
+                id="edit-outraSala" 
+                name="outraSala" 
+                class="form-control" 
+                placeholder="Especifique a sala"
+                value="${safe(valorOutraSala)}"
+                style="display: ${
+                  isSalaPersonalizada ? "block" : "none"
+                }; margin-top: 8px;"
+            >
+          </div>
           <div class="form-group"><label>IP</label><input type="text" name="ip" class="form-control" value="${safe(
             equipamento.ip
           )}"></div>
