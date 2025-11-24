@@ -111,7 +111,7 @@
             </div>
             <div class="metric-info">
               <h3 id="equipamentos-ativos">0</h3>
-              <p>Equipamentos Ativos</p>
+              <p>Total de Equipamentos</p>
             </div>
           </div>
           <div class="metric-card">
@@ -1025,39 +1025,115 @@
             <i class="fas fa-trash"></i> Apagar Itens Selecionados
           </button>
         </div>
-        <div class="table-container">
-          <table class="equipment-table" id="equipment-table">
-            <thead>
-              <tr>
-                <th class="checkbox-cell">
-                  <input
-                    type="checkbox"
-                    id="select-all-equipamentos"
-                    onclick="toggleAllCheckboxes('equipamentos')"
-                  />
-                </th>
-                <th>ID</th>
-                <th>Usuário</th>
-                <th>Tipo</th>
-                <th>Nº de Série</th>
-                <th>Patrimônio</th>
-                <th>Status</th>
-                <th>Departamento</th>
-                <th>Acessórios</th>
-                <th>Documentos</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="equipment-list"></tbody>
-          </table>
+        <div id="section-computing" style="display: none; margin-bottom: 30px">
+          <h3
+            class="lixeira-section-title"
+            style="margin-top: 0; border-bottom: none"
+          >
+            Computadores e Tablets
+          </h3>
+          <div class="table-container">
+            <table class="equipment-table" id="table-computing">
+              <thead>
+                <tr>
+                  <th class="checkbox-cell">
+                    <input
+                      type="checkbox"
+                      id="select-all-computing"
+                      onclick="toggleAllCheckboxes('computing')"
+                    />
+                  </th>
+                  <th>ID</th>
+                  <th>Usuário</th>
+                  <th>Tipo</th>
+                  <th>Nº de Série</th>
+                  <th>Patrimônio</th>
+                  <th>Status</th>
+                  <th>Departamento</th>
+                  <th>Acessórios</th>
+                  <th>Documentos</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="list-computing"></tbody>
+            </table>
+          </div>
         </div>
+
+        <div id="section-infra" style="display: none; margin-bottom: 30px">
+          <h3
+            class="lixeira-section-title"
+            style="margin-top: 0; border-bottom: none"
+          >
+            Infraestrutura (Servidores, Redes)
+          </h3>
+          <div class="table-container">
+            <table class="equipment-table" id="table-infra">
+              <thead>
+                <tr>
+                  <th class="checkbox-cell">
+                    <input
+                      type="checkbox"
+                      id="select-all-infra"
+                      onclick="toggleAllCheckboxes('infra')"
+                    />
+                  </th>
+                  <th>ID</th>
+                  <th>Usuário</th>
+                  <th>Tipo</th>
+                  <th>Nº de Série</th>
+                  <th>Patrimônio</th>
+                  <th>Status</th>
+                  <th>Departamento</th>
+                  <th>Acessórios</th>
+                  <th>Documentos</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="list-infra"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="section-others" style="display: none; margin-bottom: 30px">
+          <h3
+            class="lixeira-section-title"
+            style="margin-top: 0; border-bottom: none"
+          >
+            Outros Equipamentos
+          </h3>
+          <div class="table-container">
+            <table class="equipment-table" id="table-others">
+              <thead>
+                <tr>
+                  <th class="checkbox-cell">
+                    <input
+                      type="checkbox"
+                      id="select-all-others"
+                      onclick="toggleAllCheckboxes('others')"
+                    />
+                  </th>
+                  <th>ID</th>
+                  <th>Usuário</th>
+                  <th>Tipo</th>
+                  <th>Nº de Série</th>
+                  <th>Patrimônio</th>
+                  <th>Status</th>
+                  <th>Departamento</th>
+                  <th>Acessórios</th>
+                  <th>Documentos</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="list-others"></tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="empty-state" id="empty-state" style="display: none">
           <i class="fas fa-inbox"></i>
-          <h3>Nenhum equipamento cadastrado</h3>
-          <p>
-            Use o botão "Carregar Dados" para importar um arquivo CSV ou
-            adicione novos itens na aba "Cadastro"
-          </p>
+          <h3>Nenhum equipamento encontrado</h3>
+          <p>Tente ajustar os filtros ou cadastrar novos itens.</p>
         </div>
       </div>
 
