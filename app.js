@@ -1610,7 +1610,7 @@ function criarFormularioEdicao(equipamento) {
   ];
 
   // --- ALTERAÇÃO SALA (1/2): Define as salas padrão para comparar ---
-  const salasPadrao = ["Casa COP", "COPA", "EVENTOS", "FINANCEIRO", "PROJETOS"];
+  const salasPadrao = ["CASA COP", "PRESIDENCIA", "EVENTOS", "FINANCEIRO", "PROJETOS"];
 
   // Verifica se a sala atual é personalizada (não está na lista padrão e não é vazia)
   const isSalaPersonalizada =
