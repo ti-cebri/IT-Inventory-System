@@ -1604,12 +1604,158 @@
 
       <div class="tab-content" id="relatorios">
         <div class="list-header">
-          <h2>Relatórios</h2>
+          <h2>Gerador de Relatórios Personalizados</h2>
         </div>
-        <div class="empty-state" id="relatorios-empty-state">
-          <i class="fas fa-clipboard-list"></i>
-          <h3>Seção de Relatórios</h3>
-          <p>Esta funcionalidade ainda está em construção.</p>
+
+        <div class="reports-container">
+          <p class="report-instruction">
+            Selecione os tipos de itens que deseja incluir no relatório Excel:
+          </p>
+
+          <form id="form-relatorios">
+            <div class="report-group">
+              <div class="report-main-check">
+                <input
+                  type="checkbox"
+                  id="rep-check-equipamentos"
+                  onchange="toggleFiltroRelatorio('equipamentos')"
+                />
+                <label for="rep-check-equipamentos"
+                  >Equipamentos (Desktops, Notebooks, etc)</label
+                >
+              </div>
+
+              <div
+                id="rep-sub-equipamentos"
+                class="report-sub-options"
+                style="display: none"
+              >
+                <p class="sub-label">Selecione os tipos:</p>
+                <div class="sub-options-grid">
+                  <label
+                    ><input
+                      type="checkbox"
+                      class="sub-check-equip"
+                      value="Desktop"
+                      checked
+                    />
+                    Desktop</label
+                  >
+                  <label
+                    ><input
+                      type="checkbox"
+                      class="sub-check-equip"
+                      value="Notebook"
+                      checked
+                    />
+                    Notebook</label
+                  >
+                  <label
+                    ><input
+                      type="checkbox"
+                      class="sub-check-equip"
+                      value="Tablet"
+                      checked
+                    />
+                    Tablet</label
+                  >
+                  <label
+                    ><input
+                      type="checkbox"
+                      class="sub-check-equip"
+                      value="Servidor"
+                      checked
+                    />
+                    Servidor</label
+                  >
+                  <label
+                    ><input
+                      type="checkbox"
+                      class="sub-check-equip"
+                      value="Roteador"
+                      checked
+                    />
+                    Roteador</label
+                  >
+                  <label
+                    ><input
+                      type="checkbox"
+                      class="sub-check-equip"
+                      value="Switch"
+                      checked
+                    />
+                    Switch</label
+                  >
+                  <label
+                    ><input
+                      type="checkbox"
+                      class="sub-check-equip"
+                      value="Outro"
+                      checked
+                    />
+                    Outros</label
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="report-group">
+              <div class="report-main-check">
+                <input
+                  type="checkbox"
+                  id="rep-check-impressoras"
+                  onchange="verificarEstadoBotaoRelatorio()"
+                />
+                <label for="rep-check-impressoras">Impressoras</label>
+              </div>
+            </div>
+
+            <div class="report-group">
+              <div class="report-main-check">
+                <input
+                  type="checkbox"
+                  id="rep-check-cartuchos"
+                  onchange="verificarEstadoBotaoRelatorio()"
+                />
+                <label for="rep-check-cartuchos">Cartuchos</label>
+              </div>
+            </div>
+
+            <div class="report-group">
+              <div class="report-main-check">
+                <input
+                  type="checkbox"
+                  id="rep-check-acessorios"
+                  onchange="toggleFiltroRelatorio('acessorios')"
+                />
+                <label for="rep-check-acessorios">Acessórios</label>
+              </div>
+
+              <div
+                id="rep-sub-acessorios"
+                class="report-sub-options"
+                style="display: none"
+              >
+                <p class="sub-label">Selecione as categorias:</p>
+                <div
+                  class="sub-options-grid"
+                  id="container-filtros-acessorios-dinamico"
+                ></div>
+              </div>
+            </div>
+
+            <div class="report-actions">
+              <button
+                type="button"
+                id="btn-gerar-excel"
+                class="btn btn--primary btn--lg"
+                disabled
+                onclick="gerarRelatorioExcel()"
+              >
+                <i class="fas fa-file-excel"></i> Baixar Relatório Excel
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 
