@@ -587,6 +587,7 @@ function salvarAcessorio(e) {
 }
 
 function atualizarListaAcessorios(categoriaFiltro = "todos", termoBusca = "") {
+  atualizarContagemAcessoriosDisponiveis();
   const tbody = document.getElementById("acessorios-list");
   const emptyState = document.getElementById("acessorios-empty-state");
   let acessoriosFiltrados = acessorios.filter((a) => !a.isDeleted);
@@ -680,6 +681,48 @@ function atualizarListaAcessorios(categoriaFiltro = "todos", termoBusca = "") {
     acessoriosFiltrados.length > 0 ? "block" : "none";
   popularFiltroCategorias();
   verificarSelecao("acessorios");
+}
+
+function atualizarContagemAcessoriosDisponiveis() {
+  const summaryElement = document.getElementById(
+    "acessorios-disponiveis-summary"
+  );
+  if (!summaryElement) return;
+
+  // 1. Filtra apenas o que está disponível e não excluído
+  const disponiveis = acessorios.filter((a) => a.disponivel && !a.isDeleted);
+
+  // 2. Conta por categoria
+  const contagem = disponiveis.reduce((acc, item) => {
+    acc[item.categoria] = (acc[item.categoria] || 0) + 1;
+    return acc;
+  }, {});
+
+  // 3. Mapeamento de Categoria (Nome longo) para Classe CSS e Label Curto
+  const mapaEstilo = {
+    "Kit (teclado + mouse sem fio)": { css: "kit", label: "Kits" },
+    Headsets: { css: "headsets", label: "Headsets" },
+    Monitores: { css: "monitores", label: "Monitores" },
+    Mouses: { css: "mouses", label: "Mouses" },
+    "Suportes com Cooler": { css: "suportes", label: "Suportes" },
+    Outros: { css: "outros", label: "Outros" },
+  };
+
+  // 4. Gera o HTML colorido
+  // Transforma o objeto contagem em array, ordena alfabeticamente e mapeia para HTML
+  const summaryHtml = Object.entries(contagem)
+    .sort((a, b) => a[0].localeCompare(b[0])) // Ordena por nome da categoria
+    .map(([cat, qtd]) => {
+      // Pega a config do mapa ou usa o padrão "Outros"
+      const config = mapaEstilo[cat] || { css: "outros", label: cat };
+      return `<span class="summary-color summary-${config.css}">${qtd} ${config.label}</span>`;
+    })
+    .join(", ");
+
+  // 5. Atualiza o elemento na tela
+  summaryElement.innerHTML = summaryHtml
+    ? `Disponíveis: ${summaryHtml}`
+    : "Nenhum acessório disponível";
 }
 
 function excluirAcessorio(id) {
@@ -1610,7 +1653,7 @@ function criarFormularioEdicao(equipamento) {
   ];
 
   // --- ALTERAÇÃO SALA (1/2): Define as salas padrão para comparar ---
-  const salasPadrao = ["COPA", "CASA COP", "PRESIDENCIA", "EVENTOS", "FINANCEIRO", "PROJETOS"];
+  const salasPadrao = ["Casa COP", "COPA", "EVENTOS", "FINANCEIRO", "PROJETOS"];
 
   // Verifica se a sala atual é personalizada (não está na lista padrão e não é vazia)
   const isSalaPersonalizada =
