@@ -4093,3 +4093,269 @@ function confirmarLimpezaDados() {
     }
   );
 }
+
+// ===========================================
+// LÓGICA DE RELATÓRIOS (NOVO)
+// ===========================================
+
+function toggleFiltroRelatorio(tipo) {
+  const checkPrincipal = document.getElementById(`rep-check-${tipo}`);
+  const divSub = document.getElementById(`rep-sub-${tipo}`);
+
+  if (checkPrincipal && divSub) {
+    divSub.style.display = checkPrincipal.checked ? "block" : "none";
+
+    // Se for acessórios e estiver abrindo, popula as categorias dinamicamente
+    if (tipo === "acessorios" && checkPrincipal.checked) {
+      popularFiltrosAcessoriosRelatorio();
+    }
+  }
+  verificarEstadoBotaoRelatorio();
+}
+
+function popularFiltrosAcessoriosRelatorio() {
+  const container = document.getElementById(
+    "container-filtros-acessorios-dinamico"
+  );
+  // Pega categorias únicas dos acessórios existentes
+  const categorias = [
+    ...new Set(acessorios.filter((a) => !a.isDeleted).map((a) => a.categoria)),
+  ].sort();
+
+  // Categorias padrão caso não tenha nada cadastrado ainda
+  const padrao = [
+    "Headsets",
+    "Kit (teclado + mouse sem fio)",
+    "Monitores",
+    "Mouses",
+    "Suportes com Cooler",
+    "Outros",
+  ];
+  const listaFinal = categorias.length > 0 ? categorias : padrao;
+
+  container.innerHTML = listaFinal
+    .map(
+      (cat) => `
+    <label>
+      <input type="checkbox" class="sub-check-acc" value="${cat}" checked onchange="verificarEstadoBotaoRelatorio()"> 
+      ${cat}
+    </label>
+  `
+    )
+    .join("");
+
+  // Adiciona listeners aos novos checkboxes criados para atualizar o botão
+  container.querySelectorAll("input").forEach((input) => {
+    input.addEventListener("change", verificarEstadoBotaoRelatorio);
+  });
+}
+
+function verificarEstadoBotaoRelatorio() {
+  const btn = document.getElementById("btn-gerar-excel");
+  const equipCheck = document.getElementById("rep-check-equipamentos").checked;
+  const printCheck = document.getElementById("rep-check-impressoras").checked;
+  const cartCheck = document.getElementById("rep-check-cartuchos").checked;
+  const accCheck = document.getElementById("rep-check-acessorios").checked;
+
+  // Verifica se pelo menos um principal está marcado
+  let ativo = equipCheck || printCheck || cartCheck || accCheck;
+
+  // Se equipamentos estiver marcado, verifica se tem sub-tipo marcado
+  if (equipCheck) {
+    const subs = document.querySelectorAll(".sub-check-equip:checked");
+    if (subs.length === 0) ativo = false;
+  }
+
+  // Se acessórios estiver marcado, verifica se tem sub-categoria marcada
+  if (accCheck) {
+    const subs = document.querySelectorAll(".sub-check-acc:checked");
+    if (subs.length === 0) ativo = false;
+  }
+
+  btn.disabled = !ativo;
+  // Atualiza também os listeners dos sub-checkboxes de equipamentos
+  document.querySelectorAll(".sub-check-equip").forEach((input) => {
+    input.onchange = verificarEstadoBotaoRelatorio;
+  });
+}
+
+function gerarRelatorioExcel() {
+  let csvContent = "";
+
+  // 1. PROCESSAR EQUIPAMENTOS
+  if (document.getElementById("rep-check-equipamentos").checked) {
+    const tiposSelecionados = Array.from(
+      document.querySelectorAll(".sub-check-equip:checked")
+    ).map((cb) => cb.value);
+
+    // Filtra equipamentos (excluindo impressoras que tem seção própria)
+    const listaEquip = equipamentos.filter(
+      (eq) =>
+        !eq.isDeleted &&
+        !eq.isArchived &&
+        eq.tipoEquipamento !== "Impressora" &&
+        (tiposSelecionados.includes(eq.tipoEquipamento) ||
+          (tiposSelecionados.includes("Outro") &&
+            ![
+              "Desktop",
+              "Notebook",
+              "Tablet",
+              "Servidor",
+              "Roteador",
+              "Switch",
+            ].includes(eq.tipoEquipamento)))
+    );
+
+    if (listaEquip.length > 0) {
+      csvContent += "=== RELATÓRIO DE EQUIPAMENTOS ===\n";
+      // Colunas: ID, Usuário, Tipo, Nº de Série, Patrimônio, Status, Departamento, Acessórios, Documentos
+      csvContent +=
+        "ID,Usuário,Tipo,Nº de Série,Patrimônio,Status,Departamento,Acessórios Vinculados,Documentos\n";
+
+      listaEquip.forEach((eq) => {
+        // Formata Acessórios (nomes em vez de IDs)
+        let accNomes = "Nenhum";
+        if (eq.acessorios && eq.acessorios.length > 0) {
+          accNomes = eq.acessorios
+            .map((id) => {
+              const acc = acessorios.find((a) => String(a.id) === String(id));
+              return acc ? `${acc.categoria} (${acc.modelo})` : id;
+            })
+            .join("; ");
+        }
+
+        // Formata Documentos
+        let docs = [];
+        if (eq.termoResponsabilidade) docs.push("Termo OK");
+        if (eq.fotoNotebook) docs.push("Foto OK");
+        const docsStr = docs.length > 0 ? docs.join(" + ") : "Pendente";
+
+        const linha = [
+          eq.registro,
+          eq.nomeUsuario || "",
+          eq.tipoEquipamento,
+          eq.numeroSerie,
+          eq.numeroPatrimonio,
+          eq.statusOperacional,
+          eq.departamento,
+          accNomes,
+          docsStr,
+        ]
+          .map((campo) => `"${String(campo || "").replace(/"/g, '""')}"`)
+          .join(","); // Escape aspas CSV
+
+        csvContent += linha + "\n";
+      });
+      csvContent += "\n\n";
+    }
+  }
+
+  // 2. PROCESSAR IMPRESSORAS
+  if (document.getElementById("rep-check-impressoras").checked) {
+    const listaPrint = equipamentos.filter(
+      (eq) =>
+        !eq.isDeleted && !eq.isArchived && eq.tipoEquipamento === "Impressora"
+    );
+
+    if (listaPrint.length > 0) {
+      csvContent += "=== RELATÓRIO DE IMPRESSORAS ===\n";
+      // Colunas: ID, Nº de Série, Patrimônio, Sala, IP, Observações
+      csvContent += "ID,Nº de Série,Patrimônio,Sala,IP,Observações\n";
+
+      listaPrint.forEach((imp) => {
+        const linha = [
+          imp.registro,
+          imp.numeroSerie,
+          imp.numeroPatrimonio,
+          imp.sala,
+          imp.ip,
+          imp.observacoes,
+        ]
+          .map((campo) => `"${String(campo || "").replace(/"/g, '""')}"`)
+          .join(",");
+
+        csvContent += linha + "\n";
+      });
+      csvContent += "\n\n";
+    }
+  }
+
+  // 3. PROCESSAR CARTUCHOS
+  if (document.getElementById("rep-check-cartuchos").checked) {
+    const listaCart = cartuchos.filter((c) => !c.isDeleted && !c.isArchived);
+
+    if (listaCart.length > 0) {
+      csvContent += "=== RELATÓRIO DE CARTUCHOS ===\n";
+      // Colunas: ID, Nº de Série, Patrimônio, Cor, Status, Vinculado à (Impressora)
+      csvContent +=
+        "ID,Nº de Série,Patrimônio,Cor,Status,Vinculado à (Impressora)\n";
+
+      listaCart.forEach((c) => {
+        const linha = [
+          c.id,
+          c.numeroSerie,
+          c.patrimonio,
+          c.cor,
+          c.status,
+          c.impressoraVinculada,
+        ]
+          .map((campo) => `"${String(campo || "").replace(/"/g, '""')}"`)
+          .join(",");
+
+        csvContent += linha + "\n";
+      });
+      csvContent += "\n\n";
+    }
+  }
+
+  // 4. PROCESSAR ACESSÓRIOS
+  if (document.getElementById("rep-check-acessorios").checked) {
+    const catsSelecionadas = Array.from(
+      document.querySelectorAll(".sub-check-acc:checked")
+    ).map((cb) => cb.value);
+
+    const listaAcc = acessorios.filter(
+      (a) => !a.isDeleted && catsSelecionadas.includes(a.categoria)
+    );
+
+    if (listaAcc.length > 0) {
+      csvContent += "=== RELATÓRIO DE ACESSÓRIOS ===\n";
+      // Colunas: ID, Categoria, Modelo, Tipo, Patrimônio, Número de Série
+      csvContent += "ID,Categoria,Modelo,Tipo,Patrimônio,Número de Série\n";
+
+      listaAcc.forEach((a) => {
+        const linha = [
+          a.id,
+          a.categoria,
+          a.modelo,
+          a.tipo,
+          a.patrimonio,
+          a.numeroSerie,
+        ]
+          .map((campo) => `"${String(campo || "").replace(/"/g, '""')}"`)
+          .join(",");
+
+        csvContent += linha + "\n";
+      });
+      csvContent += "\n\n";
+    }
+  }
+
+  if (csvContent === "") {
+    mostrarMensagem(
+      "Nenhum dado encontrado para os filtros selecionados.",
+      "error"
+    );
+    return;
+  }
+
+  // Download do Arquivo
+  const blob = new Blob(["\uFEFF" + csvContent], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const link = document.createElement("a");
+  const dataHoje = new Date().toLocaleDateString("pt-BR").replace(/\//g, "-");
+  link.href = URL.createObjectURL(blob);
+  link.download = `Relatorio_TI_${dataHoje}.csv`;
+  link.click();
+}
