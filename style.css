@@ -1855,3 +1855,45 @@ button:disabled i,
 #lixeira-cartuchos-table td:nth-child(6) {
   white-space: nowrap !important;
 }
+
+/* --- Cores do Sumário de Acessórios (Baseado nos ícones existentes) --- */
+
+/* TEMA CLARO */
+.summary-kit {
+  color: #d97706;
+} /* Âmbar */
+.summary-headsets {
+  color: #9333ea;
+} /* Roxo */
+.summary-monitores {
+  color: #2563eb;
+} /* Azul */
+.summary-mouses {
+  color: #16a34a;
+} /* Verde */
+.summary-suportes {
+  color: #0d9488;
+} /* Teal */
+.summary-outros {
+  color: var(--color-text-secondary);
+}
+
+/* TEMA ESCURO */
+[data-color-scheme="dark"] .summary-kit {
+  color: #f59e0b;
+}
+[data-color-scheme="dark"] .summary-headsets {
+  color: #c084fc;
+}
+[data-color-scheme="dark"] .summary-monitores {
+  color: #60a5fa;
+}
+[data-color-scheme="dark"] .summary-mouses {
+  color: #4ade80;
+}
+[data-color-scheme="dark"] .summary-suportes {
+  color: #2dd4bf;
+}
+[data-color-scheme="dark"] .summary-outros {
+  color: var(--color-text-secondary);
+}
