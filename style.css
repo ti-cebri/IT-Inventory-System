@@ -1897,3 +1897,109 @@ button:disabled i,
 [data-color-scheme="dark"] .summary-outros {
   color: var(--color-text-secondary);
 }
+
+/* --- ESTILOS DA PÁGINA DE RELATÓRIOS --- */
+.reports-container {
+  background-color: var(--color-surface);
+  padding: var(--space-24);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-card-border);
+  box-shadow: var(--shadow-sm);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.report-instruction {
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
+  margin-bottom: var(--space-24);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-12);
+}
+
+.report-group {
+  margin-bottom: var(--space-20);
+  padding: var(--space-16);
+  background-color: var(--color-background);
+  border-radius: var(--radius-base);
+  border: 1px solid var(--color-border);
+  transition: all 0.2s ease;
+}
+
+.report-group:hover {
+  border-color: var(--color-primary);
+}
+
+.report-main-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.report-main-check input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+.report-main-check label {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.report-sub-options {
+  margin-top: var(--space-16);
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-card-border-inner);
+  margin-left: 32px; /* Indentação */
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sub-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-12);
+  font-weight: var(--font-weight-bold);
+}
+
+.sub-options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-12);
+}
+
+.sub-options-grid label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.report-actions {
+  margin-top: var(--space-32);
+  display: flex;
+  justify-content: flex-end;
+}
+
+#btn-gerar-excel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--color-secondary);
+  color: var(--color-text-secondary);
+}
