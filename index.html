@@ -10,1809 +10,1958 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+    <style>
+      /* --- ESTILOS DE LOGIN --- */
+      #login-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #f8f9fa;
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+      }
+      .login-card {
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        width: 90%;
+        max-width: 400px;
+      }
+      .login-card h2 {
+        color: #01257d;
+        margin-bottom: 10px;
+      }
+      .login-card p {
+        color: #6c757d;
+        margin-bottom: 20px;
+      }
+      .login-input {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 15px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 16px;
+      }
+      .login-btn {
+        width: 100%;
+        padding: 12px;
+        background: #01257d;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .login-btn:hover {
+        background: #011e64;
+      }
+      #login-error {
+        color: #dc3545;
+        margin-top: 15px;
+        font-size: 14px;
+        min-height: 20px;
+      }
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #01257d;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+        display: none;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Esconde o app até logar */
+      #app-content {
+        display: none;
+      }
+    </style>
   </head>
   <body>
-    <div class="container">
-      <header class="header">
-        <h1><i class="fas fa-laptop"></i> Sistema de Inventário de TI</h1>
-        <p>Gestão Completa de Equipamentos e Ativos Tecnológicos</p>
-        <button
-          id="theme-toggle"
-          class="theme-toggle-btn"
-          title="Alternar tema"
-        >
-          <i class="fas fa-moon" id="theme-toggle-icon-moon"></i>
-          <i
-            class="fas fa-sun"
-            id="theme-toggle-icon-sun"
-            style="display: none"
-          ></i>
-        </button>
-      </header>
-
-      <div class="main-nav-container">
-        <nav class="nav-tabs">
-          <button class="tab-btn active" data-tab="dashboard">
-            <i class="fas fa-chart-pie"></i> Dashboard
-          </button>
-          <button class="tab-btn" data-tab="cadastro">
-            <i class="fas fa-plus-circle"></i> Cadastro
-          </button>
-          <button class="tab-btn" data-tab="lista">
-            <i class="fas fa-list"></i> Equipamentos
-          </button>
-          <button class="tab-btn" data-tab="impressoras">
-            <i class="fas fa-print"></i> Impressoras
-          </button>
-          <button class="tab-btn" data-tab="cartuchos">
-            <i class="fas fa-tint"></i> Cartuchos
-          </button>
-          <button class="tab-btn" data-tab="acessorios">
-            <i class="fas fa-keyboard"></i> Acessórios
-          </button>
-          <button class="tab-btn" data-tab="manutencao">
-            <i class="fas fa-tools"></i> Manutenção
-          </button>
-          <button class="tab-btn" data-tab="arquivados">
-            <i class="fas fa-archive"></i> Arquivados
-          </button>
-          <button class="tab-btn" data-tab="lixeira">
-            <i class="fas fa-trash-alt"></i> Lixeira
-          </button>
-          <button class="tab-btn" data-tab="relatorios">
-            <i class="fas fa-clipboard-list"></i> Relatórios
-          </button>
-        </nav>
-
-        <div class="global-actions">
-          <button
-            class="btn btn--primary"
-            id="btn-global-carregar"
-            onclick="carregarDadosCompletos()"
-            style="display: none"
-          >
-            <i class="fas fa-upload"></i> Carregar Dados
-          </button>
-          <button
-            class="btn btn--primary"
-            id="btn-exportar-csv"
-            onclick="salvarDadosCompletos()"
-          >
-            <i class="fas fa-download"></i> Salvar CSV
-          </button>
-        </div>
+    <div id="login-screen">
+      <div class="login-card">
+        <h2><i class="fas fa-shield-alt"></i> Acesso Restrito</h2>
+        <p>Inventário de TI - CEBRI</p>
+        <form id="form-login">
+          <input
+            type="email"
+            id="login-email"
+            class="login-input"
+            placeholder="Seu e-mail"
+            required
+          />
+          <input
+            type="password"
+            id="login-password"
+            class="login-input"
+            placeholder="Sua senha"
+            required
+          />
+          <button type="submit" class="login-btn">Entrar</button>
+        </form>
+        <div id="loading-spinner" class="spinner"></div>
+        <p id="login-error"></p>
       </div>
+    </div>
 
-      <div class="tab-content active" id="dashboard">
-        <div class="dashboard-header">
-          <h2>Dashboard - Visão Geral</h2>
-
+    <div id="app-content">
+      <div class="container">
+        <header class="header">
+          <h1><i class="fas fa-laptop"></i> Sistema de Inventário de TI</h1>
+          <p>Gestão Completa de Equipamentos e Ativos Tecnológicos</p>
           <div
             style="
-              display: flex;
-              flex-direction: column;
-              gap: 10px;
-              align-items: flex-end;
+              position: absolute;
+              top: 30px;
+              right: 120px;
+              color: rgba(255, 255, 255, 0.8);
+              font-size: 12px;
+              text-align: right;
             "
+            id="user-display"
+          ></div>
+          <button
+            id="logout-btn"
+            class="theme-toggle-btn"
+            style="right: 70px; background: rgba(255, 0, 0, 0.2)"
+            title="Sair do Sistema"
           >
-            <button class="btn btn--danger" onclick="confirmarLimpezaDados()">
-              <i class="fas fa-trash"></i> Limpar Dados
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+          <button
+            id="theme-toggle"
+            class="theme-toggle-btn"
+            title="Alternar tema"
+          >
+            <i class="fas fa-moon" id="theme-toggle-icon-moon"></i>
+            <i
+              class="fas fa-sun"
+              id="theme-toggle-icon-sun"
+              style="display: none"
+            ></i>
+          </button>
+        </header>
+
+        <div class="main-nav-container">
+          <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="dashboard">
+              <i class="fas fa-chart-pie"></i> Dashboard
             </button>
+            <button class="tab-btn" data-tab="cadastro">
+              <i class="fas fa-plus-circle"></i> Cadastro
+            </button>
+            <button class="tab-btn" data-tab="lista">
+              <i class="fas fa-list"></i> Equipamentos
+            </button>
+            <button class="tab-btn" data-tab="impressoras">
+              <i class="fas fa-print"></i> Impressoras
+            </button>
+            <button class="tab-btn" data-tab="cartuchos">
+              <i class="fas fa-tint"></i> Cartuchos
+            </button>
+            <button class="tab-btn" data-tab="acessorios">
+              <i class="fas fa-keyboard"></i> Acessórios
+            </button>
+            <button class="tab-btn" data-tab="manutencao">
+              <i class="fas fa-tools"></i> Manutenção
+            </button>
+            <button class="tab-btn" data-tab="arquivados">
+              <i class="fas fa-archive"></i> Arquivados
+            </button>
+            <button class="tab-btn" data-tab="lixeira">
+              <i class="fas fa-trash-alt"></i> Lixeira
+            </button>
+            <button class="tab-btn" data-tab="relatorios">
+              <i class="fas fa-clipboard-list"></i> Relatórios
+            </button>
+          </nav>
 
-            <button class="btn btn--secondary" onclick="atualizarDashboard()">
-              <i class="fas fa-sync-alt"></i> Atualizar
+          <div class="global-actions">
+            <button
+              class="btn btn--primary"
+              id="btn-exportar-csv"
+              onclick="salvarDadosCompletos()"
+            >
+              <i class="fas fa-download"></i> Salvar CSV (Backup)
             </button>
           </div>
         </div>
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <div class="metric-icon ativo">
-              <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="metric-info">
-              <h3 id="equipamentos-ativos">0</h3>
-              <p>Total de Equipamentos</p>
-            </div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-icon disponivel">
-              <i class="fas fa-laptop"></i>
-            </div>
-            <div class="metric-info">
-              <h3 id="notebooks-disponiveis">0</h3>
-              <p>Notebooks Disponíveis</p>
-            </div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-icon manutencao">
-              <i class="fas fa-tools"></i>
-            </div>
-            <div class="metric-info">
-              <h3 id="equipamentos-manutencao">0</h3>
-              <p>Equipamentos em Manutenção</p>
-            </div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-icon arquivado">
-              <i class="fas fa-archive"></i>
-            </div>
-            <div class="metric-info">
-              <h3 id="equipamentos-arquivados">0</h3>
-              <p>Equipamentos Arquivados</p>
-            </div>
-          </div>
-        </div>
-        <div class="charts-grid">
-          <div class="chart-container">
-            <h3>Distribuição por Tipo</h3>
-            <canvas id="tipoChart"></canvas>
-          </div>
-          <div class="chart-container">
-            <h3>Status Operacional</h3>
-            <canvas id="statusChart"></canvas>
-          </div>
-          <div class="chart-container">
-            <h3>Equipamentos por Departamento</h3>
-            <canvas id="departamentoChart"></canvas>
-          </div>
-        </div>
-      </div>
 
-      <div class="tab-content" id="cadastro">
-        <div class="cadastro-toggle">
-          <button
-            id="btn-toggle-equipamento"
-            class="btn active"
-            onclick="mostrarFormulario('equipamento')"
-          >
-            <i class="fas fa-desktop"></i> Cadastrar Equipamento
-          </button>
-          <button
-            id="btn-toggle-acessorio"
-            class="btn"
-            onclick="mostrarFormulario('acessorio')"
-          >
-            <i class="fas fa-mouse"></i> Cadastrar Acessório
-          </button>
-          <button
-            id="btn-toggle-cartucho"
-            class="btn"
-            onclick="mostrarFormulario('cartucho')"
-          >
-            <i class="fas fa-tint"></i> Cadastrar Cartucho
-          </button>
+        <div class="tab-content active" id="dashboard">
+          <div class="dashboard-header">
+            <h2>Dashboard - Visão Geral</h2>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-end;
+              "
+            >
+              <button class="btn btn--secondary" onclick="atualizarDashboard()">
+                <i class="fas fa-sync-alt"></i> Atualizar
+              </button>
+            </div>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-icon ativo">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <div class="metric-info">
+                <h3 id="equipamentos-ativos">0</h3>
+                <p>Total de Equipamentos</p>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon disponivel">
+                <i class="fas fa-laptop"></i>
+              </div>
+              <div class="metric-info">
+                <h3 id="notebooks-disponiveis">0</h3>
+                <p>Notebooks Disponíveis</p>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon manutencao">
+                <i class="fas fa-tools"></i>
+              </div>
+              <div class="metric-info">
+                <h3 id="equipamentos-manutencao">0</h3>
+                <p>Equipamentos em Manutenção</p>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon arquivado">
+                <i class="fas fa-archive"></i>
+              </div>
+              <div class="metric-info">
+                <h3 id="equipamentos-arquivados">0</h3>
+                <p>Equipamentos Arquivados</p>
+              </div>
+            </div>
+          </div>
+          <div class="charts-grid">
+            <div class="chart-container">
+              <h3>Distribuição por Tipo</h3>
+              <canvas id="tipoChart"></canvas>
+            </div>
+            <div class="chart-container">
+              <h3>Status Operacional</h3>
+              <canvas id="statusChart"></canvas>
+            </div>
+            <div class="chart-container">
+              <h3>Equipamentos por Departamento</h3>
+              <canvas id="departamentoChart"></canvas>
+            </div>
+          </div>
         </div>
 
-        <div id="form-container-equipamento">
-          <div class="form-header">
-            <h2>Cadastro de Equipamento</h2>
-            <p>Selecione o tipo de equipamento para iniciar o cadastro</p>
+        <div class="tab-content" id="cadastro">
+          <div class="cadastro-toggle">
+            <button
+              id="btn-toggle-equipamento"
+              class="btn active"
+              onclick="mostrarFormulario('equipamento')"
+            >
+              <i class="fas fa-desktop"></i> Cadastrar Equipamento
+            </button>
+            <button
+              id="btn-toggle-acessorio"
+              class="btn"
+              onclick="mostrarFormulario('acessorio')"
+            >
+              <i class="fas fa-mouse"></i> Cadastrar Acessório
+            </button>
+            <button
+              id="btn-toggle-cartucho"
+              class="btn"
+              onclick="mostrarFormulario('cartucho')"
+            >
+              <i class="fas fa-tint"></i> Cadastrar Cartucho
+            </button>
           </div>
-          <form id="equipamento-form" class="equipment-form">
-            <fieldset class="form-section">
-              <legend>Detalhes do Equipamento</legend>
-              <div class="form-row">
+
+          <div id="form-container-equipamento">
+            <div class="form-header">
+              <h2>Cadastro de Equipamento</h2>
+              <p>Selecione o tipo de equipamento para iniciar o cadastro</p>
+            </div>
+            <form id="equipamento-form" class="equipment-form">
+              <fieldset class="form-section">
+                <legend>Detalhes do Equipamento</legend>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="tipoEquipamento"
+                      >Tipo de Equipamento
+                      <span class="required">*</span></label
+                    >
+                    <select
+                      id="tipoEquipamento"
+                      name="tipoEquipamento"
+                      class="form-control"
+                    >
+                      <option value="">Selecione o tipo...</option>
+                      <option value="Desktop">Desktop</option>
+                      <option value="Notebook">Notebook</option>
+                      <option value="Tablet">Tablet</option>
+                      <option value="Impressora">Impressora</option>
+                      <option value="Servidor">Servidor</option>
+                      <option value="Roteador">Roteador</option>
+                      <option value="Switch">Switch</option>
+                      <option value="Outro">Outro</option>
+                    </select>
+                    <span
+                      class="error-message"
+                      id="error-tipoEquipamento"
+                    ></span>
+                  </div>
+
+                  <div
+                    class="form-group"
+                    id="outroTipoEquipamentoGroup"
+                    style="display: none"
+                  >
+                    <label class="form-label" for="outroTipoEquipamento"
+                      >Especifique o Tipo <span class="required">*</span></label
+                    >
+                    <input
+                      type="text"
+                      id="outroTipoEquipamento"
+                      name="outroTipoEquipamento"
+                      class="form-control"
+                      placeholder="Ex: Scanner, Projetor..."
+                    />
+                    <span
+                      class="error-message"
+                      id="error-outroTipoEquipamento"
+                    ></span>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="numeroSerie"
+                      >Número de Série <span class="required">*</span></label
+                    >
+                    <input
+                      type="text"
+                      id="numeroSerie"
+                      name="numeroSerie"
+                      class="form-control"
+                      placeholder="Digite o número de série"
+                    />
+                    <span class="error-message" id="error-numeroSerie"></span>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="fabricante"
+                      >Fabricante</label
+                    >
+                    <input
+                      type="text"
+                      id="fabricante"
+                      name="fabricante"
+                      class="form-control"
+                      placeholder="Ex: Dell, HP, Apple"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="modelo">Modelo</label>
+                    <input
+                      type="text"
+                      id="modelo"
+                      name="modelo"
+                      class="form-control"
+                      placeholder="Ex: ProBook 445 G9, WF-C5890"
+                    />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="numeroPatrimonio"
+                      >Patrimônio <span class="required">*</span></label
+                    >
+                    <input
+                      type="text"
+                      id="numeroPatrimonio"
+                      name="numeroPatrimonio"
+                      class="form-control"
+                      placeholder="Digite o patrimônio"
+                    />
+                    <span
+                      class="error-message"
+                      id="error-numeroPatrimonio"
+                    ></span>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="statusOperacional"
+                      >Status Operacional <span class="required">*</span></label
+                    >
+                    <select
+                      id="statusOperacional"
+                      name="statusOperacional"
+                      class="form-control"
+                    >
+                      <option value="">Selecione...</option>
+                      <option value="Disponível">Disponível</option>
+                      <option value="Ativo">Ativo</option>
+                      <option value="Inativo">Inativo</option>
+                      <option value="Em manutenção">Em manutenção</option>
+                    </select>
+                    <span
+                      class="error-message"
+                      id="error-statusOperacional"
+                    ></span>
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset
+                id="fieldset-specs"
+                class="form-section"
+                style="display: none"
+              >
+                <legend>Especificações Técnicas</legend>
+                <div
+                  class="form-row"
+                  id="specs-polegadas-group"
+                  style="display: none"
+                >
+                  <div class="form-group">
+                    <label class="form-label" for="polegadas">Polegadas</label>
+                    <input
+                      type="text"
+                      id="polegadas"
+                      name="polegadas"
+                      class="form-control"
+                      placeholder='Ex: 14"'
+                    />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="memoriaRam"
+                      >Memória RAM</label
+                    >
+                    <input
+                      type="text"
+                      id="memoriaRam"
+                      name="memoriaRam"
+                      class="form-control"
+                      placeholder="Ex: 16GB"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="armazenamento"
+                      >HD/SSD (GB)</label
+                    >
+                    <input
+                      type="text"
+                      id="armazenamento"
+                      name="armazenamento"
+                      class="form-control"
+                      placeholder="Ex: 512GB"
+                    />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="processador"
+                      >Processador</label
+                    >
+                    <input
+                      type="text"
+                      id="processador"
+                      name="processador"
+                      class="form-control"
+                      placeholder="Ex: Intel Core i7-1165G7"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="versaoWindows"
+                      >Versão do Windows</label
+                    >
+                    <input
+                      type="text"
+                      id="versaoWindows"
+                      name="versaoWindows"
+                      class="form-control"
+                      placeholder="Ex: Windows 11 Pro"
+                    />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Placa de Vídeo dedicada?</label>
+                    <div class="radio-group">
+                      <label class="radio-label">
+                        <input
+                          type="radio"
+                          name="placaVideoDedicada"
+                          value="Sim"
+                        />
+                        <span class="radio-custom"></span>Sim
+                      </label>
+                      <label class="radio-label">
+                        <input
+                          type="radio"
+                          name="placaVideoDedicada"
+                          value="Não"
+                          checked
+                        />
+                        <span class="radio-custom"></span>Não
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset
+                id="fieldset-usuario"
+                class="form-section"
+                style="display: none"
+              >
+                <legend>Informações do Usuário</legend>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="nomeUsuario"
+                      >Nome do Usuário</label
+                    >
+                    <input
+                      type="text"
+                      id="nomeUsuario"
+                      name="nomeUsuario"
+                      class="form-control"
+                      placeholder="Digite o nome completo"
+                      oninput="handleNomeUsuarioChange(event)"
+                    />
+                    <span class="error-message" id="error-nomeUsuario"></span>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="email"
+                      >E-mail Corporativo</label
+                    >
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      class="form-control"
+                      placeholder="usuario@empresa.com"
+                    />
+                    <span class="error-message" id="error-email"></span>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group" id="cpf-group">
+                    <label class="form-label" for="cpf">CPF</label>
+                    <input
+                      type="text"
+                      id="cpf"
+                      name="cpf"
+                      class="form-control"
+                      placeholder="000.000.000-00"
+                      maxlength="14"
+                    />
+                    <span class="error-message" id="error-cpf"></span>
+                  </div>
+                  <div class="form-group" id="cnpj-group" style="display: none">
+                    <label class="form-label" for="cnpj">CNPJ</label>
+                    <input
+                      type="text"
+                      id="cnpj"
+                      name="cnpj"
+                      class="form-control"
+                      value="02.673.153/0001-25"
+                      readonly
+                    />
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset
+                id="fieldset-comercial"
+                class="form-section"
+                style="display: none"
+              >
+                <legend>Informações Comerciais e Administrativas</legend>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="dataAquisicao"
+                      >Data Aquisição</label
+                    >
+                    <input
+                      type="date"
+                      id="dataAquisicao"
+                      name="dataAquisicao"
+                      class="form-control"
+                    />
+                    <span class="error-message" id="error-dataAquisicao"></span>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Tipo de Aquisição</label>
+                    <div class="radio-group">
+                      <label class="radio-label">
+                        <input
+                          type="radio"
+                          name="tipoAquisicao"
+                          value="Patrimonial"
+                          onchange="handleTipoAquisicaoChange(this)"
+                        />
+                        <span class="radio-custom"></span>Patrimonial
+                      </label>
+                      <label class="radio-label">
+                        <input
+                          type="radio"
+                          name="tipoAquisicao"
+                          value="Alugado"
+                          onchange="handleTipoAquisicaoChange(this)"
+                        />
+                        <span class="radio-custom"></span>Alugado
+                      </label>
+                    </div>
+                    <span class="error-message" id="error-tipoAquisicao"></span>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group" id="valor-group">
+                    <label class="form-label" for="valor">Valor (R$)</label>
+                    <input
+                      type="text"
+                      id="valor"
+                      name="valor"
+                      class="form-control"
+                      placeholder="0,00"
+                    />
+                    <span class="error-message" id="error-valor"></span>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="fornecedor"
+                      >Fornecedor</label
+                    >
+                    <input
+                      type="text"
+                      id="fornecedor"
+                      name="fornecedor"
+                      class="form-control"
+                      placeholder="Fornecedor"
+                    />
+                    <span class="error-message" id="error-fornecedor"></span>
+                  </div>
+                </div>
+                <div class="form-row" id="departamento-group">
+                  <div class="form-group">
+                    <label class="form-label" for="departamento"
+                      >Departamento</label
+                    >
+                    <select
+                      id="departamento"
+                      name="departamento"
+                      class="form-control"
+                    >
+                      <option value="">Selecione...</option>
+                      <option value="Administrativo">Administrativo</option>
+                      <option value="Comunicação">Comunicação</option>
+                      <option value="Cursos">Cursos</option>
+                      <option value="Diretoria">Diretoria</option>
+                      <option value="Eventos">Eventos</option>
+                      <option value="Financeiro">Financeiro</option>
+                      <option value="Projetos">Projetos</option>
+                      <option value="Relações Corporativas">
+                        Relações Corporativas
+                      </option>
+                      <option value="Relações Externas">
+                        Relações Externas
+                      </option>
+                      <option value="Relações Institucionais">
+                        Relações Institucionais
+                      </option>
+                      <option value="Revista">Revista</option>
+                      <option value="RH">RH</option>
+                      <option value="Serviços Gerais">Serviços Gerais</option>
+                      <option value="TI">TI</option>
+                    </select>
+                    <span class="error-message" id="error-departamento"></span>
+                  </div>
+                </div>
+                <div class="form-row" id="sala-ip-group" style="display: none">
+                  <div class="form-group">
+                    <label class="form-label" for="sala">Sala</label>
+                    <select
+                      id="sala"
+                      name="sala"
+                      class="form-control"
+                      onchange="handleSalaChange(this)"
+                    >
+                      <option value="">Selecione...</option>
+                      <option value="Casa COP">Casa COP</option>
+                      <option value="COPA">COPA</option>
+                      <option value="EVENTOS">EVENTOS</option>
+                      <option value="FINANCEIRO">FINANCEIRO</option>
+                      <option value="PROJETOS">PROJETOS</option>
+                      <option value="Outra">Outra</option>
+                    </select>
+                    <input
+                      type="text"
+                      id="outraSala"
+                      name="outraSala"
+                      class="form-control"
+                      placeholder="Digite a sala..."
+                      style="display: none; margin-top: 8px"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="ip">IP</label>
+                    <input
+                      type="text"
+                      id="ip"
+                      name="ip"
+                      class="form-control"
+                      placeholder="Ex: 192.168.1.100"
+                    />
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset
+                id="fieldset-acessorios"
+                class="form-section"
+                style="display: none"
+              >
+                <legend>Vincular Acessórios</legend>
+                <div class="acessorio-search-component">
+                  <div class="form-group">
+                    <label for="acessorio-search-input" class="form-label"
+                      >Buscar Acessório</label
+                    >
+                    <input
+                      type="text"
+                      id="acessorio-search-input"
+                      class="form-control"
+                      placeholder="Digite para buscar..."
+                      autocomplete="off"
+                    />
+                    <div
+                      id="acessorio-search-results"
+                      class="search-results-container"
+                    ></div>
+                  </div>
+                  <div
+                    id="acessorios-selecionados-container"
+                    class="selected-items-container"
+                  >
+                    <p class="empty-selection-text">
+                      Nenhum acessório vinculado.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="form-row" style="margin-top: 16px">
+                  <div class="form-group">
+                    <label class="form-label">Mochila / Case</label>
+                    <div class="checkbox-item" style="margin-top: 8px">
+                      <input type="checkbox" id="mochila" name="mochila" />
+                      <label for="mochila">Mochila</label>
+                    </div>
+                    <div class="checkbox-item">
+                      <input type="checkbox" id="case" name="case" />
+                      <label for="case">Case</label>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Pacote Office - 365</label>
+                    <div class="radio-group">
+                      <label class="radio-label">
+                        <input
+                          type="radio"
+                          name="pacoteOffice"
+                          value="Standard"
+                        />
+                        <span class="radio-custom"></span>Standard
+                      </label>
+                      <label class="radio-label">
+                        <input
+                          type="radio"
+                          name="pacoteOffice"
+                          value="Premium"
+                        />
+                        <span class="radio-custom"></span>Premium
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset
+                id="fieldset-documentos"
+                class="form-section"
+                style="display: none"
+              >
+                <legend>Documentos</legend>
+                <div class="checkbox-item">
+                  <input
+                    type="checkbox"
+                    id="termo-responsabilidade"
+                    name="termoResponsabilidade"
+                  />
+                  <label for="termo-responsabilidade">Termo Assinado</label>
+                  <a
+                    href="https://drive.google.com/drive/folders/1jRc_tR7i9pClzZ2RxogLjM_j8X44ANIE"
+                    target="_blank"
+                    style="margin-left: 8px"
+                    >(Drive)</a
+                  >
+                </div>
+                <div class="checkbox-item">
+                  <input
+                    type="checkbox"
+                    id="foto-notebook"
+                    name="fotoNotebook"
+                  />
+                  <label for="foto-notebook">Foto Notebook</label>
+                  <a
+                    href="https://drive.google.com/drive/folders/1vayOAIwg3itdlLAWH_r6Arg2yd9HQ8Bz"
+                    target="_blank"
+                    style="margin-left: 8px"
+                    >(Drive)</a
+                  >
+                </div>
+              </fieldset>
+
+              <fieldset class="form-section">
+                <legend>Observações</legend>
                 <div class="form-group">
-                  <label class="form-label" for="tipoEquipamento"
-                    >Tipo de Equipamento <span class="required">*</span></label
-                  >
-                  <select
-                    id="tipoEquipamento"
-                    name="tipoEquipamento"
+                  <textarea
+                    id="observacoes"
+                    name="observacoes"
                     class="form-control"
-                  >
-                    <option value="">Selecione o tipo para continuar...</option>
-                    <option value="Desktop">Desktop</option>
-                    <option value="Notebook">Notebook</option>
-                    <option value="Tablet">Tablet</option>
-                    <option value="Impressora">Impressora</option>
-                    <option value="Servidor">Servidor</option>
-                    <option value="Roteador">Roteador</option>
-                    <option value="Switch">Switch</option>
-                    <option value="Outro">Outro</option>
-                  </select>
-                  <span class="error-message" id="error-tipoEquipamento"></span>
+                    rows="3"
+                  ></textarea>
+                </div>
+              </fieldset>
+
+              <div
+                id="form-actions-container"
+                class="form-actions"
+                style="display: none"
+              >
+                <button
+                  type="button"
+                  class="btn btn--secondary"
+                  onclick="limparFormularioEquipamento()"
+                >
+                  <i class="fas fa-eraser"></i> Limpar
+                </button>
+                <button type="submit" class="btn btn--primary">
+                  <i class="fas fa-save"></i> Salvar Equipamento
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div id="form-container-acessorio" style="display: none">
+            <div class="form-header">
+              <h2>Cadastro de Acessório</h2>
+            </div>
+            <form id="acessorio-form" class="equipment-form">
+              <fieldset class="form-section">
+                <legend>Detalhes</legend>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="acessorio-categoria"
+                      >Categoria</label
+                    >
+                    <select
+                      id="acessorio-categoria"
+                      name="categoria"
+                      class="form-control"
+                      onchange="handleCategoriaAcessorioChange()"
+                    >
+                      <option value="">Selecione...</option>
+                      <option value="Kit (teclado + mouse sem fio)">Kit</option>
+                      <option value="Headsets">Headsets</option>
+                      <option value="Monitores">Monitores</option>
+                      <option value="Mouses">Mouses</option>
+                      <option value="Suportes com Cooler">Suportes</option>
+                      <option value="Outros">Outros</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="acessorio-modelo"
+                      >Modelo</label
+                    >
+                    <input
+                      type="text"
+                      id="acessorio-modelo"
+                      name="modelo"
+                      class="form-control"
+                    />
+                  </div>
                 </div>
 
                 <div
-                  class="form-group"
-                  id="outroTipoEquipamentoGroup"
+                  class="form-row"
+                  id="campo-acessorio-polegadas"
                   style="display: none"
                 >
-                  <label class="form-label" for="outroTipoEquipamento"
-                    >Especifique o Tipo <span class="required">*</span></label
-                  >
-                  <input
-                    type="text"
-                    id="outroTipoEquipamento"
-                    name="outroTipoEquipamento"
-                    class="form-control"
-                    placeholder="Ex: Scanner, Projetor..."
-                  />
-                  <span
-                    class="error-message"
-                    id="error-outroTipoEquipamento"
-                  ></span>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label" for="numeroSerie"
-                    >Número de Série <span class="required">*</span></label
-                  >
-                  <input
-                    type="text"
-                    id="numeroSerie"
-                    name="numeroSerie"
-                    class="form-control"
-                    placeholder="Digite o número de série"
-                  />
-                  <span class="error-message" id="error-numeroSerie"></span>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label" for="fabricante">Fabricante</label>
-                  <input
-                    type="text"
-                    id="fabricante"
-                    name="fabricante"
-                    class="form-control"
-                    placeholder="Ex: Dell, HP, Apple"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="modelo">Modelo</label>
-                  <input
-                    type="text"
-                    id="modelo"
-                    name="modelo"
-                    class="form-control"
-                    placeholder="Ex: ProBook 445 G9, WF-C5890"
-                  />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label" for="numeroPatrimonio"
-                    >Patrimônio <span class="required">*</span></label
-                  >
-                  <input
-                    type="text"
-                    id="numeroPatrimonio"
-                    name="numeroPatrimonio"
-                    class="form-control"
-                    placeholder="Digite o patrimônio"
-                  />
-                  <span
-                    class="error-message"
-                    id="error-numeroPatrimonio"
-                  ></span>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="statusOperacional"
-                    >Status Operacional <span class="required">*</span></label
-                  >
-                  <select
-                    id="statusOperacional"
-                    name="statusOperacional"
-                    class="form-control"
-                  >
-                    <option value="">Selecione o status</option>
-                    <option value="Disponível">Disponível</option>
-                    <option value="Ativo">Ativo</option>
-                    <option value="Inativo">Inativo</option>
-                    <option value="Em manutenção">Em manutenção</option>
-                  </select>
-                  <span
-                    class="error-message"
-                    id="error-statusOperacional"
-                  ></span>
-                </div>
-              </div>
-            </fieldset>
-
-            <fieldset
-              id="fieldset-specs"
-              class="form-section"
-              style="display: none"
-            >
-              <legend>Especificações Técnicas</legend>
-              <div
-                class="form-row"
-                id="specs-polegadas-group"
-                style="display: none"
-              >
-                <div class="form-group">
-                  <label class="form-label" for="polegadas">Polegadas</label>
-                  <input
-                    type="text"
-                    id="polegadas"
-                    name="polegadas"
-                    class="form-control"
-                    placeholder='Ex: 14"'
-                  />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label" for="memoriaRam">Memória RAM</label>
-                  <input
-                    type="text"
-                    id="memoriaRam"
-                    name="memoriaRam"
-                    class="form-control"
-                    placeholder="Ex: 16GB"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="armazenamento"
-                    >HD/SSD (GB)</label
-                  >
-                  <input
-                    type="text"
-                    id="armazenamento"
-                    name="armazenamento"
-                    class="form-control"
-                    placeholder="Ex: 512GB"
-                  />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label" for="processador"
-                    >Processador</label
-                  >
-                  <input
-                    type="text"
-                    id="processador"
-                    name="processador"
-                    class="form-control"
-                    placeholder="Ex: Intel Core i7-1165G7"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="versaoWindows"
-                    >Versão do Windows</label
-                  >
-                  <input
-                    type="text"
-                    id="versaoWindows"
-                    name="versaoWindows"
-                    class="form-control"
-                    placeholder="Ex: Windows 11 Pro"
-                  />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">Placa de Vídeo dedicada?</label>
-                  <div class="radio-group">
-                    <label class="radio-label">
-                      <input
-                        type="radio"
-                        name="placaVideoDedicada"
-                        value="Sim"
-                      />
-                      <span class="radio-custom"></span>Sim
-                    </label>
-                    <label class="radio-label">
-                      <input
-                        type="radio"
-                        name="placaVideoDedicada"
-                        value="Não"
-                        checked
-                      />
-                      <span class="radio-custom"></span>Não
-                    </label>
+                  <div class="form-group full-width">
+                    <label class="form-label" for="acessorio-polegadas"
+                      >Polegadas</label
+                    >
+                    <input
+                      type="text"
+                      id="acessorio-polegadas"
+                      name="polegadas"
+                      class="form-control"
+                    />
                   </div>
                 </div>
-              </div>
-            </fieldset>
-
-            <fieldset
-              id="fieldset-usuario"
-              class="form-section"
-              style="display: none"
-            >
-              <legend>Informações do Usuário</legend>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label" for="nomeUsuario"
-                    >Nome do Usuário</label
-                  >
-                  <input
-                    type="text"
-                    id="nomeUsuario"
-                    name="nomeUsuario"
-                    class="form-control"
-                    placeholder="Digite o nome completo"
-                    oninput="handleNomeUsuarioChange(event)"
-                  />
-                  <span class="error-message" id="error-nomeUsuario"></span>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="email"
-                    >E-mail Corporativo</label
-                  >
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    class="form-control"
-                    placeholder="usuario@empresa.com"
-                  />
-                  <span class="error-message" id="error-email"></span>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group" id="cpf-group">
-                  <label class="form-label" for="cpf">CPF</label>
-                  <input
-                    type="text"
-                    id="cpf"
-                    name="cpf"
-                    class="form-control"
-                    placeholder="000.000.000-00"
-                    maxlength="14"
-                  />
-                  <span class="error-message" id="error-cpf"></span>
-                </div>
-                <div class="form-group" id="cnpj-group" style="display: none">
-                  <label class="form-label" for="cnpj">CNPJ</label>
-                  <input
-                    type="text"
-                    id="cnpj"
-                    name="cnpj"
-                    class="form-control"
-                    value="02.673.153/0001-25"
-                    readonly
-                  />
-                </div>
-              </div>
-            </fieldset>
-
-            <fieldset
-              id="fieldset-comercial"
-              class="form-section"
-              style="display: none"
-            >
-              <legend>Informações Comerciais e Administrativas</legend>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label" for="dataAquisicao"
-                    >Data de Aquisição / Instalação / Entrega</label
-                  >
-                  <input
-                    type="date"
-                    id="dataAquisicao"
-                    name="dataAquisicao"
-                    class="form-control"
-                  />
-                  <span class="error-message" id="error-dataAquisicao"></span>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Tipo de Aquisição</label>
-                  <div class="radio-group">
-                    <label class="radio-label">
-                      <input
-                        type="radio"
-                        name="tipoAquisicao"
-                        value="Patrimonial"
-                        onchange="handleTipoAquisicaoChange(this)"
-                      />
-                      <span class="radio-custom"></span>Patrimonial
-                    </label>
-                    <label class="radio-label">
-                      <input
-                        type="radio"
-                        name="tipoAquisicao"
-                        value="Alugado"
-                        onchange="handleTipoAquisicaoChange(this)"
-                      />
-                      <span class="radio-custom"></span>Alugado
-                    </label>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="acessorio-fabricante"
+                      >Fabricante</label
+                    >
+                    <input
+                      type="text"
+                      id="acessorio-fabricante"
+                      name="fabricante"
+                      class="form-control"
+                    />
                   </div>
-                  <span class="error-message" id="error-tipoAquisicao"></span>
+                  <div class="form-group">
+                    <label class="form-label" for="acessorio-patrimonio"
+                      >Patrimônio</label
+                    >
+                    <input
+                      type="text"
+                      id="acessorio-patrimonio"
+                      name="patrimonio"
+                      class="form-control"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group" id="valor-group">
-                  <label class="form-label" for="valor"
-                    >Valor do Equipamento (R$)</label
-                  >
-                  <input
-                    type="text"
-                    id="valor"
-                    name="valor"
-                    class="form-control"
-                    placeholder="0,00"
-                  />
-                  <span class="error-message" id="error-valor"></span>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="acessorio-nserie"
+                      >Série</label
+                    >
+                    <input
+                      type="text"
+                      id="acessorio-nserie"
+                      name="numeroSerie"
+                      class="form-control"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="acessorio-tipo">Tipo</label>
+                    <select
+                      id="acessorio-tipo"
+                      name="tipo"
+                      class="form-control"
+                      onchange="handleTipoAcessorioChange()"
+                    >
+                      <option value="">Selecione...</option>
+                      <option value="Propriedade CEBRI">
+                        Propriedade CEBRI
+                      </option>
+                      <option value="Locação">Locação</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label" for="fornecedor">Fornecedor</label>
-                  <input
-                    type="text"
-                    id="fornecedor"
-                    name="fornecedor"
-                    class="form-control"
-                    placeholder="Selecione o tipo de aquisição"
-                  />
-                  <span class="error-message" id="error-fornecedor"></span>
-                </div>
-              </div>
-              <div class="form-row" id="departamento-group">
-                <div class="form-group">
-                  <label class="form-label" for="departamento"
-                    >Departamento</label
-                  >
-                  <select
-                    id="departamento"
-                    name="departamento"
-                    class="form-control"
-                  >
-                    <option value="">Selecione o departamento</option>
-                    <option value="Administrativo">Administrativo</option>
-                    <option value="Comunicação">Comunicação</option>
-                    <option value="Cursos">Cursos</option>
-                    <option value="Diretoria">Diretoria</option>
-                    <option value="Eventos">Eventos</option>
-                    <option value="Financeiro">Financeiro</option>
-                    <option value="Projetos">Projetos</option>
-                    <option value="Relações Corporativas">
-                      Relações Corporativas
-                    </option>
-                    <option value="Relações Externas">Relações Externas</option>
-                    <option value="Relações Institucionais">
-                      Relações Institucionais
-                    </option>
-                    <option value="Revista">Revista</option>
-                    <option value="RH">RH</option>
-                    <option value="Serviços Gerais">Serviços Gerais</option>
-                    <option value="TI">TI</option>
-                  </select>
-                  <span class="error-message" id="error-departamento"></span>
-                </div>
-              </div>
-              <div class="form-row" id="sala-ip-group" style="display: none">
-                <div class="form-group">
-                  <label class="form-label" for="sala">Sala</label>
-                  <select
-                    id="sala"
-                    name="sala"
-                    class="form-control"
-                    onchange="handleSalaChange(this)"
-                  >
-                    <option value="">Selecione a sala</option>
-                    <option value="Casa COP">Casa COP</option>
-                    <option value="COPA">COPA</option>
-                    <option value="EVENTOS">EVENTOS</option>
-                    <option value="FINANCEIRO">FINANCEIRO</option>
-                    <option value="PROJETOS">PROJETOS</option>
-                    <option value="Outra">Outra</option>
-                  </select>
-                  <input
-                    type="text"
-                    id="outraSala"
-                    name="outraSala"
-                    class="form-control"
-                    placeholder="Digite o nome da sala..."
-                    style="display: none; margin-top: 8px"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="ip">Endereço IP</label>
-                  <input
-                    type="text"
-                    id="ip"
-                    name="ip"
-                    class="form-control"
-                    placeholder="Ex: 192.168.1.100"
-                  />
-                </div>
-              </div>
-            </fieldset>
-
-            <fieldset
-              id="fieldset-acessorios"
-              class="form-section"
-              style="display: none"
-            >
-              <legend>Vincular Acessórios</legend>
-              <div class="acessorio-search-component">
-                <div class="form-group">
-                  <label for="acessorio-search-input" class="form-label"
-                    >Buscar Acessório por Categoria ou Modelo</label
-                  >
-                  <input
-                    type="text"
-                    id="acessorio-search-input"
-                    class="form-control"
-                    placeholder="Digite para buscar (ex: Headset, Mouse, Suporte...)"
-                    autocomplete="off"
-                  />
+                <div class="form-row">
                   <div
-                    id="acessorio-search-results"
-                    class="search-results-container"
+                    id="campo-fornecedor"
+                    class="form-group"
+                    style="display: none"
+                  >
+                    <label class="form-label" for="acessorio-fornecedor"
+                      >Fornecedor</label
+                    >
+                    <input
+                      type="text"
+                      id="acessorio-fornecedor"
+                      name="fornecedor"
+                      class="form-control"
+                      readonly
+                    />
+                  </div>
+                  <div
+                    id="campo-valor-mensal"
+                    class="form-group"
+                    style="display: none"
+                  >
+                    <label class="form-label" for="acessorio-valor-mensal"
+                      >Valor Mensal (R$)</label
+                    >
+                    <input
+                      type="text"
+                      id="acessorio-valor-mensal"
+                      name="valorMensal"
+                      class="form-control"
+                    />
+                  </div>
+                </div>
+              </fieldset>
+              <div class="form-actions">
+                <button
+                  type="button"
+                  class="btn btn--secondary"
+                  onclick="limparFormularioAcessorio()"
+                >
+                  <i class="fas fa-eraser"></i> Limpar
+                </button>
+                <button type="submit" class="btn btn--primary">
+                  <i class="fas fa-save"></i> Salvar Acessório
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div id="form-container-cartucho" style="display: none">
+            <div class="form-header">
+              <h2>Cadastro de Cartucho</h2>
+            </div>
+            <form id="cartucho-form" class="equipment-form">
+              <fieldset class="form-section">
+                <legend>Detalhes</legend>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="cartucho-nserie"
+                      >Série <span class="required">*</span></label
+                    >
+                    <input
+                      type="text"
+                      id="cartucho-nserie"
+                      name="numeroSerie"
+                      class="form-control"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="cartucho-patrimonio"
+                      >Patrimônio</label
+                    >
+                    <input
+                      type="text"
+                      id="cartucho-patrimonio"
+                      name="patrimonio"
+                      class="form-control"
+                    />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="cartucho-cor"
+                      >Cor <span class="required">*</span></label
+                    >
+                    <select id="cartucho-cor" name="cor" class="form-control">
+                      <option value="">Selecione...</option>
+                      <option value="Preto (BK)">Preto (BK)</option>
+                      <option value="Ciano (C)">Ciano (C)</option>
+                      <option value="Magenta (M)">Magenta (M)</option>
+                      <option value="Amarelo (Y)">Amarelo (Y)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="cartucho-impressora-vinculo"
+                      >Vincular Impressora</label
+                    >
+                    <select
+                      id="cartucho-impressora-vinculo"
+                      name="impressoraVinculada"
+                      class="form-control"
+                    >
+                      <option value="">Nenhuma</option>
+                    </select>
+                  </div>
+                </div>
+              </fieldset>
+              <div class="form-actions">
+                <button
+                  type="button"
+                  class="btn btn--secondary"
+                  onclick="limparFormularioCartucho()"
+                >
+                  <i class="fas fa-eraser"></i> Limpar
+                </button>
+                <button type="submit" class="btn btn--primary">
+                  <i class="fas fa-save"></i> Salvar Cartucho
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div id="form-messages"></div>
+        </div>
+        <div class="tab-content" id="lista">
+          <div class="list-header">
+            <div class="title-with-summary">
+              <h2>Lista de Equipamentos</h2>
+              <p id="equipamentos-summary" class="summary-text"></p>
+            </div>
+            <div class="list-actions">
+              <div class="filter-container">
+                <label>Filtrar:</label
+                ><select
+                  id="filtro-tipo-equipamento"
+                  class="form-control"
+                  onchange="aplicarFiltrosEquipamentos()"
+                >
+                  <option value="todos">Todos</option>
+                  <option value="Desktop">Desktop</option>
+                  <option value="Notebook">Notebook</option>
+                  <option value="Tablet">Tablet</option>
+                  <option value="Servidor">Servidor</option>
+                  <option value="Roteador">Roteador</option>
+                  <option value="Switch">Switch</option>
+                  <option value="Outro">Outro</option>
+                </select>
+              </div>
+              <div class="search-container">
+                <input
+                  type="text"
+                  id="search-input"
+                  class="form-control"
+                  placeholder="Buscar..."
+                /><i class="fas fa-search search-icon"></i>
+              </div>
+            </div>
+          </div>
+          <div class="bulk-actions-container">
+            <button
+              id="btn-apagar-equipamentos"
+              class="btn btn--danger"
+              style="display: none"
+              onclick="excluirEquipamentosSelecionados()"
+            >
+              <i class="fas fa-trash"></i> Apagar Selecionados
+            </button>
+          </div>
+          <div
+            id="section-computing"
+            style="display: none; margin-bottom: 30px"
+          >
+            <h3
+              class="lixeira-section-title"
+              style="margin-top: 0; border: none"
+            >
+              Computadores e Tablets
+            </h3>
+            <div class="table-container">
+              <table class="equipment-table" id="table-computing">
+                <thead>
+                  <tr>
+                    <th class="checkbox-cell">
+                      <input
+                        type="checkbox"
+                        id="select-all-computing"
+                        onclick="toggleAllCheckboxes('computing')"
+                      />
+                    </th>
+                    <th>ID</th>
+                    <th>Usuário</th>
+                    <th>Tipo</th>
+                    <th>Série</th>
+                    <th>Patrimônio</th>
+                    <th>Status</th>
+                    <th>Dept</th>
+                    <th>Acessórios</th>
+                    <th>Docs</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="list-computing"></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="section-infra" style="display: none; margin-bottom: 30px">
+            <h3
+              class="lixeira-section-title"
+              style="margin-top: 0; border: none"
+            >
+              Infraestrutura
+            </h3>
+            <div class="table-container">
+              <table class="equipment-table" id="table-infra">
+                <thead>
+                  <tr>
+                    <th class="checkbox-cell">
+                      <input
+                        type="checkbox"
+                        id="select-all-infra"
+                        onclick="toggleAllCheckboxes('infra')"
+                      />
+                    </th>
+                    <th>ID</th>
+                    <th>Usuário</th>
+                    <th>Tipo</th>
+                    <th>Série</th>
+                    <th>Patrimônio</th>
+                    <th>Status</th>
+                    <th>Dept</th>
+                    <th>Sala</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="list-infra"></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="section-others" style="display: none; margin-bottom: 30px">
+            <h3
+              class="lixeira-section-title"
+              style="margin-top: 0; border: none"
+            >
+              Outros
+            </h3>
+            <div class="table-container">
+              <table class="equipment-table" id="table-others">
+                <thead>
+                  <tr>
+                    <th class="checkbox-cell">
+                      <input
+                        type="checkbox"
+                        id="select-all-others"
+                        onclick="toggleAllCheckboxes('others')"
+                      />
+                    </th>
+                    <th>ID</th>
+                    <th>Usuário</th>
+                    <th>Tipo</th>
+                    <th>Série</th>
+                    <th>Patrimônio</th>
+                    <th>Status</th>
+                    <th>Dept</th>
+                    <th>Sala</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="list-others"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="empty-state" id="empty-state" style="display: none">
+            <i class="fas fa-inbox"></i>
+            <h3>Nenhum equipamento</h3>
+          </div>
+        </div>
+
+        <div class="tab-content" id="impressoras">
+          <div class="list-header">
+            <h2>Impressoras</h2>
+            <div class="list-actions">
+              <div class="search-container">
+                <input
+                  type="text"
+                  id="search-input-impressoras"
+                  class="form-control"
+                  placeholder="Buscar..."
+                /><i class="fas fa-search search-icon"></i>
+              </div>
+            </div>
+          </div>
+          <div class="bulk-actions-container">
+            <button
+              id="btn-apagar-impressoras"
+              class="btn btn--danger"
+              style="display: none"
+              onclick="excluirImpressorasSelecionadas()"
+            >
+              <i class="fas fa-trash"></i> Apagar Selecionados
+            </button>
+          </div>
+          <div class="table-container">
+            <table class="equipment-table">
+              <thead>
+                <tr>
+                  <th class="checkbox-cell">
+                    <input
+                      type="checkbox"
+                      id="select-all-impressoras"
+                      onclick="toggleAllCheckboxes('impressoras')"
+                    />
+                  </th>
+                  <th>ID</th>
+                  <th>Série</th>
+                  <th>Patrimônio</th>
+                  <th>Sala</th>
+                  <th>IP</th>
+                  <th>Obs</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="impressoras-list"></tbody>
+            </table>
+          </div>
+          <div
+            class="empty-state"
+            id="impressoras-empty-state"
+            style="display: none"
+          >
+            <i class="fas fa-inbox"></i>
+            <h3>Nenhuma impressora</h3>
+          </div>
+        </div>
+
+        <div class="tab-content" id="cartuchos">
+          <div class="list-header">
+            <div class="title-with-summary">
+              <h2>Cartuchos</h2>
+              <p id="cartuchos-disponiveis-summary" class="summary-text"></p>
+            </div>
+            <div class="list-actions">
+              <div class="search-container">
+                <input
+                  type="text"
+                  id="search-input-cartuchos"
+                  class="form-control"
+                  placeholder="Buscar..."
+                /><i class="fas fa-search search-icon"></i>
+              </div>
+            </div>
+          </div>
+          <div class="bulk-actions-container">
+            <button
+              id="btn-apagar-cartuchos"
+              class="btn btn--danger"
+              style="display: none"
+              onclick="excluirCartuchosSelecionados()"
+            >
+              <i class="fas fa-trash"></i> Apagar Selecionados
+            </button>
+          </div>
+          <div class="table-container">
+            <table class="equipment-table" id="cartuchos-table">
+              <thead>
+                <tr>
+                  <th class="checkbox-cell">
+                    <input
+                      type="checkbox"
+                      id="select-all-cartuchos"
+                      onclick="toggleAllCheckboxes('cartuchos')"
+                    />
+                  </th>
+                  <th>ID</th>
+                  <th>Série</th>
+                  <th>Patrimônio</th>
+                  <th>Cor</th>
+                  <th>Status</th>
+                  <th>Vinculado</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="cartuchos-list"></tbody>
+            </table>
+          </div>
+          <div
+            class="empty-state"
+            id="cartuchos-empty-state"
+            style="display: none"
+          >
+            <i class="fas fa-inbox"></i>
+            <h3>Nenhum cartucho</h3>
+          </div>
+        </div>
+
+        <div class="tab-content" id="acessorios">
+          <div class="list-header">
+            <div class="title-with-summary">
+              <h2>Acessórios</h2>
+              <p id="acessorios-disponiveis-summary" class="summary-text"></p>
+            </div>
+            <div class="list-actions">
+              <div class="filter-container">
+                <label>Filtro:</label
+                ><select
+                  id="filtro-categoria-acessorio"
+                  class="form-control"
+                  onchange="aplicarFiltrosAcessorios()"
+                >
+                  <option value="todos">Todos</option>
+                </select>
+              </div>
+              <div class="search-container">
+                <input
+                  type="text"
+                  id="search-input-acessorios"
+                  class="form-control"
+                  placeholder="Buscar..."
+                /><i class="fas fa-search search-icon"></i>
+              </div>
+            </div>
+          </div>
+          <div class="bulk-actions-container">
+            <button
+              id="btn-apagar-acessorios"
+              class="btn btn--danger"
+              style="display: none"
+              onclick="excluirAcessoriosSelecionados()"
+            >
+              <i class="fas fa-trash"></i> Apagar Selecionados
+            </button>
+          </div>
+          <div class="table-container">
+            <table class="equipment-table" id="acessorios-table">
+              <thead>
+                <tr>
+                  <th class="checkbox-cell">
+                    <input
+                      type="checkbox"
+                      id="select-all-acessorios"
+                      onclick="toggleAllCheckboxes('acessorios')"
+                    />
+                  </th>
+                  <th>ID</th>
+                  <th>Categoria</th>
+                  <th>Modelo</th>
+                  <th>Tipo</th>
+                  <th>Patrimônio</th>
+                  <th>Série</th>
+                  <th>Disp.</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="acessorios-list"></tbody>
+            </table>
+          </div>
+          <div
+            class="empty-state"
+            id="acessorios-empty-state"
+            style="display: none"
+          >
+            <i class="fas fa-inbox"></i>
+            <h3>Nenhum acessório</h3>
+          </div>
+        </div>
+
+        <div class="tab-content" id="manutencao">
+          <div class="list-header"><h2>Em Manutenção</h2></div>
+          <div class="table-container">
+            <table class="equipment-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Usuário</th>
+                  <th>Tipo</th>
+                  <th>Série</th>
+                  <th>Patrimônio</th>
+                  <th>Data Entrada</th>
+                  <th>Motivo</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="manutencao-list"></tbody>
+            </table>
+          </div>
+          <div
+            class="empty-state"
+            id="manutencao-empty-state"
+            style="display: none"
+          >
+            <i class="fas fa-tools"></i>
+            <h3>Nenhum equipamento em manutenção</h3>
+          </div>
+        </div>
+
+        <div class="tab-content" id="arquivados">
+          <div class="list-header">
+            <h2>Arquivados</h2>
+            <div class="list-actions">
+              <div class="search-container">
+                <input
+                  type="text"
+                  id="search-input-arquivados"
+                  class="form-control"
+                  placeholder="Buscar..."
+                /><i class="fas fa-search search-icon"></i>
+              </div>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="equipment-table" id="archived-equipment-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Usuário</th>
+                  <th>Tipo</th>
+                  <th>Série</th>
+                  <th>Patrimônio</th>
+                  <th>Status</th>
+                  <th>Data</th>
+                  <th>Motivo</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="archived-equipment-list"></tbody>
+            </table>
+          </div>
+          <div
+            class="empty-state"
+            id="archived-empty-state"
+            style="display: none"
+          >
+            <i class="fas fa-archive"></i>
+            <h3>Vazio</h3>
+          </div>
+          <div class="list-header" style="margin-top: 40px">
+            <h2>Cartuchos Arquivados</h2>
+            <div class="list-actions">
+              <div class="search-container">
+                <input
+                  type="text"
+                  id="search-input-cartuchos-arquivados"
+                  class="form-control"
+                  placeholder="Buscar..."
+                />
+              </div>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="equipment-table" id="archived-cartridges-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Série</th>
+                  <th>Cor</th>
+                  <th>Status</th>
+                  <th>Data</th>
+                  <th>Vinculado</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="archived-cartridges-list"></tbody>
+            </table>
+          </div>
+          <div
+            class="empty-state"
+            id="archived-cartridges-empty-state"
+            style="display: none"
+          >
+            <i class="fas fa-archive"></i>
+            <h3>Vazio</h3>
+          </div>
+        </div>
+
+        <div class="tab-content" id="lixeira">
+          <div class="list-header"><h2>Lixeira</h2></div>
+          <div class="bulk-actions-container">
+            <button
+              id="btn-apagar-lixeira-equipamentos"
+              class="btn btn--danger"
+              style="display: none"
+              onclick="excluirEquipamentosSelecionadosLixeira()"
+            >
+              <i class="fas fa-times-circle"></i> Excluir Permanente
+            </button>
+          </div>
+          <h3 class="lixeira-section-title">Equipamentos</h3>
+          <div class="table-container">
+            <table class="equipment-table" id="lixeira-equipment-table">
+              <thead>
+                <tr>
+                  <th class="checkbox-cell">
+                    <input
+                      type="checkbox"
+                      id="select-all-lixeira-equipamentos"
+                      onclick="toggleAllCheckboxes('lixeira-equipamentos')"
+                    />
+                  </th>
+                  <th>ID</th>
+                  <th>Tipo</th>
+                  <th>Série</th>
+                  <th>Patrimônio</th>
+                  <th>Data Exclusão</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="lixeira-equipment-list"></tbody>
+            </table>
+          </div>
+          <div
+            class="empty-state"
+            id="lixeira-equipamentos-empty-state"
+            style="display: none"
+          >
+            <h3>Vazio</h3>
+          </div>
+          <div class="bulk-actions-container">
+            <button
+              id="btn-apagar-lixeira-acessorios"
+              class="btn btn--danger"
+              style="display: none"
+              onclick="excluirAcessoriosSelecionadosLixeira()"
+            >
+              <i class="fas fa-times-circle"></i> Excluir Permanente
+            </button>
+          </div>
+          <h3 class="lixeira-section-title">Acessórios</h3>
+          <div class="table-container">
+            <table class="equipment-table" id="lixeira-acessorios-table">
+              <thead>
+                <tr>
+                  <th class="checkbox-cell">
+                    <input
+                      type="checkbox"
+                      id="select-all-lixeira-acessorios"
+                      onclick="toggleAllCheckboxes('lixeira-acessorios')"
+                    />
+                  </th>
+                  <th>ID</th>
+                  <th>Categoria</th>
+                  <th>Modelo</th>
+                  <th>Data Exclusão</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="lixeira-acessorios-list"></tbody>
+            </table>
+          </div>
+          <div
+            class="empty-state"
+            id="lixeira-acessorios-empty-state"
+            style="display: none"
+          >
+            <h3>Vazio</h3>
+          </div>
+          <div class="bulk-actions-container">
+            <button
+              id="btn-apagar-lixeira-cartuchos"
+              class="btn btn--danger"
+              style="display: none"
+              onclick="excluirCartuchosSelecionadosLixeira()"
+            >
+              <i class="fas fa-times-circle"></i> Excluir Permanente
+            </button>
+          </div>
+          <h3 class="lixeira-section-title">Cartuchos</h3>
+          <div class="table-container">
+            <table class="equipment-table" id="lixeira-cartuchos-table">
+              <thead>
+                <tr>
+                  <th class="checkbox-cell">
+                    <input
+                      type="checkbox"
+                      id="select-all-lixeira-cartuchos"
+                      onclick="toggleAllCheckboxes('lixeira-cartuchos')"
+                    />
+                  </th>
+                  <th>ID</th>
+                  <th>Série</th>
+                  <th>Cor</th>
+                  <th>Data Exclusão</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="lixeira-cartuchos-list"></tbody>
+            </table>
+          </div>
+          <div
+            class="empty-state"
+            id="lixeira-cartuchos-empty-state"
+            style="display: none"
+          >
+            <h3>Vazio</h3>
+          </div>
+        </div>
+
+        <div class="tab-content" id="relatorios">
+          <div class="reports-container">
+            <p class="report-instruction">
+              Selecione os dados para o Relatório Excel:
+            </p>
+            <form id="form-relatorios">
+              <div class="report-group">
+                <div class="report-main-check">
+                  <input
+                    type="checkbox"
+                    id="rep-check-equipamentos"
+                    onchange="toggleFiltroRelatorio('equipamentos')"
+                  /><label for="rep-check-equipamentos">Equipamentos</label>
+                </div>
+                <div
+                  id="rep-sub-equipamentos"
+                  class="report-sub-options"
+                  style="display: none"
+                >
+                  <div class="sub-options-grid">
+                    <label
+                      ><input
+                        type="checkbox"
+                        class="sub-check-equip"
+                        value="Desktop"
+                        checked
+                      />Desktop</label
+                    ><label
+                      ><input
+                        type="checkbox"
+                        class="sub-check-equip"
+                        value="Notebook"
+                        checked
+                      />Notebook</label
+                    ><label
+                      ><input
+                        type="checkbox"
+                        class="sub-check-equip"
+                        value="Tablet"
+                        checked
+                      />Tablet</label
+                    ><label
+                      ><input
+                        type="checkbox"
+                        class="sub-check-equip"
+                        value="Servidor"
+                        checked
+                      />Servidor</label
+                    ><label
+                      ><input
+                        type="checkbox"
+                        class="sub-check-equip"
+                        value="Roteador"
+                        checked
+                      />Roteador</label
+                    ><label
+                      ><input
+                        type="checkbox"
+                        class="sub-check-equip"
+                        value="Switch"
+                        checked
+                      />Switch</label
+                    ><label
+                      ><input
+                        type="checkbox"
+                        class="sub-check-equip"
+                        value="Outro"
+                        checked
+                      />Outros</label
+                    >
+                  </div>
+                </div>
+              </div>
+              <div class="report-group">
+                <div class="report-main-check">
+                  <input
+                    type="checkbox"
+                    id="rep-check-impressoras"
+                    onchange="verificarEstadoBotaoRelatorio()"
+                  /><label for="rep-check-impressoras">Impressoras</label>
+                </div>
+              </div>
+              <div class="report-group">
+                <div class="report-main-check">
+                  <input
+                    type="checkbox"
+                    id="rep-check-cartuchos"
+                    onchange="verificarEstadoBotaoRelatorio()"
+                  /><label for="rep-check-cartuchos">Cartuchos</label>
+                </div>
+              </div>
+              <div class="report-group">
+                <div class="report-main-check">
+                  <input
+                    type="checkbox"
+                    id="rep-check-acessorios"
+                    onchange="toggleFiltroRelatorio('acessorios')"
+                  /><label for="rep-check-acessorios">Acessórios</label>
+                </div>
+                <div
+                  id="rep-sub-acessorios"
+                  class="report-sub-options"
+                  style="display: none"
+                >
+                  <div
+                    class="sub-options-grid"
+                    id="container-filtros-acessorios-dinamico"
                   ></div>
                 </div>
-                <div
-                  id="acessorios-selecionados-container"
-                  class="selected-items-container"
+              </div>
+              <div class="report-actions">
+                <button
+                  type="button"
+                  id="btn-gerar-excel"
+                  class="btn btn--primary btn--lg"
+                  disabled
+                  onclick="gerarRelatorioExcel()"
                 >
-                  <p class="empty-selection-text">
-                    Nenhum acessório vinculado.
-                  </p>
-                </div>
+                  <i class="fas fa-file-excel"></i> Baixar Excel
+                </button>
               </div>
+            </form>
+          </div>
+        </div>
 
-              <div class="form-row" style="margin-top: 16px">
-                <div class="form-group">
-                  <label class="form-label">Mochila / Case</label>
-                  <div class="checkbox-item" style="margin-top: 8px">
-                    <input type="checkbox" id="mochila" name="mochila" />
-                    <label for="mochila">Mochila</label>
-                  </div>
-                  <div class="checkbox-item">
-                    <input type="checkbox" id="case" name="case" />
-                    <label for="case">Case</label>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Pacote Office - 365</label>
-                  <div class="radio-group">
-                    <label class="radio-label">
-                      <input
-                        type="radio"
-                        name="pacoteOffice"
-                        value="Standard"
-                      />
-                      <span class="radio-custom"></span>Standard
-                    </label>
-                    <label class="radio-label">
-                      <input type="radio" name="pacoteOffice" value="Premium" />
-                      <span class="radio-custom"></span>Premium
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </fieldset>
-
-            <fieldset
-              id="fieldset-documentos"
-              class="form-section"
-              style="display: none"
-            >
-              <legend>Documentos</legend>
-              <div class="checkbox-item">
-                <input
-                  type="checkbox"
-                  id="termo-responsabilidade"
-                  name="termoResponsabilidade"
-                />
-                <label for="termo-responsabilidade"
-                  >Termo de Responsabilidade Assinado</label
+        <div class="modal" id="edit-modal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>Editar Equipamento</h3>
+              <button class="modal-close" onclick="fecharModal()">
+                &times;
+              </button>
+            </div>
+            <div class="modal-body" id="edit-form-container"></div>
+          </div>
+        </div>
+        <div class="modal" id="confirm-modal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>Confirmar</h3>
+              <button class="modal-close" onclick="fecharModalConfirm()">
+                &times;
+              </button>
+            </div>
+            <div class="modal-body">
+              <p id="confirm-message">Tem certeza?</p>
+              <div id="confirm-dynamic-content"></div>
+              <div class="modal-actions">
+                <button
+                  class="btn btn--secondary"
+                  onclick="fecharModalConfirm()"
                 >
-                <a
-                  href="https://drive.google.com/drive/folders/1jRc_tR7i9pClzZ2RxogLjM_j8X44ANIE"
-                  target="_blank"
-                  style="margin-left: var(--space-8)"
-                  >(Drive de Termos)</a
-                >
+                  Cancelar</button
+                ><button class="btn btn--primary" id="confirm-delete-btn">
+                  Confirmar
+                </button>
               </div>
-              <div class="checkbox-item">
-                <input type="checkbox" id="foto-notebook" name="fotoNotebook" />
-                <label for="foto-notebook"
-                  >Foto do Notebook (antes de entregar)</label
-                >
-                <a
-                  href="https://drive.google.com/drive/folders/1vayOAIwg3itdlLAWH_r6Arg2yd9HQ8Bz"
-                  target="_blank"
-                  style="margin-left: var(--space-8)"
-                  >(Drive de Fotos)</a
-                >
-              </div>
-            </fieldset>
-
-            <fieldset class="form-section">
-              <legend>Observações</legend>
-              <div class="form-group">
-                <textarea
-                  id="observacoes"
-                  name="observacoes"
-                  class="form-control"
-                  rows="3"
-                  placeholder="Informações adicionais sobre o equipamento"
-                ></textarea>
-              </div>
-            </fieldset>
-
-            <div
-              id="form-actions-container"
-              class="form-actions"
-              style="display: none"
-            >
-              <button
-                type="button"
-                class="btn btn--secondary"
-                onclick="limparFormularioEquipamento()"
-              >
-                <i class="fas fa-eraser"></i> Limpar
-              </button>
-              <button type="submit" class="btn btn--primary">
-                <i class="fas fa-save"></i> Salvar Equipamento
+            </div>
+          </div>
+        </div>
+        <div class="modal" id="edit-acessorio-modal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>Editar Acessório</h3>
+              <button class="modal-close" onclick="fecharModalAcessorio()">
+                &times;
               </button>
             </div>
-          </form>
-        </div>
-
-        <div id="form-container-acessorio" style="display: none">
-          <div class="form-header">
-            <h2>Cadastro de Acessório</h2>
-            <p>Cadastre os itens que podem ser vinculados aos equipamentos</p>
+            <div class="modal-body" id="edit-acessorio-form-container"></div>
           </div>
-          <form id="acessorio-form" class="equipment-form">
-            <fieldset class="form-section">
-              <legend>Detalhes do Acessório</legend>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label" for="acessorio-categoria"
-                    >Categoria</label
-                  >
-                  <select
-                    id="acessorio-categoria"
-                    name="categoria"
-                    class="form-control"
-                    onchange="handleCategoriaAcessorioChange()"
-                  >
-                    <option value="">Selecione a categoria</option>
-                    <option value="Kit (teclado + mouse sem fio)">
-                      Kit (teclado + mouse sem fio)
-                    </option>
-                    <option value="Headsets">Headsets</option>
-                    <option value="Monitores">Monitores</option>
-                    <option value="Mouses">Mouses</option>
-                    <option value="Suportes com Cooler">
-                      Suportes com Cooler
-                    </option>
-                    <option value="Outros">Outros</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="acessorio-modelo"
-                    >Modelo</label
-                  >
-                  <input
-                    type="text"
-                    id="acessorio-modelo"
-                    name="modelo"
-                    class="form-control"
-                    placeholder="Ex: Dell UltraSharp U2419H"
-                  />
-                </div>
-              </div>
-
-              <div
-                class="form-row"
-                id="campo-acessorio-polegadas"
-                style="display: none"
-              >
-                <div class="form-group full-width">
-                  <label class="form-label" for="acessorio-polegadas"
-                    >Polegadas</label
-                  >
-                  <input
-                    type="text"
-                    id="acessorio-polegadas"
-                    name="polegadas"
-                    class="form-control"
-                    placeholder='Ex: 24"'
-                  />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label" for="acessorio-fabricante"
-                    >Fabricante</label
-                  >
-                  <input
-                    type="text"
-                    id="acessorio-fabricante"
-                    name="fabricante"
-                    class="form-control"
-                    placeholder="Ex: Dell, Logitech, etc."
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="acessorio-patrimonio"
-                    >Patrimônio</label
-                  >
-                  <input
-                    type="text"
-                    id="acessorio-patrimonio"
-                    name="patrimonio"
-                    class="form-control"
-                    placeholder="Número de patrimônio (se houver)"
-                  />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label" for="acessorio-nserie"
-                    >Número de Série</label
-                  >
-                  <input
-                    type="text"
-                    id="acessorio-nserie"
-                    name="numeroSerie"
-                    class="form-control"
-                    placeholder="Número de série (se houver)"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="acessorio-tipo">Tipo</label>
-                  <select
-                    id="acessorio-tipo"
-                    name="tipo"
-                    class="form-control"
-                    onchange="handleTipoAcessorioChange()"
-                  >
-                    <option value="">Selecione o tipo</option>
-                    <option value="Propriedade CEBRI">Propriedade CEBRI</option>
-                    <option value="Locação">Locação</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-row">
-                <div
-                  id="campo-fornecedor"
-                  class="form-group"
-                  style="display: none"
-                >
-                  <label class="form-label" for="acessorio-fornecedor"
-                    >Fornecedor</label
-                  >
-                  <input
-                    type="text"
-                    id="acessorio-fornecedor"
-                    name="fornecedor"
-                    class="form-control"
-                    readonly
-                  />
-                </div>
-                <div
-                  id="campo-valor-mensal"
-                  class="form-group"
-                  style="display: none"
-                >
-                  <label class="form-label" for="acessorio-valor-mensal"
-                    >Valor Mensal (R$)</label
-                  >
-                  <input
-                    type="text"
-                    id="acessorio-valor-mensal"
-                    name="valorMensal"
-                    class="form-control"
-                    placeholder="0,00"
-                  />
-                </div>
-              </div>
-            </fieldset>
-            <div class="form-actions">
-              <button
-                type="button"
-                class="btn btn--secondary"
-                onclick="limparFormularioAcessorio()"
-              >
-                <i class="fas fa-eraser"></i> Limpar
-              </button>
-              <button type="submit" class="btn btn--primary">
-                <i class="fas fa-save"></i> Salvar Acessório
+        </div>
+        <div class="modal" id="edit-cartucho-modal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>Editar Cartucho</h3>
+              <button class="modal-close" onclick="fecharModalCartucho()">
+                &times;
               </button>
             </div>
-          </form>
-        </div>
-
-        <div id="form-container-cartucho" style="display: none">
-          <div class="form-header">
-            <h2>Cadastro de Cartucho</h2>
-            <p>Cadastre novos cartuchos de toner para as impressoras</p>
+            <div class="modal-body" id="edit-cartucho-form-container"></div>
           </div>
-          <form id="cartucho-form" class="equipment-form">
-            <fieldset class="form-section">
-              <legend>Detalhes do Cartucho</legend>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label" for="cartucho-nserie"
-                    >Número de Série <span class="required">*</span></label
-                  >
-                  <input
-                    type="text"
-                    id="cartucho-nserie"
-                    name="numeroSerie"
-                    class="form-control"
-                    placeholder="Digite o número de série"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="cartucho-patrimonio"
-                    >Patrimônio</label
-                  >
-                  <input
-                    type="text"
-                    id="cartucho-patrimonio"
-                    name="patrimonio"
-                    class="form-control"
-                    placeholder="Número de patrimônio (se houver)"
-                  />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label" for="cartucho-cor"
-                    >Cor do Cartucho <span class="required">*</span></label
-                  >
-                  <select id="cartucho-cor" name="cor" class="form-control">
-                    <option value="">Selecione a cor...</option>
-                    <option value="Preto (BK)">Preto (BK)</option>
-                    <option value="Ciano (C)">Ciano (C)</option>
-                    <option value="Magenta (M)">Magenta (M)</option>
-                    <option value="Amarelo (Y)">Amarelo (Y)</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="cartucho-impressora-vinculo"
-                    >Vincular à Impressora (Opcional)</label
-                  >
-                  <select
-                    id="cartucho-impressora-vinculo"
-                    name="impressoraVinculada"
-                    class="form-control"
-                  >
-                    <option value="">Nenhuma</option>
-                  </select>
-                </div>
-              </div>
-            </fieldset>
-            <div class="form-actions">
-              <button
-                type="button"
-                class="btn btn--secondary"
-                onclick="limparFormularioCartucho()"
-              >
-                <i class="fas fa-eraser"></i> Limpar
-              </button>
-              <button type="submit" class="btn btn--primary">
-                <i class="fas fa-save"></i> Salvar Cartucho
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <div id="form-messages"></div>
-      </div>
-
-      <div class="tab-content" id="lista">
-        <div class="list-header">
-          <div class="title-with-summary">
-            <h2>Lista de Equipamentos</h2>
-            <p id="equipamentos-summary" class="summary-text"></p>
-          </div>
-          <div class="list-actions">
-            <div class="filter-container">
-              <label for="filtro-tipo-equipamento" class="form-label"
-                >Filtrar por Tipo:</label
-              >
-              <select
-                id="filtro-tipo-equipamento"
-                class="form-control"
-                onchange="aplicarFiltrosEquipamentos()"
-              >
-                <option value="todos">Todos os Tipos</option>
-                <option value="Desktop">Desktop</option>
-                <option value="Notebook">Notebook</option>
-                <option value="Tablet">Tablet</option>
-                <option value="Servidor">Servidor</option>
-                <option value="Roteador">Roteador</option>
-                <option value="Switch">Switch</option>
-                <option value="Outro">Outro</option>
-              </select>
-            </div>
-            <div class="search-container">
-              <input
-                type="text"
-                id="search-input"
-                class="form-control"
-                placeholder="Buscar equipamentos..."
-              />
-              <i class="fas fa-search search-icon"></i>
-            </div>
-          </div>
-        </div>
-        <div class="bulk-actions-container">
-          <button
-            id="btn-apagar-equipamentos"
-            class="btn btn--danger"
-            style="display: none"
-            onclick="excluirEquipamentosSelecionados()"
-          >
-            <i class="fas fa-trash"></i> Apagar Itens Selecionados
-          </button>
-        </div>
-        <div id="section-computing" style="display: none; margin-bottom: 30px">
-          <h3
-            class="lixeira-section-title"
-            style="margin-top: 0; border-bottom: none"
-          >
-            Computadores e Tablets
-          </h3>
-          <div class="table-container">
-            <table class="equipment-table" id="table-computing">
-              <thead>
-                <tr>
-                  <th class="checkbox-cell">
-                    <input
-                      type="checkbox"
-                      id="select-all-computing"
-                      onclick="toggleAllCheckboxes('computing')"
-                    />
-                  </th>
-                  <th>ID</th>
-                  <th>Usuário</th>
-                  <th>Tipo</th>
-                  <th>Nº de Série</th>
-                  <th>Patrimônio</th>
-                  <th>Status</th>
-                  <th>Departamento</th>
-                  <th>Acessórios</th>
-                  <th>Documentos</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="list-computing"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div id="section-infra" style="display: none; margin-bottom: 30px">
-          <h3
-            class="lixeira-section-title"
-            style="margin-top: 0; border-bottom: none"
-          >
-            Infraestrutura (Servidores, Redes)
-          </h3>
-          <div class="table-container">
-            <table class="equipment-table" id="table-infra">
-              <thead>
-                <tr>
-                  <th class="checkbox-cell">
-                    <input
-                      type="checkbox"
-                      id="select-all-infra"
-                      onclick="toggleAllCheckboxes('infra')"
-                    />
-                  </th>
-                  <th>ID</th>
-                  <th>Usuário</th>
-                  <th>Tipo</th>
-                  <th>Nº de Série</th>
-                  <th>Patrimônio</th>
-                  <th>Status</th>
-                  <th>Departamento</th>
-                  <th>Sala</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="list-infra"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div id="section-others" style="display: none; margin-bottom: 30px">
-          <h3
-            class="lixeira-section-title"
-            style="margin-top: 0; border-bottom: none"
-          >
-            Outros Equipamentos
-          </h3>
-          <div class="table-container">
-            <table class="equipment-table" id="table-others">
-              <thead>
-                <tr>
-                  <th class="checkbox-cell">
-                    <input
-                      type="checkbox"
-                      id="select-all-others"
-                      onclick="toggleAllCheckboxes('others')"
-                    />
-                  </th>
-                  <th>ID</th>
-                  <th>Usuário</th>
-                  <th>Tipo</th>
-                  <th>Nº de Série</th>
-                  <th>Patrimônio</th>
-                  <th>Status</th>
-                  <th>Departamento</th>
-                  <th>Sala</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="list-others"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="empty-state" id="empty-state" style="display: none">
-          <i class="fas fa-inbox"></i>
-          <h3>Nenhum equipamento encontrado</h3>
-          <p>Tente ajustar os filtros ou cadastrar novos itens.</p>
-        </div>
-      </div>
-
-      <div class="tab-content" id="impressoras">
-        <div class="list-header">
-          <h2>Lista de Impressoras</h2>
-          <div class="list-actions">
-            <div class="search-container">
-              <input
-                type="text"
-                id="search-input-impressoras"
-                class="form-control"
-                placeholder="Buscar impressoras..."
-              />
-              <i class="fas fa-search search-icon"></i>
-            </div>
-          </div>
-        </div>
-        <div class="bulk-actions-container">
-          <button
-            id="btn-apagar-impressoras"
-            class="btn btn--danger"
-            style="display: none"
-            onclick="excluirImpressorasSelecionadas()"
-          >
-            <i class="fas fa-trash"></i> Apagar Itens Selecionados
-          </button>
-        </div>
-        <div class="table-container">
-          <table class="equipment-table">
-            <thead>
-              <tr>
-                <th class="checkbox-cell">
-                  <input
-                    type="checkbox"
-                    id="select-all-impressoras"
-                    onclick="toggleAllCheckboxes('impressoras')"
-                  />
-                </th>
-                <th>ID</th>
-                <th>Nº de Série</th>
-                <th>Patrimônio</th>
-                <th>Sala</th>
-                <th>IP</th>
-                <th>Observações</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="impressoras-list"></tbody>
-          </table>
-        </div>
-        <div
-          class="empty-state"
-          id="impressoras-empty-state"
-          style="display: none"
-        >
-          <i class="fas fa-inbox"></i>
-          <h3>Nenhuma impressora cadastrada</h3>
-          <p>
-            Cadastre um equipamento do tipo "Impressora" para que ele apareça
-            aqui.
-          </p>
-        </div>
-      </div>
-
-      <div class="tab-content" id="cartuchos">
-        <div class="list-header">
-          <div class="title-with-summary">
-            <h2>Lista de Cartuchos</h2>
-            <p id="cartuchos-disponiveis-summary" class="summary-text"></p>
-          </div>
-          <div class="list-actions">
-            <div class="search-container">
-              <input
-                type="text"
-                id="search-input-cartuchos"
-                class="form-control"
-                placeholder="Buscar cartuchos..."
-              />
-              <i class="fas fa-search search-icon"></i>
-            </div>
-          </div>
-        </div>
-
-        <div class="bulk-actions-container">
-          <button
-            id="btn-apagar-cartuchos"
-            class="btn btn--danger"
-            style="display: none"
-            onclick="excluirCartuchosSelecionados()"
-          >
-            <i class="fas fa-trash"></i> Apagar Itens Selecionados
-          </button>
-        </div>
-        <div class="table-container">
-          <table class="equipment-table" id="cartuchos-table">
-            <thead>
-              <tr>
-                <th class="checkbox-cell">
-                  <input
-                    type="checkbox"
-                    id="select-all-cartuchos"
-                    onclick="toggleAllCheckboxes('cartuchos')"
-                  />
-                </th>
-                <th>ID</th>
-                <th>Nº de Série</th>
-                <th>Patrimônio</th>
-                <th>Cor</th>
-                <th>Status</th>
-                <th>Vinculado à (Impressora)</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="cartuchos-list"></tbody>
-          </table>
-        </div>
-        <div
-          class="empty-state"
-          id="cartuchos-empty-state"
-          style="display: none"
-        >
-          <i class="fas fa-inbox"></i>
-          <h3>Nenhum cartucho cadastrado</h3>
-          <p>Adicione novos itens na aba "Cadastro"</p>
-        </div>
-      </div>
-
-      <div class="tab-content" id="acessorios">
-        <div class="list-header">
-          <div class="title-with-summary">
-            <h2>Lista de Acessórios</h2>
-            <p id="acessorios-disponiveis-summary" class="summary-text"></p>
-          </div>
-          <div class="list-actions">
-            <div class="filter-container">
-              <label for="filtro-categoria-acessorio" class="form-label"
-                >Filtrar por Categoria:</label
-              >
-              <select
-                id="filtro-categoria-acessorio"
-                class="form-control"
-                onchange="aplicarFiltrosAcessorios()"
-              >
-                <option value="todos">Todas as Categorias</option>
-              </select>
-            </div>
-            <div class="search-container">
-              <input
-                type="text"
-                id="search-input-acessorios"
-                class="form-control"
-                placeholder="Buscar acessórios..."
-              />
-              <i class="fas fa-search search-icon"></i>
-            </div>
-          </div>
-        </div>
-        <div class="bulk-actions-container">
-          <button
-            id="btn-apagar-acessorios"
-            class="btn btn--danger"
-            style="display: none"
-            onclick="excluirAcessoriosSelecionados()"
-          >
-            <i class="fas fa-trash"></i> Apagar Itens Selecionados
-          </button>
-        </div>
-        <div class="table-container">
-          <table class="equipment-table" id="acessorios-table">
-            <thead>
-              <tr>
-                <th class="checkbox-cell">
-                  <input
-                    type="checkbox"
-                    id="select-all-acessorios"
-                    onclick="toggleAllCheckboxes('acessorios')"
-                  />
-                </th>
-                <th>ID</th>
-                <th>Categoria</th>
-                <th>Modelo</th>
-                <th>Tipo</th>
-                <th>Patrimônio</th>
-                <th>Número de Série</th>
-                <th>Disponível</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="acessorios-list"></tbody>
-          </table>
-        </div>
-        <div
-          class="empty-state"
-          id="acessorios-empty-state"
-          style="display: none"
-        >
-          <i class="fas fa-inbox"></i>
-          <h3>Nenhum acessório cadastrado</h3>
-          <p>Adicione novos itens na aba "Cadastro"</p>
-        </div>
-      </div>
-
-      <div class="tab-content" id="manutencao">
-        <div class="list-header">
-          <h2>Equipamentos em Manutenção</h2>
-        </div>
-        <div class="table-container">
-          <table class="equipment-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Usuário</th>
-                <th>Tipo</th>
-                <th>Nº de Série</th>
-                <th>Patrimônio</th>
-                <th>Data de Entrada</th>
-                <th>Motivo</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="manutencao-list"></tbody>
-          </table>
-        </div>
-        <div
-          class="empty-state"
-          id="manutencao-empty-state"
-          style="display: none"
-        >
-          <i class="fas fa-tools"></i>
-          <h3>Nenhum equipamento em manutenção</h3>
-          <p>
-            Envie um Notebook ou Desktop para manutenção a partir da lista
-            principal.
-          </p>
-        </div>
-      </div>
-
-      <div class="tab-content" id="arquivados">
-        <div class="list-header">
-          <h2>Equipamentos Arquivados</h2>
-          <div class="list-actions">
-            <div class="search-container">
-              <input
-                type="text"
-                id="search-input-arquivados"
-                class="form-control"
-                placeholder="Buscar nos arquivados..."
-              />
-              <i class="fas fa-search search-icon"></i>
-            </div>
-          </div>
-        </div>
-        <div class="table-container">
-          <table class="equipment-table" id="archived-equipment-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Usuário</th>
-                <th>Tipo</th>
-                <th>Nº de Série</th>
-                <th>Patrimônio</th>
-                <th>Status</th>
-                <th>Data de Arquivamento</th>
-                <th>Motivo do Arquivamento</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="archived-equipment-list"></tbody>
-          </table>
-        </div>
-        <div
-          class="empty-state"
-          id="archived-empty-state"
-          style="display: none"
-        >
-          <i class="fas fa-archive"></i>
-          <h3>Nenhum equipamento arquivado</h3>
-          <p>
-            Use o ícone de arquivo na lista principal para arquivar um item.
-          </p>
-        </div>
-
-        <div class="list-header" style="margin-top: 40px">
-          <h2>Cartuchos Arquivados</h2>
-          <div class="list-actions">
-            <div class="search-container">
-              <input
-                type="text"
-                id="search-input-cartuchos-arquivados"
-                class="form-control"
-                placeholder="Buscar nos cartuchos arquivados..."
-              />
-              <i class="fas fa-search search-icon"></i>
-            </div>
-          </div>
-        </div>
-        <div class="table-container">
-          <table class="equipment-table" id="archived-cartridges-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nº de Série</th>
-                <th>Cor</th>
-                <th>Status</th>
-                <th>Data de Troca</th>
-                <th>Esteve Vinculado à</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="archived-cartridges-list"></tbody>
-          </table>
-        </div>
-        <div
-          class="empty-state"
-          id="archived-cartridges-empty-state"
-          style="display: none"
-        >
-          <i class="fas fa-archive"></i>
-          <h3>Nenhum cartucho arquivado</h3>
-          <p>
-            Use o ícone de arquivo na lista de cartuchos para arquivar um item.
-          </p>
-        </div>
-      </div>
-
-      <div class="tab-content" id="lixeira">
-        <div class="list-header">
-          <h2>Lixeira</h2>
-        </div>
-
-        <div class="bulk-actions-container">
-          <button
-            id="btn-apagar-lixeira-equipamentos"
-            class="btn btn--danger"
-            style="display: none"
-            onclick="excluirEquipamentosSelecionadosLixeira()"
-          >
-            <i class="fas fa-times-circle"></i> Excluir Itens Permanentemente
-          </button>
-        </div>
-        <h3 class="lixeira-section-title">Equipamentos Excluídos</h3>
-        <div class="table-container">
-          <table class="equipment-table" id="lixeira-equipment-table">
-            <thead>
-              <tr>
-                <th class="checkbox-cell">
-                  <input
-                    type="checkbox"
-                    id="select-all-lixeira-equipamentos"
-                    onclick="toggleAllCheckboxes('lixeira-equipamentos')"
-                  />
-                </th>
-                <th>ID</th>
-                <th>Tipo</th>
-                <th>Nº de Série</th>
-                <th>Patrimônio</th>
-                <th>Data de Exclusão</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="lixeira-equipment-list"></tbody>
-          </table>
-        </div>
-        <div
-          class="empty-state"
-          id="lixeira-equipamentos-empty-state"
-          style="display: none"
-        >
-          <i class="fas fa-trash-alt"></i>
-          <h3>Nenhum equipamento na lixeira</h3>
-        </div>
-
-        <div class="bulk-actions-container">
-          <button
-            id="btn-apagar-lixeira-acessorios"
-            class="btn btn--danger"
-            style="display: none"
-            onclick="excluirAcessoriosSelecionadosLixeira()"
-          >
-            <i class="fas fa-times-circle"></i> Excluir Itens Permanentemente
-          </button>
-        </div>
-        <h3 class="lixeira-section-title">Acessórios Excluídos</h3>
-        <div class="table-container">
-          <table class="equipment-table" id="lixeira-acessorios-table">
-            <thead>
-              <tr>
-                <th class="checkbox-cell">
-                  <input
-                    type="checkbox"
-                    id="select-all-lixeira-acessorios"
-                    onclick="toggleAllCheckboxes('lixeira-acessorios')"
-                  />
-                </th>
-                <th>ID</th>
-                <th>Categoria</th>
-                <th>Modelo</th>
-                <th>Data de Exclusão</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="lixeira-acessorios-list"></tbody>
-          </table>
-        </div>
-        <div
-          class="empty-state"
-          id="lixeira-acessorios-empty-state"
-          style="display: none"
-        >
-          <i class="fas fa-trash-alt"></i>
-          <h3>Nenhum acessório na lixeira</h3>
-        </div>
-
-        <div class="bulk-actions-container">
-          <button
-            id="btn-apagar-lixeira-cartuchos"
-            class="btn btn--danger"
-            style="display: none"
-            onclick="excluirCartuchosSelecionadosLixeira()"
-          >
-            <i class="fas fa-times-circle"></i> Excluir Itens Permanentemente
-          </button>
-        </div>
-        <h3 class="lixeira-section-title">Cartuchos Excluídos</h3>
-        <div class="table-container">
-          <table class="equipment-table" id="lixeira-cartuchos-table">
-            <thead>
-              <tr>
-                <th class="checkbox-cell">
-                  <input
-                    type="checkbox"
-                    id="select-all-lixeira-cartuchos"
-                    onclick="toggleAllCheckboxes('lixeira-cartuchos')"
-                  />
-                </th>
-                <th>ID</th>
-                <th>Nº de Série</th>
-                <th>Cor</th>
-                <th>Data de Exclusão</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="lixeira-cartuchos-list"></tbody>
-          </table>
-        </div>
-        <div
-          class="empty-state"
-          id="lixeira-cartuchos-empty-state"
-          style="display: none"
-        >
-          <i class="fas fa-trash-alt"></i>
-          <h3>Nenhum cartucho na lixeira</h3>
-        </div>
-      </div>
-
-      <div class="tab-content" id="relatorios">
-
-        <div class="reports-container">
-          <p class="report-instruction">
-            Selecione os tipos de itens que deseja incluir no relatório Excel:
-          </p>
-
-          <form id="form-relatorios">
-            <div class="report-group">
-              <div class="report-main-check">
-                <input
-                  type="checkbox"
-                  id="rep-check-equipamentos"
-                  onchange="toggleFiltroRelatorio('equipamentos')"
-                />
-                <label for="rep-check-equipamentos"
-                  >Equipamentos (Desktops, Notebooks, etc)</label
-                >
-              </div>
-
-              <div
-                id="rep-sub-equipamentos"
-                class="report-sub-options"
-                style="display: none"
-              >
-                <p class="sub-label">Selecione os tipos:</p>
-                <div class="sub-options-grid">
-                  <label
-                    ><input
-                      type="checkbox"
-                      class="sub-check-equip"
-                      value="Desktop"
-                      checked
-                    />
-                    Desktop</label
-                  >
-                  <label
-                    ><input
-                      type="checkbox"
-                      class="sub-check-equip"
-                      value="Notebook"
-                      checked
-                    />
-                    Notebook</label
-                  >
-                  <label
-                    ><input
-                      type="checkbox"
-                      class="sub-check-equip"
-                      value="Tablet"
-                      checked
-                    />
-                    Tablet</label
-                  >
-                  <label
-                    ><input
-                      type="checkbox"
-                      class="sub-check-equip"
-                      value="Servidor"
-                      checked
-                    />
-                    Servidor</label
-                  >
-                  <label
-                    ><input
-                      type="checkbox"
-                      class="sub-check-equip"
-                      value="Roteador"
-                      checked
-                    />
-                    Roteador</label
-                  >
-                  <label
-                    ><input
-                      type="checkbox"
-                      class="sub-check-equip"
-                      value="Switch"
-                      checked
-                    />
-                    Switch</label
-                  >
-                  <label
-                    ><input
-                      type="checkbox"
-                      class="sub-check-equip"
-                      value="Outro"
-                      checked
-                    />
-                    Outros</label
-                  >
-                </div>
-              </div>
-            </div>
-
-            <div class="report-group">
-              <div class="report-main-check">
-                <input
-                  type="checkbox"
-                  id="rep-check-impressoras"
-                  onchange="verificarEstadoBotaoRelatorio()"
-                />
-                <label for="rep-check-impressoras">Impressoras</label>
-              </div>
-            </div>
-
-            <div class="report-group">
-              <div class="report-main-check">
-                <input
-                  type="checkbox"
-                  id="rep-check-cartuchos"
-                  onchange="verificarEstadoBotaoRelatorio()"
-                />
-                <label for="rep-check-cartuchos">Cartuchos</label>
-              </div>
-            </div>
-
-            <div class="report-group">
-              <div class="report-main-check">
-                <input
-                  type="checkbox"
-                  id="rep-check-acessorios"
-                  onchange="toggleFiltroRelatorio('acessorios')"
-                />
-                <label for="rep-check-acessorios">Acessórios</label>
-              </div>
-
-              <div
-                id="rep-sub-acessorios"
-                class="report-sub-options"
-                style="display: none"
-              >
-                <p class="sub-label">Selecione as categorias:</p>
-                <div
-                  class="sub-options-grid"
-                  id="container-filtros-acessorios-dinamico"
-                ></div>
-              </div>
-            </div>
-
-            <div class="report-actions">
-              <button
-                type="button"
-                id="btn-gerar-excel"
-                class="btn btn--primary btn--lg"
-                disabled
-                onclick="gerarRelatorioExcel()"
-              >
-                <i class="fas fa-file-excel"></i> Baixar Relatório Excel
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <div class="modal" id="edit-modal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>Editar Equipamento</h3>
-            <button class="modal-close" onclick="fecharModal()">&times;</button>
-          </div>
-          <div class="modal-body" id="edit-form-container"></div>
-        </div>
-      </div>
-
-      <div class="modal" id="confirm-modal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>Confirmar Ação</h3>
-            <button class="modal-close" onclick="fecharModalConfirm()">
-              &times;
-            </button>
-          </div>
-          <div class="modal-body">
-            <p id="confirm-message">Tem certeza?</p>
-            <div id="confirm-dynamic-content"></div>
-            <div class="modal-actions">
-              <button class="btn btn--secondary" onclick="fecharModalConfirm()">
-                Cancelar
-              </button>
-              <button class="btn btn--primary" id="confirm-delete-btn">
-                Confirmar
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal" id="edit-acessorio-modal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>Editar Acessório</h3>
-            <button class="modal-close" onclick="fecharModalAcessorio()">
-              &times;
-            </button>
-          </div>
-          <div class="modal-body" id="edit-acessorio-form-container"></div>
-        </div>
-      </div>
-
-      <div class="modal" id="edit-cartucho-modal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>Editar Cartucho</h3>
-            <button class="modal-close" onclick="fecharModalCartucho()">
-              &times;
-            </button>
-          </div>
-          <div class="modal-body" id="edit-cartucho-form-container"></div>
         </div>
       </div>
     </div>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import {
+        getAuth,
+        signInWithEmailAndPassword,
+        onAuthStateChanged,
+        signOut,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+      import {
+        getFirestore,
+        doc,
+        getDoc,
+        setDoc,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+      // SUAS CHAVES (Extraídas da imagem que você mandou)
+      const firebaseConfig = {
+        apiKey: "AIzaSyDxK9qsPFQs61zyIyo-KvZ1bi_9WjzyTvI",
+        authDomain: "it-inventory-system-cebri.firebaseapp.com",
+        projectId: "it-inventory-system-cebri",
+        storageBucket: "it-inventory-system-cebri.firebasestorage.app",
+        messagingSenderId: "360059167238",
+        appId: "1:360059167238:web:ceaf66d04748bcd79b1987",
+      };
+
+      // Inicializa Firebase
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      // Expõe variáveis para o app.js
+      window.auth = auth;
+      window.db = db;
+      window.doc = doc;
+      window.getDoc = getDoc;
+      window.setDoc = setDoc;
+
+      // Elementos da Tela de Login
+      const loginScreen = document.getElementById("login-screen");
+      const appContent = document.getElementById("app-content");
+      const loginForm = document.getElementById("form-login");
+      const errorMsg = document.getElementById("login-error");
+      const loading = document.getElementById("loading-spinner");
+      const userDisplay = document.getElementById("user-display");
+      const logoutBtn = document.getElementById("logout-btn");
+
+      // Monitora Estado do Usuário
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          // Usuário logado
+          loginScreen.style.display = "none";
+          appContent.style.display = "block";
+          userDisplay.textContent = `Logado como: ${user.email}`;
+
+          // Carrega dados da nuvem (função definida no app.js)
+          if (window.carregarDadosDoFirebase) {
+            window.carregarDadosDoFirebase();
+          }
+        } else {
+          // Usuário deslogado
+          loginScreen.style.display = "flex";
+          appContent.style.display = "none";
+        }
+      });
+
+      // Função de Login
+      loginForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const email = document.getElementById("login-email").value;
+        const pass = document.getElementById("login-password").value;
+
+        errorMsg.textContent = "";
+        loading.style.display = "block";
+
+        signInWithEmailAndPassword(auth, email, pass)
+          .then(() => {
+            loading.style.display = "none";
+            // onAuthStateChanged cuidará do resto
+          })
+          .catch((error) => {
+            loading.style.display = "none";
+            console.error(error);
+            if (error.code === "auth/invalid-credential") {
+              errorMsg.textContent = "E-mail ou senha incorretos.";
+            } else {
+              errorMsg.textContent = "Erro ao entrar: " + error.message;
+            }
+          });
+      });
+
+      // Função de Logout
+      logoutBtn.addEventListener("click", () => {
+        signOut(auth).then(() => {
+          location.reload(); // Recarrega a página para limpar memória
+        });
+      });
+    </script>
 
     <script src="app.js"></script>
     <div id="acessorio-tooltip"></div>
