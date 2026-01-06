@@ -1,4 +1,4 @@
-// Sistema de Gestão de Inventário de TI
+// Sistema de Gestão de Inventário de TI - Versão Online (Firebase)
 
 // ===========================================
 // DADOS E CONFIGURAÇÕES GLOBAIS
@@ -13,11 +13,104 @@ let dadosForamAlterados = false;
 let tipoChart, statusChart, departamentoChart;
 
 // ===========================================
+// INTEGRAÇÃO COM FIREBASE (NOVO)
+// ===========================================
+
+// Função unificada para salvar tudo na nuvem
+async function salvarNoFirebase() {
+  // Verifica se o Firebase foi inicializado e se há usuário logado
+  if (!window.db || !window.auth || !window.auth.currentUser) return;
+
+  const salvarBtn = document.getElementById("btn-exportar-csv");
+
+  // Feedback visual no botão
+  if (salvarBtn) {
+    salvarBtn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Salvando...';
+    salvarBtn.disabled = true;
+  }
+
+  try {
+    const dadosGerais = {
+      equipamentos: equipamentos,
+      acessorios: acessorios,
+      cartuchos: cartuchos,
+      lastUpdate: new Date().toISOString(),
+      updatedBy: window.auth.currentUser.email,
+    };
+
+    // Salva na coleção 'cebri_data', documento 'inventario_geral'
+    await window.setDoc(
+      window.doc(window.db, "cebri_data", "inventario_geral"),
+      dadosGerais
+    );
+
+    setEstadoAlteracao(false);
+    mostrarMensagem("Alterações sincronizadas com a nuvem!", "success");
+  } catch (error) {
+    console.error("Erro ao salvar no Firebase:", error);
+    mostrarMensagem("Erro ao salvar na nuvem: " + error.message, "error");
+  } finally {
+    // Restaura o botão
+    if (salvarBtn) {
+      salvarBtn.innerHTML =
+        '<i class="fas fa-download"></i> Salvar CSV (Backup)';
+      salvarBtn.disabled = false;
+    }
+    atualizarEstadoBotaoSalvar();
+  }
+}
+
+// Função global chamada pelo index.html assim que o login é feito
+window.carregarDadosDoFirebase = async function () {
+  mostrarMensagem("Sincronizando dados...", "info");
+
+  try {
+    const docRef = window.doc(window.db, "cebri_data", "inventario_geral");
+    const docSnap = await window.getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+
+      // Carrega os arrays globais
+      equipamentos = data.equipamentos || [];
+      acessorios = data.acessorios || [];
+      cartuchos = data.cartuchos || [];
+
+      mostrarMensagem("Dados atualizados!", "success");
+    } else {
+      console.log("Banco de dados vazio. Iniciando arrays vazios.");
+      mostrarMensagem("Bem-vindo! O banco de dados está vazio.", "info");
+    }
+
+    // Atualiza toda a interface com os dados carregados
+    inicializarInterfaceAposCarga();
+  } catch (error) {
+    console.error("Erro ao carregar:", error);
+    mostrarMensagem("Erro de conexão. Verifique sua internet.", "error");
+  }
+};
+
+function inicializarInterfaceAposCarga() {
+  atualizarEstadoBotaoSalvar();
+  setEstadoAlteracao(false);
+  mostrarTab("dashboard");
+  // Força a atualização da aba atual caso não seja dashboard
+  const activeTabBtn = document.querySelector(".tab-btn.active");
+  if (activeTabBtn && activeTabBtn.dataset.tab !== "dashboard") {
+    mostrarTab(activeTabBtn.dataset.tab);
+  }
+}
+
+// ===========================================
 // INICIALIZAÇÃO E EVENTOS GLOBAIS
 // ===========================================
 
 document.addEventListener("DOMContentLoaded", function () {
-  inicializarAplicacao();
+  // Apenas configura visual e eventos.
+  // NÃO carrega dados aqui. O Login no index.html fará isso.
+  aplicarTemaSalvo();
+  configurarEventListeners();
+  configurarMascaras();
 });
 
 window.addEventListener("beforeunload", (event) => {
@@ -28,47 +121,19 @@ window.addEventListener("beforeunload", (event) => {
   }
 });
 
-function inicializarAplicacao() {
-  aplicarTemaSalvo(); // <-- ADIÇÃO PARA TEMA
-  configurarEventListeners();
-  configurarMascaras();
-  carregarDeLocalStorage();
-  carregarAcessoriosDeLocalStorage();
-  carregarCartuchosDeLocalStorage();
-  mostrarTab("dashboard");
-}
-
 // ===========================================
-// GERENCIAMENTO DE PERSISTÊNCIA (LocalStorage)
+// COMPATIBILIDADE (Redireciona LocalStorage para Firebase)
 // ===========================================
 
+// Essas funções substituem as antigas para o seu código continuar funcionando
 function salvarParaLocalStorage() {
-  localStorage.setItem("inventarioEquipamentos", JSON.stringify(equipamentos));
+  salvarNoFirebase();
 }
-
-function carregarDeLocalStorage() {
-  const dadosSalvos = localStorage.getItem("inventarioEquipamentos");
-  equipamentos = dadosSalvos ? JSON.parse(dadosSalvos) : [];
-  atualizarEstadoBotaoSalvar();
-  setEstadoAlteracao(false);
-}
-
 function salvarAcessoriosParaLocalStorage() {
-  localStorage.setItem("inventarioAcessorios", JSON.stringify(acessorios));
+  salvarNoFirebase();
 }
-
-function carregarAcessoriosDeLocalStorage() {
-  const dadosSalvos = localStorage.getItem("inventarioAcessorios");
-  acessorios = dadosSalvos ? JSON.parse(dadosSalvos) : [];
-}
-
 function salvarCartuchosParaLocalStorage() {
-  localStorage.setItem("inventarioCartuchos", JSON.stringify(cartuchos));
-}
-
-function carregarCartuchosDeLocalStorage() {
-  const dadosSalvos = localStorage.getItem("inventarioCartuchos");
-  cartuchos = dadosSalvos ? JSON.parse(dadosSalvos) : [];
+  salvarNoFirebase();
 }
 
 // ===========================================
