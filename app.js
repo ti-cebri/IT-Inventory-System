@@ -3950,9 +3950,36 @@ function mostrarTooltipCartuchos(event, sala) {
 }
 
 function posicionarTooltip(event, tooltip) {
-  tooltip.style.left = `${event.pageX + 15}px`;
-  tooltip.style.top = `${event.pageY + 15}px`;
+  // 1. Torna visível primeiro para o navegador calcular a largura real
   tooltip.classList.add("active");
+
+  // 2. Pega as medidas
+  const rect = tooltip.getBoundingClientRect();
+  const larguraTooltip = rect.width;
+  const alturaTooltip = rect.height;
+  
+  // 3. Pega o tamanho da janela do navegador
+  const larguraJanela = window.innerWidth;
+  const alturaJanela = window.innerHeight;
+
+  // 4. Define a posição inicial (Direita e Abaixo do mouse)
+  let left = event.pageX + 15;
+  let top = event.pageY + 15;
+
+  // 5. CORREÇÃO HORIZONTAL: Se passar da borda direita, joga para a esquerda
+  // (event.clientX é a posição do mouse relativa à janela visível)
+  if (event.clientX + 15 + larguraTooltip > larguraJanela) {
+    left = event.pageX - larguraTooltip - 15;
+  }
+
+  // 6. CORREÇÃO VERTICAL: Se passar da borda inferior, joga para cima
+  if (event.clientY + 15 + alturaTooltip > alturaJanela) {
+    top = event.pageY - alturaTooltip - 15;
+  }
+
+  // 7. Aplica as coordenadas finais
+  tooltip.style.left = `${left}px`;
+  tooltip.style.top = `${top}px`;
 }
 
 function esconderTooltip() {
