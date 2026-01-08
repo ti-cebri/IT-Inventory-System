@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="stylesheet" href="style.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles-slim@2.0.6/tsparticles.slim.bundle.min.js"></script>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -139,10 +140,13 @@
     </div>
 
     <div id="app-content">
-      <div class="container">
-        <header class="header">
+      <header class="header">
+        <div id="tsparticles"></div>
+
+        <div class="header-content">
           <h1><i class="fas fa-laptop"></i> Sistema de Inventário de TI</h1>
           <p>Gestão Completa de Equipamentos e Ativos Tecnológicos</p>
+
           <div
             style="
               position: absolute;
@@ -155,14 +159,16 @@
             "
             id="user-display"
           ></div>
+
           <button
             id="logout-btn"
             class="theme-toggle-btn"
-            style="right: 70px; background: rgba(255, 0, 0, 0.2)"
+            style="right: 60px; background: rgba(255, 0, 0, 0.2)"
             title="Sair do Sistema"
           >
             <i class="fas fa-sign-out-alt"></i>
           </button>
+
           <button
             id="theme-toggle"
             class="theme-toggle-btn"
@@ -175,60 +181,60 @@
               style="display: none"
             ></i>
           </button>
-        </header>
+        </div>
+      </header>
+      <div class="main-nav-container">
+        <nav class="nav-tabs">
+          <button class="tab-btn active" data-tab="dashboard">
+            <i class="fas fa-chart-pie"></i> Dashboard
+          </button>
+          <button class="tab-btn" data-tab="cadastro">
+            <i class="fas fa-plus-circle"></i> Cadastro
+          </button>
+          <button class="tab-btn" data-tab="lista">
+            <i class="fas fa-list"></i> Equipamentos
+          </button>
+          <button class="tab-btn" data-tab="impressoras">
+            <i class="fas fa-print"></i> Impressoras
+          </button>
+          <button class="tab-btn" data-tab="cartuchos">
+            <i class="fas fa-tint"></i> Cartuchos
+          </button>
+          <button class="tab-btn" data-tab="acessorios">
+            <i class="fas fa-keyboard"></i> Acessórios
+          </button>
+          <button class="tab-btn" data-tab="manutencao">
+            <i class="fas fa-tools"></i> Manutenção
+          </button>
+          <button class="tab-btn" data-tab="arquivados">
+            <i class="fas fa-archive"></i> Arquivados
+          </button>
+          <button class="tab-btn" data-tab="lixeira">
+            <i class="fas fa-trash-alt"></i> Lixeira
+          </button>
+          <button class="tab-btn" data-tab="relatorios">
+            <i class="fas fa-clipboard-list"></i> Relatórios
+          </button>
+        </nav>
 
-        <div class="main-nav-container">
-          <nav class="nav-tabs">
-            <button class="tab-btn active" data-tab="dashboard">
-              <i class="fas fa-chart-pie"></i> Dashboard
-            </button>
-            <button class="tab-btn" data-tab="cadastro">
-              <i class="fas fa-plus-circle"></i> Cadastro
-            </button>
-            <button class="tab-btn" data-tab="lista">
-              <i class="fas fa-list"></i> Equipamentos
-            </button>
-            <button class="tab-btn" data-tab="impressoras">
-              <i class="fas fa-print"></i> Impressoras
-            </button>
-            <button class="tab-btn" data-tab="cartuchos">
-              <i class="fas fa-tint"></i> Cartuchos
-            </button>
-            <button class="tab-btn" data-tab="acessorios">
-              <i class="fas fa-keyboard"></i> Acessórios
-            </button>
-            <button class="tab-btn" data-tab="manutencao">
-              <i class="fas fa-tools"></i> Manutenção
-            </button>
-            <button class="tab-btn" data-tab="arquivados">
-              <i class="fas fa-archive"></i> Arquivados
-            </button>
-            <button class="tab-btn" data-tab="lixeira">
-              <i class="fas fa-trash-alt"></i> Lixeira
-            </button>
-            <button class="tab-btn" data-tab="relatorios">
-              <i class="fas fa-clipboard-list"></i> Relatórios
-            </button>
-          </nav>
-
-          <div class="global-actions">
-            <!-- <button
+        <div class="global-actions">
+          <!-- <button
               class="btn btn--secondary"
               id="btn-global-carregar"
               onclick="carregarDadosCompletos()"
             >
               <i class="fas fa-upload"></i> Importar CSV
             </button> -->
-            <button
-              class="btn btn--primary"
-              id="btn-exportar-csv"
-              onclick="salvarDadosCompletos()"
-            >
-              <i class="fas fa-download"></i> Exportar CSV
-            </button>
-          </div>
+          <button
+            class="btn btn--primary"
+            id="btn-exportar-csv"
+            onclick="salvarDadosCompletos()"
+          >
+            <i class="fas fa-download"></i> Exportar CSV
+          </button>
         </div>
-
+      </div>
+      <div class="container">
         <div class="tab-content active" id="dashboard">
           <div class="dashboard-header">
             <h2>Dashboard - Visão Geral</h2>
@@ -240,9 +246,9 @@
                 align-items: flex-end;
               "
             >
-              <button class="btn btn--secondary" onclick="atualizarDashboard()">
+              <!-- <button class="btn btn--secondary" onclick="atualizarDashboard()">
                 <i class="fas fa-sync-alt"></i> Atualizar
-              </button>
+              </button> -->
             </div>
           </div>
           <div class="metrics-grid">
@@ -1888,6 +1894,66 @@
         </div>
       </div>
     </div>
+
+    <script>
+      // Espera a biblioteca carregar
+      document.addEventListener("DOMContentLoaded", async function () {
+        await tsParticles.load("tsparticles", {
+          fullScreen: { enable: false }, // Não ocupa a tela toda, só o header
+          background: {
+            color: { value: "transparent" }, // Fundo transparente (usa o gradiente do CSS)
+          },
+          fpsLimit: 60, // Limita o FPS para não pesar
+          interactivity: {
+            events: {
+              onHover: {
+                enable: true,
+                mode: "grab", // Efeito ao passar o mouse: agarra as partículas próximas
+              },
+              resize: true,
+            },
+            modes: {
+              grab: {
+                distance: 140,
+                links: { opacity: 0.5 },
+              },
+            },
+          },
+          particles: {
+            color: { value: "#4a90e2" }, // Cor dos pontos (azul claro tecnológico)
+            links: {
+              color: "#4a90e2", // Cor das linhas que conectam
+              distance: 150, // Distância máxima para conectar pontos
+              enable: true, // Habilita as linhas (o efeito de rede/circuito)
+              opacity: 0.3, // Transparência das linhas
+              width: 1, // Espessura da linha
+            },
+            move: {
+              direction: "none",
+              enable: true,
+              outModes: { default: "bounce" }, // Bate na borda e volta
+              random: false,
+              speed: 0.8, // Velocidade lenta e elegante
+              straight: false,
+            },
+            number: {
+              density: { enable: true, area: 800 },
+              value: 60, // Quantidade de partículas (aumente se quiser mais denso)
+            },
+            opacity: {
+              value: 0.5,
+            },
+            shape: {
+              type: "circle", // Forma dos pontos (pode ser square, triangle, etc)
+            },
+            size: {
+              value: { min: 1, max: 3 }, // Tamanho variado dos pontos
+            },
+          },
+          detectRetina: true,
+        });
+      });
+    </script>
 
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
