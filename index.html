@@ -225,19 +225,19 @@
             >
               <i class="fas fa-upload"></i> Importar CSV
             </button> -->
-          <button
+          <!-- <button
             class="btn btn--primary"
             id="btn-exportar-csv"
             onclick="salvarDadosCompletos()"
           >
             <i class="fas fa-download"></i> Exportar CSV
-          </button>
+          </button> -->
         </div>
       </div>
       <div class="container">
         <div class="tab-content active" id="dashboard">
           <div class="dashboard-header">
-            <h2>Dashboard - Visão Geral</h2>
+            <!-- <h2>Dashboard - Visão Geral</h2> -->
             <div
               style="
                 display: flex;
@@ -312,29 +312,29 @@
               class="btn active"
               onclick="mostrarFormulario('equipamento')"
             >
-              <i class="fas fa-desktop"></i> Cadastrar Equipamento
+              <i class="fas fa-desktop"></i> Equipamento
             </button>
             <button
               id="btn-toggle-acessorio"
               class="btn"
               onclick="mostrarFormulario('acessorio')"
             >
-              <i class="fas fa-mouse"></i> Cadastrar Acessório
+              <i class="fas fa-mouse"></i> Acessório
             </button>
             <button
               id="btn-toggle-cartucho"
               class="btn"
               onclick="mostrarFormulario('cartucho')"
             >
-              <i class="fas fa-tint"></i> Cadastrar Cartucho
+              <i class="fas fa-tint"></i> Cartucho
             </button>
           </div>
 
           <div id="form-container-equipamento">
-            <div class="form-header">
+            <!-- <div class="form-header">
               <h2>Cadastro de Equipamento</h2>
               <p>Selecione o tipo de equipamento para iniciar o cadastro</p>
-            </div>
+            </div> -->
             <form id="equipamento-form" class="equipment-form">
               <fieldset class="form-section">
                 <legend>Detalhes do Equipamento</legend>
@@ -907,12 +907,12 @@
           </div>
 
           <div id="form-container-acessorio" style="display: none">
-            <div class="form-header">
+            <!-- <div class="form-header">
               <h2>Cadastro de Acessório</h2>
-            </div>
+            </div> -->
             <form id="acessorio-form" class="equipment-form">
               <fieldset class="form-section">
-                <legend>Detalhes</legend>
+                <legend>Detalhes do Acessório</legend>
                 <div class="form-row">
                   <div class="form-group">
                     <label class="form-label" for="acessorio-categoria"
@@ -1065,12 +1065,12 @@
           </div>
 
           <div id="form-container-cartucho" style="display: none">
-            <div class="form-header">
+            <!-- <div class="form-header">
               <h2>Cadastro de Cartucho</h2>
-            </div>
+            </div> -->
             <form id="cartucho-form" class="equipment-form">
               <fieldset class="form-section">
-                <legend>Detalhes</legend>
+                <legend>Detalhes do Cartucho</legend>
                 <div class="form-row">
                   <div class="form-group">
                     <label class="form-label" for="cartucho-nserie"
@@ -1142,7 +1142,7 @@
         <div class="tab-content" id="lista">
           <div class="list-header">
             <div class="title-with-summary">
-              <h2>Lista de Equipamentos</h2>
+              <!-- <h2>Lista de Equipamentos</h2> -->
               <p id="equipamentos-summary" class="summary-text"></p>
             </div>
             <div class="list-actions">
@@ -1172,6 +1172,14 @@
                 /><i class="fas fa-search search-icon"></i>
               </div>
             </div>
+            <button
+              class="btn btn--primary"
+              id="btn-exportar-csv"
+              onclick="salvarDadosCompletos()"
+              style="height: 40px"
+            >
+              <i class="fas fa-download"></i> CSV
+            </button>
           </div>
           <div class="bulk-actions-container">
             <button
@@ -1914,15 +1922,15 @@
             },
             modes: {
               grab: {
-                distance: 140,
+                distance: 160,
                 links: { opacity: 0.5 },
               },
             },
           },
           particles: {
-            color: { value: "#4a90e2" }, // Cor dos pontos (azul claro tecnológico)
+            color: { value: "#ffffff" }, // Cor dos pontos (azul claro tecnológico)
             links: {
-              color: "#4a90e2", // Cor das linhas que conectam
+              color: "#ffffff", // Cor das linhas que conectam
               distance: 150, // Distância máxima para conectar pontos
               enable: true, // Habilita as linhas (o efeito de rede/circuito)
               opacity: 0.3, // Transparência das linhas
