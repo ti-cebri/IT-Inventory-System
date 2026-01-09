@@ -2697,24 +2697,27 @@ function criarGrafico(
       .trim(),
   };
 
+  // --- PALETA DE CORES TECH (Tons de Azul e Ciano) ---
+  // --- PALETA DE CORES TECH (Azul Profundo + Verde Tech) ---
   const colors = {
     bar: {
-      Disponível: themeColors.disponivel,
-      Ativo: themeColors.ativo,
-      Inativo: themeColors.inativo,
-      "Em manutenção": themeColors.manutencao,
-      Arquivado: themeColors.arquivado,
+      Disponível: "#0d6efd", // Azul Vibrante
+      Ativo: "#024624",      // SEU VERDE (rgb 2, 70, 36 hex)
+      Inativo: "#dc3545",    // Vermelho (Erro)
+      "Em manutenção": "#ffc107", // Amarelo (Atenção)
+      Arquivado: "#6c757d",  // Cinza
     },
-    // Paleta de cores para Doughnut (pode ser ajustada)
+    // Paleta mista para o gráfico de rosca
     doughnut: [
-      themeColors.disponivel,
-      "#FFC185", // Laranja claro
-      "#B4413C", // Vermelho escuro
-      "#6b7280", // Cinza (Info)
-      "#d97706", // Laranja (Warning)
-      themeColors.ativo,
+      "rgb(8, 0, 46)",   // Seu Azul Escuro (Fundo)
+      "rgb(2, 70, 36)",  // Seu Verde Escuro
+      "#0d6efd",         // Azul Brilhante
+      "#198754",         // Verde Sucesso (Bootstrap)
+      "#0dcaf0",         // Ciano (Ligação entre azul e verde)
+      "#20c997",         // Teal
+      "#adb5bd"          // Cinza
     ],
-    line: themeColors.disponivel, // Cor da linha para gráfico de linha
+    line: "rgb(2, 70, 36)", // Linha do gráfico agora será Verde para destacar
   };
 
   chartInstance = new Chart(ctx, {
@@ -3957,7 +3960,7 @@ function posicionarTooltip(event, tooltip) {
   const rect = tooltip.getBoundingClientRect();
   const larguraTooltip = rect.width;
   const alturaTooltip = rect.height;
-  
+
   // 3. Pega o tamanho da janela do navegador
   const larguraJanela = window.innerWidth;
   const alturaJanela = window.innerHeight;
