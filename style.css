@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap");
 
 :root {
   /* Colors - TEMA (Azul Marinho + Cinzas Neutros + Verde Sucesso) */
@@ -357,73 +357,103 @@ pre code {
 }
 
 /* Form elements */
-/* --- INPUTS TECH --- */
+/* --- INPUTS E SELECTS (ESTILO TECH) --- */
+
 .form-control {
-  padding: var(--space-12);
-  
-  /* Borda Tech */
+  height: 45px; /* Altura fixa para alinhar tudo */
+  padding: 10px 15px;
+
+  /* FORMA: Quadrada e Tech */
+  border-radius: 0 !important;
   border: 1px solid var(--color-border);
-  border-radius: 0; /* Quadrado */
-  
-  font-size: var(--font-size-md);
-  background: var(--color-surface);
+
+  /* CORES */
+  background-color: var(--color-surface); /* Branco no light, Escuro no dark */
   color: var(--color-text);
+
+  /* TIPOGRAFIA */
+  font-family: "Share Tech Mono", monospace; /* Fonte técnica para dados */
+  font-size: 14px;
+  letter-spacing: 0.5px;
+
   transition: all 0.2s ease;
-}
 
-/* Foco no Input: Borda Azul Forte + Sombra Sutil */
-.form-control:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 1px var(--color-primary); /* Brilho sólido */
-  outline: none;
-  background-color: rgba(var(--color-primary-rgb), 0.02); /* Fundo levemente azulado */
-}
-
-.form-control.error {
-  border-color: var(--color-error);
-  box-shadow: none;
-}
-
-textarea.form-control {
-  resize: vertical;
-  min-height: 80px;
-}
-
-textarea.form-control {
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-base);
-}
-select.form-control {
-  padding: var(--space-8) var(--space-12);
+  /* Remove estilos padrão do navegador (como sombras internas cinzas) */
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  background-image: var(--select-caret-light);
-  background-repeat: no-repeat;
-  background-position: right var(--space-12) center;
-  background-size: 16px;
-  padding-right: var(--space-32);
+  box-shadow: none;
 }
 
-[data-color-scheme="dark"] select.form-control {
-  background-image: var(--select-caret-dark);
-}
-[data-color-scheme="light"] select.form-control {
-  background-image: var(--select-caret-light);
-}
+/* EFEITO DE FOCO (Ao clicar no campo) */
 .form-control:focus {
-  border-color: var(--color-primary);
-  outline: none; /* Removido outline original */
-  box-shadow: var(--focus-ring); /* Usando box-shadow para foco */
+  border-color: var(--color-primary); /* Fica Azul */
+  box-shadow: 0 0 0 1px var(--color-primary); /* Borda dupla brilhante */
+  outline: none;
+  background-color: rgba(
+    var(--color-primary-rgb),
+    0.02
+  ); /* Fundo levemente azulado */
 }
+
+/* ESTILOS ESPECÍFICOS PARA O SELECT (DROPDOWN) */
+select.form-control {
+  cursor: pointer;
+  padding-right: 40px; /* Espaço para a seta */
+
+  /* Seta Personalizada (Quadrada/Tech) */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2301257D' stroke-width='3' stroke-linecap='square' stroke-linejoin='miter'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 12px;
+}
+
+/* Ajuste da seta para o Modo Escuro */
+[data-color-scheme="dark"] select.form-control {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='square' stroke-linejoin='miter'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* Estilo das opções dentro do dropdown (O suporte varia por navegador) */
+select.form-control option {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  padding: 10px;
+  font-family: sans-serif; /* Volta para sans-serif para leitura fácil */
+}
+
+/* Campo com erro */
+.form-control.error {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 1px var(--color-error);
+}
+
+/* Ajuste para Textarea */
+textarea.form-control {
+  height: auto; /* Permite crescer */
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* --- RÓTULOS DOS CAMPOS (LABELS) --- */
 .form-label {
   display: block;
   margin-bottom: var(--space-8);
-  font-weight: var(--font-weight-medium);
-  font-size: var(--font-size-sm);
+
+  /* Tipografia Tech */
+  font-family: "Share Tech Mono", monospace; /* Mesma fonte dos inputs */
+  font-size: 13px; /* Levemente menor pois é uppercase */
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  color: var(--color-text-secondary); /* Cinza técnico */
+  transition: color 0.2s;
 }
-.form-group {
-  margin-bottom: var(--space-16);
+
+/* Quando o usuário clica no input, o label brilha (Opcional, fica legal) */
+.form-group:focus-within .form-label {
+  color: var(--color-primary);
+  text-shadow: 0 0 5px rgba(var(--color-primary-rgb), 0.2);
 }
 
 /* Card component */
@@ -570,15 +600,11 @@ select.form-control {
   position: relative;
   text-align: center;
   /* margin-bottom: var(--space-16); */
-  height: 160px; 
+  height: 160px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(
-    135deg,
-    rgb(8, 0, 46) 0%,
-    rgb(2, 70, 36) 100%
-  );
+  background: linear-gradient(135deg, rgb(8, 0, 46) 0%, rgb(2, 70, 36) 100%);
   color: var(--color-btn-primary-text);
   /* border-radius: var(--radius-lg); */
   box-shadow: var(--shadow-lg);
@@ -599,10 +625,10 @@ select.form-control {
   position: relative;
   z-index: 2;
   width: 100%;
-  
+
   /* REMOVIDO: padding-right: 180px; */
   padding: 0; /* Agora o padding é zero para garantir o centro exato */
-  
+
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -611,7 +637,7 @@ select.form-control {
 
 /* TÍTULO: Fonte Orbitron (Futurista) */
 .header h1 {
-  font-family: 'Orbitron', sans-serif; /* Fonte Tech */
+  font-family: "Orbitron", sans-serif; /* Fonte Tech */
   color: #ffffff;
   font-size: 38px; /* Tamanho ajustado */
   margin-bottom: 4px; /* Menos espaço abaixo */
@@ -623,7 +649,7 @@ select.form-control {
 
 /* SUBTÍTULO: Fonte Share Tech Mono (Terminal) */
 .header p {
-  font-family: 'Share Tech Mono', monospace; /* Fonte Código */
+  font-family: "Share Tech Mono", monospace; /* Fonte Código */
   color: rgba(167, 213, 255, 0.9); /* Azul bem clarinho */
   font-size: 16px;
   margin: 0;
@@ -640,46 +666,46 @@ select.form-control {
 .nav-tabs {
   display: flex;
   /* Removemos o gap grande para caber tudo. Usamos padding nos botões para separar */
-  gap: 0; 
+  gap: 0;
   margin-bottom: 0;
-  
+
   background: transparent;
   padding: 0;
   border-radius: 0;
   box-shadow: none;
   border: none;
-  
+
   flex-wrap: wrap;
   justify-content: center;
-  
+
   /* Linha fina cinza correndo por baixo de tudo para dar acabamento */
   border-bottom: 1px solid var(--color-border);
 }
 
 /* Estilo Base do Botão (Limpo) */
 .tab-btn {
-  font-family: 'Orbitron', sans-serif;
+  font-family: "Orbitron", sans-serif;
   /* Fonte menor para caber na linha */
-  font-size: 11px; 
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px; /* Reduzi o espaçamento das letras */
-  
+
   /* Padding reduzido nas laterais */
-  padding: 12px 12px; 
-  
+  padding: 12px 12px;
+
   border: none;
   background: transparent; /* Sem cor de fundo por padrão */
   color: var(--color-text-secondary); /* Cinza discreto */
-  
-  border-radius: 0; 
-  
+
+  border-radius: 0;
+
   /* Prepara a borda inferior invisível para não pular quando ficar ativo */
-  border-bottom: 3px solid transparent; 
-  
+  border-bottom: 3px solid transparent;
+
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -703,15 +729,15 @@ select.form-control {
 /* --- BOTÃO ATIVO (Aba Selecionada) --- */
 .tab-btn.active {
   background: transparent; /* Continua transparente */
-  
+
   /* Texto assume a cor principal */
-  color: var(--color-primary); 
-  
+  color: var(--color-primary);
+
   /* Apenas a linha embaixo aparece (Degradê Azul/Verde) */
   border-bottom-width: 3px;
   border-bottom-style: solid;
   border-image: linear-gradient(to right, rgb(8, 0, 46), rgb(2, 70, 36)) 1;
-  
+
   /* Se o navegador não suportar border-image, usa cor sólida: */
   border-bottom-color: var(--color-primary);
 }
@@ -757,14 +783,14 @@ select.form-control {
 .metric-card {
   background: var(--color-surface);
   /* Quadrado e com borda sutil */
-  border-radius: 0; 
+  border-radius: 0;
   border: 1px solid var(--color-card-border);
-  
+
   /* Garante alinhamento lado a lado */
   display: flex;
   align-items: center;
   gap: var(--space-16);
-  
+
   padding: var(--space-20);
   box-shadow: var(--shadow-sm);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -774,7 +800,7 @@ select.form-control {
 
 .metric-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
   border-color: var(--color-primary); /* Borda fica azul ao passar o mouse */
 }
 
@@ -783,23 +809,19 @@ select.form-control {
 .metric-icon {
   width: 64px;
   height: 64px;
-  border-radius: 0; 
-  
+  border-radius: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 26px;
-  
+
   /* AQUI ESTÁ A MUDANÇA: O Fundo agora é o seu degradê */
-  background: linear-gradient(
-    135deg,
-    rgb(8, 0, 46) 0%,
-    rgb(2, 70, 36) 100%
-  );
-  
+  background: linear-gradient(135deg, rgb(8, 0, 46) 0%, rgb(2, 70, 36) 100%);
+
   color: #ffffff;
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.5); /* Sombra interna mais forte */
-  border: 1px solid rgba(255,255,255,0.1); /* Borda sutil */
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5); /* Sombra interna mais forte */
+  border: 1px solid rgba(255, 255, 255, 0.1); /* Borda sutil */
 }
 
 /* Cores específicas apenas para o BRILHO/Borda do ícone, mantendo o fundo escuro unificado */
@@ -816,7 +838,7 @@ select.form-control {
 
 .metric-icon.manutencao {
   border-bottom: 3px solid var(--color-warning); /* Laranja */
-  color: #ffecb5; 
+  color: #ffecb5;
 }
 
 .metric-icon.arquivado {
@@ -844,11 +866,11 @@ select.form-control {
 
 .chart-container {
   background: var(--color-surface);
-  
+
   /* Quadrado */
-  border-radius: 0; 
+  border-radius: 0;
   border: 1px solid var(--color-card-border);
-  
+
   padding: var(--space-20);
   box-shadow: var(--shadow-sm);
   position: relative; /* Necessário para a linha do topo */
@@ -857,7 +879,7 @@ select.form-control {
 
 /* Efeito Tech: Barra azul escura no topo (Conecta com o Header) */
 .chart-container::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -869,23 +891,23 @@ select.form-control {
 /* Efeito de hover suave */
 .chart-container:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
 }
 
 /* Título do Gráfico com Fonte Sci-Fi */
 .chart-container h3 {
-  font-family: 'Orbitron', sans-serif; /* Mesma fonte do Logo */
+  font-family: "Orbitron", sans-serif; /* Mesma fonte do Logo */
   color: var(--color-primary);
   font-size: 16px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  
+
   margin-bottom: var(--space-20);
   padding-bottom: var(--space-12);
   border-bottom: 1px solid var(--color-border); /* Linha separadora fina */
   text-align: left; /* Alinhado à esquerda fica mais técnico */
-  
+
   display: flex;
   align-items: center;
   gap: 10px;
@@ -893,7 +915,7 @@ select.form-control {
 
 /* Pequeno detalhe decorativo antes do título */
 .chart-container h3::before {
-  content: '';
+  content: "";
   display: block;
   width: 8px;
   height: 8px;
@@ -905,7 +927,7 @@ select.form-control {
 .chart-container canvas {
   padding-top: 10px;
   /* Estas duas linhas são o segredo para parar de esticar: */
-  height: 300px !important; 
+  height: 300px !important;
   max-height: 300px !important;
   width: 100% !important;
 }
@@ -931,7 +953,7 @@ select.form-control {
 /* --- SEÇÃO DO FORMULÁRIO (ESTILO TECH) --- */
 .form-section {
   background: var(--color-surface);
-  border-radius: 0; 
+  border-radius: 0;
   padding: var(--space-24);
   margin-bottom: var(--space-24);
   border: 1px solid var(--color-card-border);
@@ -942,7 +964,7 @@ select.form-control {
 
 /* Barra de energia no topo do Formulário */
 .form-section::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -953,16 +975,16 @@ select.form-control {
 
 /* Título das Seções (Detalhes, Usuário, etc.) */
 .form-section legend {
-  font-family: 'Orbitron', sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-size: 18px;
   font-weight: 700;
-  
+
   /* MÁGICA DO TEXTO EM DEGRADÊ */
   background: linear-gradient(90deg, rgb(8, 0, 46) 0%, rgb(2, 70, 36) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent; /* O texto fica transparente para mostrar o fundo */
-  
+
   text-transform: uppercase;
   letter-spacing: 1px;
   padding: 0 0 var(--space-8) 0;
@@ -976,7 +998,7 @@ select.form-control {
 
 /* Quadrado decorativo antes do título (agora verde escuro para contrastar) */
 .form-section legend::before {
-  content: '';
+  content: "";
   display: block;
   width: 8px;
   height: 8px;
@@ -1075,7 +1097,7 @@ textarea.form-control {
 /* Estilo Base para os botões de ação */
 .form-actions .btn {
   border-radius: 0; /* Totalmente Quadrados */
-  font-family: 'Orbitron', sans-serif; /* Fonte Tech */
+  font-family: "Orbitron", sans-serif; /* Fonte Tech */
   font-size: 14px;
   font-weight: 700;
   text-transform: uppercase; /* Caixa alta */
@@ -1088,11 +1110,7 @@ textarea.form-control {
 /* BOTÃO SALVAR (Principal) */
 .form-actions .btn--primary {
   /* O mesmo degradê do Header e dos Ícones */
-  background: linear-gradient(
-    90deg,
-    rgb(8, 0, 46) 0%,
-    rgb(2, 70, 36) 100%
-  );
+  background: linear-gradient(90deg, rgb(8, 0, 46) 0%, rgb(2, 70, 36) 100%);
   border: none;
   color: #ffffff;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
@@ -1147,20 +1165,34 @@ textarea.form-control {
 }
 .list-header {
   display: flex;
-  justify-content: space-between; /* Texto na esquerda, Ações na direita */
+  justify-content: space-between; /* Separa Esquerda e Direita */
   align-items: center;
-  margin-bottom: var(--space-24);
-  padding: var(--space-16);
-  background-color: var(--color-surface); /* Fundo branco para destacar do cinza */
+  margin-bottom: var(--space-10);
+  padding: 12px 20px;
+  background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 0; /* Tech style quadrado */
-  border-left: 4px solid var(--color-primary); /* Detalhe azul na esquerda */
+  border-left: 4px solid var(--color-primary); /* Detalhe Tech na borda */
+  border-radius: 0; /* Quadrado */
+  flex-wrap: wrap; /* Responsividade */
+  gap: 15px;
 }
-/* .list-header h2 {
-  color: var(--color-text);
-  font-size: var(--font-size-3xl);
-} */
- /* Remove margens extras do container de resumo para alinhar */
+
+/* --- GRUPO ESQUERDA (Resumo + Botão CSV) --- */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Ajuste no texto de resumo para remover margens extras */
+.summary-text {
+  margin: 0 !important;
+  font-family: "Orbitron", sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+/* Remove margens extras do container de resumo para alinhar */
 .title-with-summary {
   display: flex;
   align-items: center;
@@ -1174,15 +1206,97 @@ textarea.form-control {
   align-items: center;
   flex-wrap: wrap; /* Permite quebrar linha em telas pequenas */
 }
-/* Ajuste fino para o botão de CSV ficar na mesma altura dos inputs */
+
+/* Botão CSV mais discreto e elegante */
 #btn-exportar-csv {
-  height: 40px; /* Mesma altura padrão dos inputs */
-  white-space: nowrap;
-  padding: 0 20px;
+  height: 32px;
   border-radius: 0; /* Quadrado */
-  font-family: 'Orbitron', sans-serif;
+  border: 1px solid var(--color-success); /* Borda Verde Tech */
+  color: var(--color-success);
+  background: transparent;
   font-size: 12px;
-  letter-spacing: 1px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+#btn-exportar-csv:hover {
+  background-color: var(--color-success);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(40, 167, 69, 0.4);
+}
+
+/* --- GRUPO DIREITA (Filtro + Busca) --- */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Wrappers para colocar ícones dentro dos inputs */
+.filter-wrapper,
+.search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.filter-wrapper i,
+.search-wrapper i {
+  position: absolute;
+  left: 10px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  z-index: 1;
+}
+
+/* Estilo Minimalista para os Inputs da Direita */
+.minimal-select,
+.minimal-input {
+  height: 36px;
+  
+  /* CORREÇÃO: Removemos o padding vertical que estava esmagando o texto */
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-left: 30px !important; /* Mantém espaço para o ícone */
+  padding-right: 10px; /* Espaço na direita */
+  
+  /* Centraliza o texto verticalmente */
+  line-height: 34px; /* Altura (36) - Bordas (2) */
+  
+  border-radius: 0 !important;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-background);
+  font-size: 13px;
+  min-width: 180px;
+}
+
+/* Ajuste específico para a seta do Select */
+select.minimal-select {
+  padding-right: 35px !important; /* Espaço extra na direita para a seta não ficar em cima do texto */
+}
+
+.minimal-select:focus,
+.minimal-input:focus {
+  border-color: var(--color-primary);
+  background-color: var(--color-surface);
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+}
+
+/* Ajuste para telas pequenas */
+@media (max-width: 768px) {
+  .list-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .header-left,
+  .header-right {
+    flex-direction: column;
+    width: 100%;
+  }
+  .minimal-input,
+  .minimal-select {
+    width: 100%;
+  }
 }
 
 .search-container {
@@ -1199,111 +1313,179 @@ textarea.form-control {
   transform: translateY(-50%);
   color: var(--color-text-secondary);
 }
+
+/* --- TABELA DE DADOS TECH --- */
+
 .table-container {
   background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+  border-radius: 0; 
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--color-card-border);
+  border-top: 3px solid var(--color-primary);
+  overflow-x: auto; 
 }
+
+/* --- ESTE BLOCO ESTAVA FALTANDO OU NO LUGAR ERRADO --- */
+/* Ele diz para a TABELA ocupar 100% da largura */
 .equipment-table {
-  width: 100%;
+  width: 100% !important; 
   border-collapse: collapse;
+  border-spacing: 0;
+  margin: 0;
 }
+
+/* --- TABELA DE DADOS (FONTE TECH) --- */
+
+/* CABEÇALHO (Títulos das Colunas) */
 .equipment-table th {
-  background: var(--color-secondary);
-  color: var(--color-text);
-  font-weight: var(--font-weight-semibold);
-  padding: var(--space-12);
-  text-align: left;
-  border-bottom: 1px solid var(--color-border);
-}
-.equipment-table td {
-  padding: var(--space-12);
-  border-bottom: 1px solid var(--color-card-border);
-  color: var(--color-text);
-}
-.equipment-table tbody tr:hover {
-  background: var(--color-secondary);
-}
-.equipment-table tbody tr:last-child td {
-  border-bottom: none;
-}
-.status-badge {
-  padding: var(--space-4) var(--space-8);
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  /* Removi width e border-collapse daqui */
+  
+  background-color: rgb(8, 0, 46); /* Azul Profundo */
+  color: #ffffff;
+
+  /* Fonte Tech para Títulos */
+  font-family: "Orbitron", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 1px;
+
+  padding: 15px 12px;
+  text-align: left;
+  border-bottom: 2px solid var(--color-success);
+  white-space: nowrap;
 }
-/* === STATUS BADGES (ATUALIZADO PARA VARS) === */
-.status-badge.ativo {
-  background-color: rgba(var(--color-success-rgb), 0.1);
-  color: var(--color-success);
-  border: 1px solid rgba(var(--color-success-rgb), 0.3);
+
+/* CORPO (Dados das Células) */
+.equipment-table td {
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+
+  /* Fonte de Terminal para os dados */
+  font-family: "Share Tech Mono", monospace;
+  font-size: 14px;
+
+  vertical-align: middle;
+  transition: all 0.2s ease;
 }
-.status-badge.disponivel {
-  background-color: rgba(var(--color-primary-rgb), 0.1);
+
+/* --- AJUSTE DOS BADGES DENTRO DA TABELA --- */
+.status-badge,
+.cor-badge {
+  font-family: "Orbitron", sans-serif !important;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+/* Ajuste para o texto de "Nenhum" ou "N/A" */
+.equipment-table td:empty::after,
+.equipment-table td:contains("N/A") {
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.equipment-table tbody tr:hover {
+  background-color: rgba(var(--color-primary-rgb), 0.08); /* Cinza/Azulado */
+  transition: background-color 0.2s ease;
+}
+
+/* HOVER: Texto fica azul ao passar o mouse */
+.equipment-table tbody tr:hover td {
   color: var(--color-primary);
-  border: 1px solid rgba(var(--color-primary-rgb), 0.3);
+  cursor: default;
 }
+
+/* --- BADGES DE STATUS TECH --- */
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 0; /* Quadrado */
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid transparent;
+  display: inline-block;
+  min-width: 80px; /* Tamanho fixo para alinhamento */
+  text-align: center;
+}
+
+/* CORES DOS STATUS */
+.status-badge.disponivel {
+  background-color: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.status-badge.ativo {
+  background-color: rgba(25, 135, 84, 0.1);
+  color: #198754;
+  border-color: #198754;
+}
+
 .status-badge.inativo {
-  background-color: rgba(var(--color-error-rgb), 0.1);
-  color: var(--color-error);
-  border: 1px solid rgba(var(--color-error-rgb), 0.3);
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border-color: #dc3545;
 }
+
 .status-badge.manutencao {
-  background-color: rgba(var(--color-warning-rgb), 0.1);
-  color: var(--color-warning);
-  border: 1px solid rgba(var(--color-warning-rgb), 0.3);
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #d39e00;
+  border-color: #ffc107;
 }
+
 .status-badge.arquivado {
-  background-color: rgba(var(--color-info-rgb), 0.1);
-  color: var(--color-info);
-  border: 1px solid rgba(var(--color-info-rgb), 0.3);
+  background-color: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+  border-color: #6c757d;
 }
+
 .action-buttons {
   display: flex;
   gap: var(--space-8);
 }
+
+/* --- BOTÕES DE AÇÃO NA TABELA --- */
 .btn-action {
-  background-color: var(--color-surface);
+  background-color: transparent;
   border: 1px solid var(--color-border);
   color: var(--color-text-secondary);
-  padding: var(--space-6);
-  border-radius: var(--radius-sm);
+  width: 30px;
+  height: 30px;
+  border-radius: 0; /* Quadrado */
   cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-standard);
-  font-size: var(--font-size-md);
-  width: 32px;
-  height: 32px;
-  line-height: 1;
-}
-
-.btn-action i {
-  margin: 0;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-action:hover {
-  background-color: var(--color-secondary);
-  color: var(--color-text);
-  border-color: var(--color-border-secondary);
+  transform: scale(1.1);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Cores específicas no hover */
 .btn-action.btn-edit:hover {
-  color: var(--color-primary);
+  background-color: var(--color-primary);
   border-color: var(--color-primary);
+  color: white;
 }
 
 .btn-action.btn-delete:hover {
-  color: var(--color-error);
+  background-color: var(--color-error);
   border-color: var(--color-error);
+  color: white;
 }
 
 .btn-action.btn-archive:hover,
 .btn-action.btn-restore:hover {
-  color: var(--color-info);
+  background-color: var(--color-info);
   border-color: var(--color-info);
+  color: white;
 }
 
 .empty-state {
@@ -1459,16 +1641,23 @@ textarea.form-control {
   margin-bottom: var(--space-32);
 }
 
+/* --- BOTÕES DE ALTERNÂNCIA (TABS DO CADASTRO) --- */
 .cadastro-toggle .btn {
   background-color: var(--color-surface);
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
   flex-basis: 250px;
-  
-  /* Quadrado */
-  border-radius: 0; 
-  font-weight: 500;
+
+  /* Estilo Tech */
+  border-radius: 0;
+  font-family: "Orbitron", sans-serif; /* Fonte do Header */
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+
   transition: all 0.3s ease;
+  padding: 12px 20px; /* Garante altura clicável */
 }
 
 /* Botão Ativo: Azul Sólido Tech */
@@ -1478,7 +1667,7 @@ textarea.form-control {
   color: #ffffff;
   border-color: transparent; /* Remove borda sólida */
   font-weight: 700;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
 }
 
@@ -1602,61 +1791,125 @@ button:disabled i,
   color: var(--color-btn-primary-text);
   transform: translateY(-1px);
 }
+
+/* --- TOOLTIP TECH (Pop-up de Detalhes) --- */
+
 #acessorio-tooltip {
   display: none;
   position: absolute;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 12px;
-  box-shadow: var(--shadow-lg);
   z-index: 1010;
-  width: 280px;
-  font-size: 14px;
+  width: 300px;
+
+  /* Visual Tech */
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-primary); /* Borda Azul */
+  border-radius: 0; /* Quadrado */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+
+  /* Barra de energia no topo (Verde) */
+  border-top: 3px solid var(--color-success);
+
+  padding: 16px;
+  opacity: 0;
   transition: opacity 0.2s ease-in-out;
+  pointer-events: auto; /* Permite clicar e selecionar */
+  user-select: text; /* Garante que o navegador permita seleção de texto */
+  cursor: text; /* Muda o cursor para o "I" de texto */
 }
+
 #acessorio-tooltip.active {
   display: block;
+  opacity: 1;
 }
+
+/* Título do Tooltip (Detalhes do Acessório) */
 #acessorio-tooltip h4 {
-  font-size: 16px;
+  font-family: "Orbitron", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+
   margin-top: 0;
-  margin-bottom: 10px;
-  padding-bottom: 6px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--color-border);
 }
+
+/* Conteúdo de Texto (Modelo, Série, etc) */
 #acessorio-tooltip p {
-  margin: 0 0 6px 0;
-  color: var(--color-text-secondary);
-}
-#acessorio-tooltip p strong {
+  margin: 0 0 8px 0;
   color: var(--color-text);
-  margin-right: 5px;
+  font-family: "Share Tech Mono", monospace; /* Fonte tipo código */
+  font-size: 14px;
+  line-height: 1.4;
+
+  /* Alinha Rótulo e Valor */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
+
+#acessorio-tooltip p:last-child {
+  margin-bottom: 0;
+}
+
+/* Rótulos (Modelo:, Série:) */
+#acessorio-tooltip p strong {
+  color: var(--color-text-secondary);
+  font-weight: normal;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+/* --- Cores Específicas para Cartuchos (Mantendo compatibilidade) --- */
+#acessorio-tooltip .tooltip-cor {
+  font-weight: bold;
+  font-family: "Orbitron", sans-serif;
+  font-size: 11px;
+}
+
+#acessorio-tooltip .tooltip-cor.ciano {
+  color: #0dcaf0;
+  text-shadow: 0 0 5px rgba(13, 202, 240, 0.5);
+}
+#acessorio-tooltip .tooltip-cor.magenta {
+  color: #d63384;
+  text-shadow: 0 0 5px rgba(214, 51, 132, 0.5);
+}
+#acessorio-tooltip .tooltip-cor.amarelo {
+  color: #ffc107;
+  text-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
+}
+#acessorio-tooltip .tooltip-cor.preto {
+  color: var(--color-text);
+}
+
 .main-nav-container {
   display: flex;
   justify-content: center; /* Centraliza os botões na tela */
   align-items: center;
   gap: var(--space-16);
-  
+
   /* Largura total e sem margens */
   width: 100%;
   margin: 0;
-  
+
   /* Cor de fundo para criar a barra contínua */
-  background-color: var(--color-surface); 
+  background-color: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
-  
+
   /* Espaçamento interno da barra */
   padding: 10px 20px;
-  
+
   /* Remove arredondamentos */
   border-radius: 0;
-  
+
   /* Sombra leve para separar do conteúdo abaixo */
   box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  
+
   /* Garante que fique acima do conteúdo ao rolar */
   position: relative;
   z-index: 10;
@@ -1665,14 +1918,14 @@ button:disabled i,
   display: flex;
   gap: var(--space-4);
   margin-bottom: 0; /* Remove margem inferior antiga */
-  
+
   /* Remove estilos de "cartão" antigos para ficar transparente */
   background: transparent;
   padding: 0;
   border-radius: 0;
   box-shadow: none;
   border: none;
-  
+
   flex-wrap: wrap; /* Permite quebrar linha em telas pequenas */
   justify-content: center;
 }
@@ -1923,12 +2176,37 @@ button:disabled i,
 
 /* Adicione estas novas regras no final do seu arquivo style.css */
 
+/* --- TÍTULOS DE SEÇÃO NAS LISTAS (Estilo Tech) --- */
 .lixeira-section-title {
-  font-size: var(--font-size-2xl);
-  margin-top: var(--space-32);
-  margin-bottom: var(--space-16);
+  font-family: "Orbitron", sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+
+  /* Texto Degradê */
+  background: linear-gradient(90deg, rgb(8, 0, 46) 0%, rgb(2, 70, 36) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+
+  /* margin-top: var(--space-10); */
+  margin-bottom: var(--space-20);
   padding-bottom: var(--space-8);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 2px solid var(--color-border); /* Linha mais grossa */
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lixeira-section-title::before {
+  content: "";
+  display: block;
+  width: 10px;
+  height: 10px;
+  background-color: rgb(2, 70, 36); /* Quadrado verde */
+  box-shadow: 0 0 5px rgba(2, 70, 36, 0.5); /* Brilho */
 }
 
 .btn-action.btn-restore:hover {
@@ -1940,24 +2218,35 @@ button:disabled i,
   font-weight: 900;
 }
 
-/* Estilo para a célula da sala da impressora clicável */
+/* --- BOTÕES DE SALA (IMPRESSORAS) TECH --- */
 .clickable-sala {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 6px;
+  padding: 6px 12px; /* Um pouco maior para facilitar o clique */
+
+  /* Estilo Tech */
+  border-radius: 0; /* Quadrado */
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+
+  font-family: "Share Tech Mono", monospace; /* Fonte técnica */
   font-size: 12px;
-  font-weight: 500;
-  background-color: var(--color-secondary);
-  color: var(--color-text);
+  font-weight: bold;
+  color: var(--color-primary);
+  text-transform: uppercase;
+
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  text-decoration: none; /* Garante que não haja sublinhado */
+  text-decoration: none;
+  min-width: 100px; /* Largura mínima para ficarem alinhados */
+  text-align: center;
 }
 
 .clickable-sala:hover {
   background-color: var(--color-primary);
-  color: var(--color-btn-primary-text);
-  transform: translateY(-1px);
+  color: #ffffff;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 10px rgba(var(--color-primary-rgb), 0.4); /* Brilho ao passar o mouse */
+  transform: translateY(-2px);
 }
 
 /* Estilos para as cores dos cartuchos no tooltip */
@@ -1978,7 +2267,10 @@ button:disabled i,
 }
 
 #acessorio-tooltip .tooltip-cor.preto {
-  color: #f9fafb;
+  color: var(
+    --color-text
+  ); /* Adapta-se ao tema (Preto no claro, Branco no escuro) */
+  text-decoration-color: var(--color-text-secondary);
 }
 
 /* Ajuste de margem para parágrafos dentro do tooltip */
@@ -2006,24 +2298,24 @@ button:disabled i,
 .theme-toggle-btn {
   position: absolute;
   /* Ajustei o TOP para 15px para ficar alinhado no canto superior */
-  top: 15px; 
-  right: 20px; 
-  
+  top: 15px;
+  right: 20px;
+
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: var(--color-btn-primary-text);
-  
+
   /* NOVOS TAMANHOS (Eram 40px) */
   width: 32px;
   height: 32px;
-  
+
   border-radius: var(--radius-base);
   cursor: pointer;
   transition: all var(--duration-normal) var(--ease-standard);
-  
+
   /* ÍCONE MENOR (Era font-size-lg) */
-  font-size: 13px; 
-  
+  font-size: 13px;
+
   padding: 0;
   display: flex;
   align-items: center;
@@ -2368,4 +2660,3 @@ button:disabled i,
   background-color: var(--color-secondary);
   color: var(--color-text-secondary);
 }
-
