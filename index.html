@@ -337,7 +337,7 @@
             </div> -->
             <form id="equipamento-form" class="equipment-form">
               <fieldset class="form-section">
-                <legend>Detalhes do Equipamento</legend>
+                <legend>Detalhes</legend>
                 <div class="form-row">
                   <div class="form-group">
                     <label class="form-label" for="tipoEquipamento"
@@ -912,7 +912,7 @@
             </div> -->
             <form id="acessorio-form" class="equipment-form">
               <fieldset class="form-section">
-                <legend>Detalhes do Acessório</legend>
+                <legend>Detalhes</legend>
                 <div class="form-row">
                   <div class="form-group">
                     <label class="form-label" for="acessorio-categoria"
@@ -1070,7 +1070,7 @@
             </div> -->
             <form id="cartucho-form" class="equipment-form">
               <fieldset class="form-section">
-                <legend>Detalhes do Cartucho</legend>
+                <legend>Detalhes</legend>
                 <div class="form-row">
                   <div class="form-group">
                     <label class="form-label" for="cartucho-nserie"
@@ -1141,19 +1141,28 @@
         </div>
         <div class="tab-content" id="lista">
           <div class="list-header">
-            <div class="title-with-summary">
-              <!-- <h2>Lista de Equipamentos</h2> -->
+            <div class="header-left">
               <p id="equipamentos-summary" class="summary-text"></p>
+
+              <button
+                class="btn btn--outline btn--sm"
+                id="btn-exportar-csv"
+                onclick="salvarDadosCompletos()"
+                title="Baixar planilha"
+              >
+                <i class="fas fa-file-csv"></i> CSV
+              </button>
             </div>
-            <div class="list-actions">
-              <div class="filter-container">
-                <label>Filtrar:</label
-                ><select
+
+            <div class="header-right">
+              <div class="filter-wrapper">
+                <i class="fas fa-filter"></i>
+                <select
                   id="filtro-tipo-equipamento"
-                  class="form-control"
+                  class="form-control minimal-select"
                   onchange="aplicarFiltrosEquipamentos()"
                 >
-                  <option value="todos">Todos</option>
+                  <option value="todos">Todos os Tipos</option>
                   <option value="Desktop">Desktop</option>
                   <option value="Notebook">Notebook</option>
                   <option value="Tablet">Tablet</option>
@@ -1163,23 +1172,17 @@
                   <option value="Outro">Outro</option>
                 </select>
               </div>
-              <div class="search-container">
+
+              <div class="search-wrapper">
+                <i class="fas fa-search"></i>
                 <input
                   type="text"
                   id="search-input"
-                  class="form-control"
+                  class="form-control minimal-input"
                   placeholder="Buscar..."
-                /><i class="fas fa-search search-icon"></i>
+                />
               </div>
             </div>
-            <button
-              class="btn btn--primary"
-              id="btn-exportar-csv"
-              onclick="salvarDadosCompletos()"
-              style="height: 40px"
-            >
-              <i class="fas fa-download"></i> CSV
-            </button>
           </div>
           <div class="bulk-actions-container">
             <button
@@ -1218,7 +1221,7 @@
                     <th>Série</th>
                     <th>Patrimônio</th>
                     <th>Status</th>
-                    <th>Dept</th>
+                    <th>Departamento</th>
                     <th>Acessórios</th>
                     <th>Docs</th>
                     <th>Ações</th>
@@ -1252,7 +1255,7 @@
                     <th>Série</th>
                     <th>Patrimônio</th>
                     <th>Status</th>
-                    <th>Dept</th>
+                    <th>Departamento</th>
                     <th>Sala</th>
                     <th>Ações</th>
                   </tr>
@@ -1285,7 +1288,7 @@
                     <th>Série</th>
                     <th>Patrimônio</th>
                     <th>Status</th>
-                    <th>Dept</th>
+                    <th>Departamento</th>
                     <th>Sala</th>
                     <th>Ações</th>
                   </tr>
@@ -1302,15 +1305,17 @@
 
         <div class="tab-content" id="impressoras">
           <div class="list-header">
-            <h2>Impressoras</h2>
-            <div class="list-actions">
-              <div class="search-container">
+            <div class="header-left"></div>
+
+            <div class="header-right">
+              <div class="search-wrapper">
+                <i class="fas fa-search"></i>
                 <input
                   type="text"
                   id="search-input-impressoras"
-                  class="form-control"
-                  placeholder="Buscar..."
-                /><i class="fas fa-search search-icon"></i>
+                  class="form-control minimal-input"
+                  placeholder="Buscar impressora..."
+                />
               </div>
             </div>
           </div>
@@ -1359,18 +1364,19 @@
 
         <div class="tab-content" id="cartuchos">
           <div class="list-header">
-            <div class="title-with-summary">
-              <h2>Cartuchos</h2>
+            <div class="header-left">
               <p id="cartuchos-disponiveis-summary" class="summary-text"></p>
             </div>
-            <div class="list-actions">
-              <div class="search-container">
+
+            <div class="header-right">
+              <div class="search-wrapper">
+                <i class="fas fa-search"></i>
                 <input
                   type="text"
                   id="search-input-cartuchos"
-                  class="form-control"
-                  placeholder="Buscar..."
-                /><i class="fas fa-search search-icon"></i>
+                  class="form-control minimal-input"
+                  placeholder="Buscar cartucho..."
+                />
               </div>
             </div>
           </div>
@@ -1419,28 +1425,30 @@
 
         <div class="tab-content" id="acessorios">
           <div class="list-header">
-            <div class="title-with-summary">
-              <h2>Acessórios</h2>
+            <div class="header-left">
               <p id="acessorios-disponiveis-summary" class="summary-text"></p>
             </div>
-            <div class="list-actions">
-              <div class="filter-container">
-                <label>Filtro:</label
-                ><select
+
+            <div class="header-right">
+              <div class="filter-wrapper">
+                <i class="fas fa-filter"></i>
+                <select
                   id="filtro-categoria-acessorio"
-                  class="form-control"
+                  class="form-control minimal-select"
                   onchange="aplicarFiltrosAcessorios()"
                 >
-                  <option value="todos">Todos</option>
+                  <option value="todos">Todas as Categorias</option>
                 </select>
               </div>
-              <div class="search-container">
+
+              <div class="search-wrapper">
+                <i class="fas fa-search"></i>
                 <input
                   type="text"
                   id="search-input-acessorios"
-                  class="form-control"
+                  class="form-control minimal-input"
                   placeholder="Buscar..."
-                /><i class="fas fa-search search-icon"></i>
+                />
               </div>
             </div>
           </div>
@@ -1489,7 +1497,10 @@
         </div>
 
         <div class="tab-content" id="manutencao">
-          <div class="list-header"><h2>Em Manutenção</h2></div>
+          <div class="list-header">
+            <div class="header-left"></div>
+            <div class="header-right"></div>
+          </div>
           <div class="table-container">
             <table class="equipment-table">
               <thead>
@@ -1519,18 +1530,22 @@
 
         <div class="tab-content" id="arquivados">
           <div class="list-header">
-            <h2>Arquivados</h2>
-            <div class="list-actions">
-              <div class="search-container">
+            <div class="header-left"></div>
+            <div class="header-right">
+              <div class="search-wrapper">
+                <i class="fas fa-search"></i>
                 <input
                   type="text"
                   id="search-input-arquivados"
-                  class="form-control"
-                  placeholder="Buscar..."
-                /><i class="fas fa-search search-icon"></i>
+                  class="form-control minimal-input"
+                  placeholder="Buscar equipamento..."
+                />
               </div>
             </div>
           </div>
+
+          <h3 class="lixeira-section-title">Equipamentos</h3>
+
           <div class="table-container">
             <table class="equipment-table" id="archived-equipment-table">
               <thead>
@@ -1555,21 +1570,39 @@
             style="display: none"
           >
             <i class="fas fa-archive"></i>
-            <h3>Vazio</h3>
+            <h3>Nenhum equipamento arquivado</h3>
           </div>
-          <div class="list-header" style="margin-top: 40px">
-            <h2>Cartuchos Arquivados</h2>
-            <div class="list-actions">
-              <div class="search-container">
-                <input
-                  type="text"
-                  id="search-input-cartuchos-arquivados"
-                  class="form-control"
-                  placeholder="Buscar..."
-                />
-              </div>
+
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-end;
+              margin-top: 40px;
+              border-bottom: 2px solid var(--color-border);
+              padding-bottom: 8px;
+              margin-bottom: 20px;
+            "
+          >
+            <h3
+              class="lixeira-section-title"
+              style="margin: 0; border: none; padding: 0"
+            >
+              Cartuchos
+            </h3>
+
+            <div class="search-wrapper">
+              <i class="fas fa-search"></i>
+              <input
+                type="text"
+                id="search-input-cartuchos-arquivados"
+                class="form-control minimal-input"
+                placeholder="Buscar cartucho..."
+                style="width: 200px"
+              />
             </div>
           </div>
+
           <div class="table-container">
             <table class="equipment-table" id="archived-cartridges-table">
               <thead>
@@ -1592,12 +1625,12 @@
             style="display: none"
           >
             <i class="fas fa-archive"></i>
-            <h3>Vazio</h3>
+            <h3>Nenhum cartucho arquivado</h3>
           </div>
         </div>
 
         <div class="tab-content" id="lixeira">
-          <div class="list-header"><h2>Lixeira</h2></div>
+          <!-- <div class="list-header"><h2>Lixeira</h2></div> -->
           <div class="bulk-actions-container">
             <button
               id="btn-apagar-lixeira-equipamentos"
