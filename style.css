@@ -357,18 +357,36 @@ pre code {
 }
 
 /* Form elements */
+/* --- INPUTS TECH --- */
 .form-control {
-  display: block;
-  width: 100%;
-  padding: var(--space-8) var(--space-12);
-  font-size: var(--font-size-md);
-  line-height: 1.5;
-  color: var(--color-text);
-  background-color: var(--color-surface);
+  padding: var(--space-12);
+  
+  /* Borda Tech */
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-base);
-  transition: border-color var(--duration-fast) var(--ease-standard),
-    box-shadow var(--duration-fast) var(--ease-standard);
+  border-radius: 0; /* Quadrado */
+  
+  font-size: var(--font-size-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: all 0.2s ease;
+}
+
+/* Foco no Input: Borda Azul Forte + Sombra Sutil */
+.form-control:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary); /* Brilho sólido */
+  outline: none;
+  background-color: rgba(var(--color-primary-rgb), 0.02); /* Fundo levemente azulado */
+}
+
+.form-control.error {
+  border-color: var(--color-error);
+  box-shadow: none;
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
 }
 
 textarea.form-control {
@@ -558,7 +576,7 @@ select.form-control {
   justify-content: center;
   background: linear-gradient(
     135deg,
-    rgb(12, 1, 59) 0%,
+    rgb(8, 0, 46) 0%,
     rgb(2, 70, 36) 100%
   );
   color: var(--color-btn-primary-text);
@@ -617,58 +635,100 @@ select.form-control {
   color: #4a90e2; /* Ícone em azul claro */
 }
 
+/* --- NAVEGAÇÃO TECH CLEAN (Minimalista) --- */
+
 .nav-tabs {
   display: flex;
-  gap: var(--space-4);
-  margin-bottom: var(--space-32);
-  background: var(--color-surface);
-  padding: var(--space-8);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-card-border);
-}
-.tab-btn {
-  padding: var(--space-12) var(--space-16);
-  border: none;
-  background: transparent;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-medium);
+  /* Removemos o gap grande para caber tudo. Usamos padding nos botões para separar */
+  gap: 0; 
+  margin-bottom: 0;
   
-  /* ALTERAÇÃO 1: Cantos quadrados */
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  
+  flex-wrap: wrap;
+  justify-content: center;
+  
+  /* Linha fina cinza correndo por baixo de tudo para dar acabamento */
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Estilo Base do Botão (Limpo) */
+.tab-btn {
+  font-family: 'Orbitron', sans-serif;
+  /* Fonte menor para caber na linha */
+  font-size: 11px; 
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px; /* Reduzi o espaçamento das letras */
+  
+  /* Padding reduzido nas laterais */
+  padding: 12px 12px; 
+  
+  border: none;
+  background: transparent; /* Sem cor de fundo por padrão */
+  color: var(--color-text-secondary); /* Cinza discreto */
+  
   border-radius: 0; 
   
-  cursor: pointer;
+  /* Prepara a borda inferior invisível para não pular quando ficar ativo */
+  border-bottom: 3px solid transparent; 
   
-  /* ALTERAÇÃO 2: Transição suave para o zoom e cor */
-  transition: transform 0.4s ease, color 0.2s ease, font-weight 0.1s ease;
+  cursor: pointer;
+  transition: all 0.2s ease;
   
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-8);
+  gap: 6px; /* Aproxima o ícone do texto */
   white-space: nowrap;
+  position: relative;
 }
 
+/* Hover: Fundo bem suave apenas ao passar o mouse */
 .tab-btn:hover {
-  /* ALTERAÇÃO 3: Fundo transparente (sem cinza) */
-  background: transparent;
-  
-  /* ALTERAÇÃO 4: Texto Azul e Negrito */
-  color: var(--color-primary);
-  font-weight: bold;
-  
-  /* ALTERAÇÃO 5: Zoom de 10% */
-  transform: scale(1.1);
+  background-color: rgba(var(--color-primary-rgb), 0.04); /* Quase invisível */
+  color: var(--color-primary); /* Texto fica azul */
 }
-.tab-btn.active {
-  background: var(--color-primary);
-  color: var(--color-btn-primary-text);
-  box-shadow: var(--shadow-sm);
-}
+
+/* Ícones */
 .tab-btn i {
-  font-size: var(--font-size-lg);
+  font-size: 13px;
+  margin: 0; /* Garante que não tenha margens extras */
 }
+
+/* --- BOTÃO ATIVO (Aba Selecionada) --- */
+.tab-btn.active {
+  background: transparent; /* Continua transparente */
+  
+  /* Texto assume a cor principal */
+  color: var(--color-primary); 
+  
+  /* Apenas a linha embaixo aparece (Degradê Azul/Verde) */
+  border-bottom-width: 3px;
+  border-bottom-style: solid;
+  border-image: linear-gradient(to right, rgb(8, 0, 46), rgb(2, 70, 36)) 1;
+  
+  /* Se o navegador não suportar border-image, usa cor sólida: */
+  border-bottom-color: var(--color-primary);
+}
+
+.tab-btn.active i {
+  /* O ícone também fica na cor ativa */
+  color: var(--color-primary);
+}
+
+/* Ajuste fino para telas menores (Notebooks pequenos) */
+@media (max-width: 1366px) {
+  .tab-btn {
+    padding: 10px 8px; /* Aperta um pouco mais se precisar */
+    font-size: 10px;
+  }
+}
+
 .tab-content {
   display: none;
 }
@@ -691,61 +751,77 @@ select.form-control {
   gap: var(--space-20);
   margin-bottom: var(--space-32);
 }
+
+/* --- CARD DO DASHBOARD (ESTILO TECH SÓLIDO) --- */
+
 .metric-card {
   background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  padding: var(--space-20);
+  /* Quadrado e com borda sutil */
+  border-radius: 0; 
+  border: 1px solid var(--color-card-border);
+  
+  /* Garante alinhamento lado a lado */
   display: flex;
   align-items: center;
   gap: var(--space-16);
+  
+  padding: var(--space-20);
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-card-border);
-  transition: transform var(--duration-normal) var(--ease-standard);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden; /* Para efeitos de brilho */
 }
+
 .metric-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+  border-color: var(--color-primary); /* Borda fica azul ao passar o mouse */
 }
+
+/* --- ÍCONE QUADRADO ESCURO (Conecta com o Header) --- */
+/* --- ÍCONE QUADRADO COM DEGRADÊ (Conecta com o Header) --- */
 .metric-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: var(--radius-lg);
+  width: 64px;
+  height: 64px;
+  border-radius: 0; 
+  
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  color: white;
+  font-size: 26px;
+  
+  /* AQUI ESTÁ A MUDANÇA: O Fundo agora é o seu degradê */
+  background: linear-gradient(
+    135deg,
+    rgb(8, 0, 46) 0%,
+    rgb(2, 70, 36) 100%
+  );
+  
+  color: #ffffff;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5); /* Sombra interna mais forte */
+  border: 1px solid rgba(255,255,255,0.1); /* Borda sutil */
 }
-/* === DASHBOARD ICONS (ATUALIZADO PARA VARS) === */
+
+/* Cores específicas apenas para o BRILHO/Borda do ícone, mantendo o fundo escuro unificado */
+
 .metric-icon.disponivel {
-  /* Azul primário (cor muda com tema) */
-  background: linear-gradient(
-    135deg,
-    var(--color-primary),
-    var(--color-primary-active)
-  );
+  border-bottom: 3px solid #0d6efd; /* Azul Claro */
+  color: #a6c8ff; /* Ícone levemente azulado */
 }
+
 .metric-icon.ativo {
-  /* Verde sucesso */
-  background: linear-gradient(
-    135deg,
-    var(--color-success),
-    rgba(var(--color-success-rgb), 0.7)
-  );
+  border-bottom: 3px solid var(--color-success); /* Verde */
+  color: #d1e7dd; /* Ícone levemente esverdeado */
 }
+
 .metric-icon.manutencao {
-  background: linear-gradient(
-    135deg,
-    var(--color-warning),
-    rgba(var(--color-warning-rgb), 0.7)
-  );
+  border-bottom: 3px solid var(--color-warning); /* Laranja */
+  color: #ffecb5; 
 }
+
 .metric-icon.arquivado {
-  background: linear-gradient(
-    135deg,
-    var(--color-info),
-    rgba(var(--color-info-rgb), 0.7)
-  );
+  border-bottom: 3px solid var(--color-info); /* Cinza */
+  color: #e2e3e5;
 }
 
 .metric-info h3 {
@@ -764,22 +840,76 @@ select.form-control {
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: var(--space-24);
 }
+/* --- GRÁFICOS (ESTILO TECH) --- */
+
 .chart-container {
   background: var(--color-surface);
-  border-radius: var(--radius-lg);
+  
+  /* Quadrado */
+  border-radius: 0; 
+  border: 1px solid var(--color-card-border);
+  
   padding: var(--space-20);
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-card-border);
+  position: relative; /* Necessário para a linha do topo */
+  transition: all 0.3s ease;
 }
+
+/* Efeito Tech: Barra azul escura no topo (Conecta com o Header) */
+.chart-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px; /* Linha de destaque */
+  background: linear-gradient(90deg, rgb(8, 0, 46) 0%, rgb(2, 70, 36) 100%);
+}
+
+/* Efeito de hover suave */
+.chart-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+/* Título do Gráfico com Fonte Sci-Fi */
 .chart-container h3 {
-  color: var(--color-text);
-  font-size: var(--font-size-xl);
-  margin-bottom: var(--space-16);
-  text-align: center;
+  font-family: 'Orbitron', sans-serif; /* Mesma fonte do Logo */
+  color: var(--color-primary);
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  
+  margin-bottom: var(--space-20);
+  padding-bottom: var(--space-12);
+  border-bottom: 1px solid var(--color-border); /* Linha separadora fina */
+  text-align: left; /* Alinhado à esquerda fica mais técnico */
+  
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
+
+/* Pequeno detalhe decorativo antes do título */
+.chart-container h3::before {
+  content: '';
+  display: block;
+  width: 8px;
+  height: 8px;
+  background-color: var(--color-primary);
+  border-radius: 0; /* Quadrado */
+}
+
+/* Ajuste no Canvas para garantir que caiba bem E TENHA LIMITE */
 .chart-container canvas {
-  height: 300px !important;
+  padding-top: 10px;
+  /* Estas duas linhas são o segredo para parar de esticar: */
+  height: 300px !important; 
+  max-height: 300px !important;
+  width: 100% !important;
 }
+
 .form-header {
   text-align: center;
   margin-bottom: var(--space-32);
@@ -798,21 +928,59 @@ select.form-control {
   max-width: 900px;
   margin: 0 auto;
 }
+/* --- SEÇÃO DO FORMULÁRIO (ESTILO TECH) --- */
 .form-section {
   background: var(--color-surface);
-  border-radius: var(--radius-lg);
+  border-radius: 0; 
   padding: var(--space-24);
   margin-bottom: var(--space-24);
   border: 1px solid var(--color-card-border);
   box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden; /* Garante que o detalhe não vaze */
 }
 
+/* Barra de energia no topo do Formulário */
+.form-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, rgb(8, 0, 46) 0%, rgb(2, 70, 36) 100%);
+}
+
+/* Título das Seções (Detalhes, Usuário, etc.) */
 .form-section legend {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
-  padding: 0 var(--space-12);
-  margin-bottom: var(--space-16);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  
+  /* MÁGICA DO TEXTO EM DEGRADÊ */
+  background: linear-gradient(90deg, rgb(8, 0, 46) 0%, rgb(2, 70, 36) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent; /* O texto fica transparente para mostrar o fundo */
+  
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 0 0 var(--space-8) 0;
+  margin-bottom: var(--space-20);
+  width: 100%;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Quadrado decorativo antes do título (agora verde escuro para contrastar) */
+.form-section legend::before {
+  content: '';
+  display: block;
+  width: 8px;
+  height: 8px;
+  background-color: rgb(2, 70, 36); /* Verde Tech */
 }
 .form-row {
   display: grid;
@@ -899,8 +1067,62 @@ textarea.form-control {
 .form-actions {
   display: flex;
   gap: var(--space-16);
-  justify-content: center;
+  justify-content: center; /* Centralizados */
   margin-top: var(--space-32);
+  padding-top: var(--space-20);
+  border-top: 1px solid var(--color-border); /* Linha sutil separando do form */
+}
+/* Estilo Base para os botões de ação */
+.form-actions .btn {
+  border-radius: 0; /* Totalmente Quadrados */
+  font-family: 'Orbitron', sans-serif; /* Fonte Tech */
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase; /* Caixa alta */
+  letter-spacing: 1px;
+  padding: 12px 30px; /* Mais largos para presença */
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+/* BOTÃO SALVAR (Principal) */
+.form-actions .btn--primary {
+  /* O mesmo degradê do Header e dos Ícones */
+  background: linear-gradient(
+    90deg,
+    rgb(8, 0, 46) 0%,
+    rgb(2, 70, 36) 100%
+  );
+  border: none;
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.form-actions .btn--primary:hover {
+  transform: translateY(-2px); /* Sobe levemente */
+  box-shadow: 0 6px 20px rgba(2, 70, 36, 0.4); /* Brilho verde */
+  filter: brightness(1.2); /* Fica mais claro */
+}
+
+/* BOTÃO LIMPAR (Secundário) */
+.form-actions .btn--secondary {
+  background: transparent;
+  border: 1px solid var(--color-text-secondary);
+  color: var(--color-text-secondary);
+}
+
+.form-actions .btn--secondary:hover {
+  /* Efeito de alerta ao passar o mouse (Vermelho Tech) */
+  border-color: var(--color-error);
+  color: var(--color-error);
+  box-shadow: 0 0 10px rgba(220, 53, 69, 0.2);
+  background: rgba(220, 53, 69, 0.05);
+}
+
+/* Ícones dentro dos botões */
+.form-actions .btn i {
+  margin-right: 8px;
+  font-size: 16px;
 }
 #form-messages {
   margin-top: var(--space-24);
@@ -925,21 +1147,44 @@ textarea.form-control {
 }
 .list-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* Texto na esquerda, Ações na direita */
   align-items: center;
   margin-bottom: var(--space-24);
-  flex-wrap: wrap;
-  gap: var(--space-16);
+  padding: var(--space-16);
+  background-color: var(--color-surface); /* Fundo branco para destacar do cinza */
+  border: 1px solid var(--color-border);
+  border-radius: 0; /* Tech style quadrado */
+  border-left: 4px solid var(--color-primary); /* Detalhe azul na esquerda */
 }
-.list-header h2 {
+/* .list-header h2 {
   color: var(--color-text);
   font-size: var(--font-size-3xl);
+} */
+ /* Remove margens extras do container de resumo para alinhar */
+.title-with-summary {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
 }
+/* Garante que os botões/inputs da direita fiquem alinhados */
 .list-actions {
   display: flex;
-  gap: var(--space-16);
+  gap: var(--space-12);
   align-items: center;
+  flex-wrap: wrap; /* Permite quebrar linha em telas pequenas */
 }
+/* Ajuste fino para o botão de CSV ficar na mesma altura dos inputs */
+#btn-exportar-csv {
+  height: 40px; /* Mesma altura padrão dos inputs */
+  white-space: nowrap;
+  padding: 0 20px;
+  border-radius: 0; /* Quadrado */
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
 .search-container {
   position: relative;
 }
@@ -1206,23 +1451,40 @@ textarea.form-control {
     box-shadow: 0 0 0 0 rgba(var(--color-warning-rgb), 0);
   }
 }
+/* --- BOTÕES DE ALTERNÂNCIA (TABS DO CADASTRO) --- */
 .cadastro-toggle {
   display: flex;
   justify-content: center;
   gap: var(--space-16);
   margin-bottom: var(--space-32);
 }
+
 .cadastro-toggle .btn {
   background-color: var(--color-surface);
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
   flex-basis: 250px;
+  
+  /* Quadrado */
+  border-radius: 0; 
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
+
+/* Botão Ativo: Azul Sólido Tech */
+/* Botão Ativo: Degradê */
 .cadastro-toggle .btn.active {
-  background-color: var(--color-primary);
-  color: var(--color-btn-primary-text);
+  background: linear-gradient(135deg, rgb(8, 0, 46) 0%, rgb(2, 70, 36) 100%);
+  color: #ffffff;
+  border-color: transparent; /* Remove borda sólida */
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+.cadastro-toggle .btn:hover:not(.active) {
   border-color: var(--color-primary);
-  box-shadow: var(--shadow-sm);
+  color: var(--color-primary);
 }
 .form-group.full-width {
   grid-column: 1 / -1;
