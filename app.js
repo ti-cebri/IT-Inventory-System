@@ -52,8 +52,7 @@ async function salvarNoFirebase() {
   } finally {
     // Restaura o botão
     if (salvarBtn) {
-      salvarBtn.innerHTML =
-        '<i class="fas fa-download"></i> Salvar CSV (Backup)';
+      salvarBtn.innerHTML = '<i class="fas fa-download"></i> Exportar CSV';
       salvarBtn.disabled = false;
     }
     atualizarEstadoBotaoSalvar();
@@ -2144,13 +2143,18 @@ function configurarEventListeners() {
   configurarValidacaoTempoReal();
   document.addEventListener("click", (e) => {
     const tooltip = document.getElementById("acessorio-tooltip");
-    if (
-      tooltip.classList.contains("active") &&
-      !e.target.closest(
-        ".acessorio-badge, .disponibilidade-nao, .icon-doc-pending, .clickable-sala"
-      )
-    ) {
-      esconderTooltip();
+
+    // Se o tooltip está ativo...
+    if (tooltip.classList.contains("active")) {
+      // Verifica se o clique NÃO foi nos ícones que abrem E NÃO foi dentro do próprio tooltip
+      const clicouNoIcone = e.target.closest(
+        ".acessorio-badge, .disponibilidade-nao, .icon-doc-pending, .clickable-sala, .icon-kit, .icon-headsets, .icon-monitores, .icon-mouses, .icon-suportes, .icon-outros"
+      );
+      const clicouDentroDoTooltip = e.target.closest("#acessorio-tooltip");
+
+      if (!clicouNoIcone && !clicouDentroDoTooltip) {
+        esconderTooltip();
+      }
     }
   });
 
@@ -2179,8 +2183,8 @@ function setEstadoAlteracao(alterado) {
   btn.classList.toggle("btn--primary", !alterado || btn.disabled);
   btn.innerHTML =
     alterado && !btn.disabled
-      ? `<i class="fas fa-exclamation-triangle"></i> Salvar CSV`
-      : `<i class="fas fa-download"></i> Salvar CSV`;
+      ? `<i class="fas fa-exclamation-triangle"></i> Exportar CSV`
+      : `<i class="fas fa-download"></i> Exportar CSV`;
 }
 
 // *** INÍCIO DA MODIFICAÇÃO ***
@@ -2702,20 +2706,20 @@ function criarGrafico(
   const colors = {
     bar: {
       Disponível: "#0d6efd", // Azul Vibrante
-      Ativo: "#024624",      // SEU VERDE (rgb 2, 70, 36 hex)
-      Inativo: "#dc3545",    // Vermelho (Erro)
+      Ativo: "#024624", // SEU VERDE (rgb 2, 70, 36 hex)
+      Inativo: "#dc3545", // Vermelho (Erro)
       "Em manutenção": "#ffc107", // Amarelo (Atenção)
-      Arquivado: "#6c757d",  // Cinza
+      Arquivado: "#6c757d", // Cinza
     },
     // Paleta mista para o gráfico de rosca
     doughnut: [
-      "rgb(8, 0, 46)",   // Seu Azul Escuro (Fundo)
-      "rgb(2, 70, 36)",  // Seu Verde Escuro
-      "#0d6efd",         // Azul Brilhante
-      "#198754",         // Verde Sucesso (Bootstrap)
-      "#0dcaf0",         // Ciano (Ligação entre azul e verde)
-      "#20c997",         // Teal
-      "#adb5bd"          // Cinza
+      "rgb(8, 0, 46)", // Seu Azul Escuro (Fundo)
+      "rgb(2, 70, 36)", // Seu Verde Escuro
+      "#0d6efd", // Azul Brilhante
+      "#198754", // Verde Sucesso (Bootstrap)
+      "#0dcaf0", // Ciano (Ligação entre azul e verde)
+      "#20c997", // Teal
+      "#adb5bd", // Cinza
     ],
     line: "rgb(2, 70, 36)", // Linha do gráfico agora será Verde para destacar
   };
