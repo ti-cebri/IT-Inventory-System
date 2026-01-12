@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
 
 :root {
   /* Colors - TEMA (Azul Marinho + Cinzas Neutros + Verde Sucesso) */
@@ -111,55 +112,52 @@
   --container-xl: 1280px;
 }
 
-/* Data attribute for manual theme switching */
+/* --- TEMA ESCURO (DARK MODE - TECH/SCI-FI) --- */
 [data-color-scheme="dark"] {
-  /* Fundo Cinza Escuro */
-  --color-background: rgba(31, 33, 33, 1);
-  --color-surface: rgba(38, 40, 40, 1);
-  --color-text: rgba(245, 245, 245, 1);
-  --color-text-secondary: rgba(167, 169, 169, 0.7);
+  /* Fundo: Não use cinza, use Azul Profundo/Preto (Deep Space) */
+  --color-background: #020408;
 
-  /* Cor Primária Azul Padrão Vibrante (para abas ativas, etc) */
-  --color-primary: rgba(13, 110, 253, 1); /* #0d6efd */
-  --color-primary-hover: rgba(11, 94, 215, 1);
-  --color-primary-active: rgba(9, 78, 177, 1);
-  --color-primary-rgb: 13, 110, 253;
+  /* Superfície: Um tom levemente mais claro, azulado metálico */
+  --color-surface: #0b1118;
 
-  --color-secondary: rgba(119, 124, 124, 0.15);
-  --color-secondary-hover: rgba(119, 124, 124, 0.25);
-  --color-secondary-active: rgba(119, 124, 124, 0.3);
-  --color-border: rgba(119, 124, 124, 0.3);
+  /* Texto: Branco gelo para leitura nítida */
+  --color-text: #e6edf3;
+  --color-text-secondary: #8b949e;
 
-  /* Cores de Status (Claras e Verde Ajustado) */
-  --color-error: rgba(255, 84, 89, 1);
-  --color-success: rgba(
-    40,
-    190,
-    69,
-    1
-  ); /* Verde mais vibrante para dark mode */
-  --color-warning: rgba(230, 129, 97, 1);
-  --color-info: rgba(167, 169, 169, 1);
+  /* Cor Primária: Azul Neon (Mais vibrante que no modo claro para brilhar) */
+  --color-primary: #448aff; /* Azul Elétrico */
+  --color-primary-hover: #2979ff;
+  --color-primary-active: #2962ff;
+  --color-primary-rgb: 68, 138, 255;
 
-  --color-focus-ring: rgba(
-    13,
-    110,
-    253,
-    0.4
-  ); /* Foco com a cor primária nova */
-  --color-btn-primary-text: rgba(255, 255, 255, 1); /* Texto branco no botão */
-  --color-card-border: rgba(119, 124, 124, 0.2);
-  --color-card-border-inner: rgba(119, 124, 124, 0.15);
-  --shadow-inset-sm: inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.15);
-  --color-border-secondary: rgba(119, 124, 124, 0.2);
-  --color-select-caret: rgba(245, 245, 245, 0.8);
+  /* Bordas: Azul escuro sutil para separar elementos */
+  --color-secondary: rgba(56, 139, 253, 0.15);
+  --color-secondary-hover: rgba(56, 139, 253, 0.25);
+  --color-border: #30363d; /* Cinza azulado para linhas finas */
 
-  /* RGB versions for opacity control */
-  --color-success-rgb: 40, 190, 69; /* Verde mais vibrante */
-  --color-error-rgb: 255, 84, 89;
-  --color-warning-rgb: 230, 129, 97;
-  --color-info-rgb: 167, 169, 169;
+  /* Cards e Containers */
+  --color-card-border: #30363d;
+  --color-card-border-inner: #21262d;
+
+  /* Cores de Status (Neon/Pastel para não ferir os olhos) */
+  --color-error: #f85149; /* Vermelho Neon */
+  --color-success: #2ea043; /* Verde Matrix */
+  --color-warning: #db9c08; /* Dourado */
+  --color-info: #58a6ff; /* Ciano */
+
+  /* Shadows agora viram "Glows" (Brilhos) */
+  --shadow-sm: 0 0 0 1px #30363d; /* Borda sutil em vez de sombra */
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.5); /* Sombra profunda */
+  --shadow-lg: 0 0 20px rgba(68, 138, 255, 0.15); /* Brilho azulado */
+
+  /* Ícones e Setas */
+  --color-select-caret: #e6edf3;
+
+  /* Ajuste de RGB para opacidades */
+  --color-success-rgb: 46, 160, 67;
+  --color-error-rgb: 248, 81, 73;
+  --color-warning-rgb: 219, 156, 8;
+  --color-info-rgb: 88, 166, 255;
 }
 
 [data-color-scheme="light"] {
@@ -1253,16 +1251,16 @@ textarea.form-control {
 .minimal-select,
 .minimal-input {
   height: 36px;
-  
+
   /* CORREÇÃO: Removemos o padding vertical que estava esmagando o texto */
   padding-top: 0 !important;
   padding-bottom: 0 !important;
   padding-left: 30px !important; /* Mantém espaço para o ícone */
   padding-right: 10px; /* Espaço na direita */
-  
+
   /* Centraliza o texto verticalmente */
   line-height: 34px; /* Altura (36) - Bordas (2) */
-  
+
   border-radius: 0 !important;
   border: 1px solid var(--color-border);
   background-color: var(--color-background);
@@ -1318,17 +1316,17 @@ select.minimal-select {
 
 .table-container {
   background: var(--color-surface);
-  border-radius: 0; 
+  border-radius: 0;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--color-card-border);
   border-top: 3px solid var(--color-primary);
-  overflow-x: auto; 
+  overflow-x: auto;
 }
 
 /* --- ESTE BLOCO ESTAVA FALTANDO OU NO LUGAR ERRADO --- */
 /* Ele diz para a TABELA ocupar 100% da largura */
 .equipment-table {
-  width: 100% !important; 
+  width: 100% !important;
   border-collapse: collapse;
   border-spacing: 0;
   margin: 0;
@@ -1339,7 +1337,7 @@ select.minimal-select {
 /* CABEÇALHO (Títulos das Colunas) */
 .equipment-table th {
   /* Removi width e border-collapse daqui */
-  
+
   background-color: rgb(8, 0, 46); /* Azul Profundo */
   color: #ffffff;
 
@@ -2459,9 +2457,9 @@ button:disabled i,
 } /* Cinza (Padrão) */
 
 /* ===========================================
-   CORREÇÃO (v2): Força a coluna de Ações 
-   a não ser "espremida".
-   =========================================== */
+  CORREÇÃO (v2): Força a coluna de Ações 
+  a não ser "espremida".
+=========================================== */
 
 /* Tabela Principal de Equipamentos (Ações é a 11ª coluna) */
 #equipment-table td:nth-child(11) {
@@ -2659,4 +2657,457 @@ button:disabled i,
   cursor: not-allowed;
   background-color: var(--color-secondary);
   color: var(--color-text-secondary);
+}
+
+/* --- CORREÇÃO: TÍTULOS BRILHANTES NO MODO ESCURO --- */
+
+/* Altera o texto de "Detalhes", "Equipamentos", etc. para NEON */
+[data-color-scheme="dark"] .form-section legend,
+[data-color-scheme="dark"] .lixeira-section-title {
+  /* Degradê Claro: Azul Gelo -> Verde Neon */
+  background: linear-gradient(90deg, #82b1ff 0%, #69f0ae 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+
+  /* Sombra para dar efeito de "luz" */
+  filter: drop-shadow(0 0 5px rgba(105, 240, 174, 0.3));
+}
+
+/* Altera o quadradinho decorativo antes do texto */
+[data-color-scheme="dark"] .form-section legend::before,
+[data-color-scheme="dark"] .lixeira-section-title::before {
+  background-color: #69f0ae; /* Verde Neon Sólido */
+  box-shadow: 0 0 10px rgba(105, 240, 174, 0.6); /* Brilho forte */
+}
+
+/* Garante que os Labels (nomes dos campos) fiquem claros */
+[data-color-scheme="dark"] .form-label {
+  color: #c9d1d9; /* Cinza claro quase branco */
+}
+
+/* ======================================================= */
+/* --- ESTILOS MOBILE (CELULAR) - COLE NO FINAL DO CSS --- */
+/* ======================================================= */
+
+/* 1. Elementos do Menu Mobile (Invisíveis no Desktop) */
+.mobile-menu-btn,
+.mobile-close-btn,
+.mobile-menu-overlay {
+  display: none;
+}
+
+/* --- REGRAS APENAS PARA TELAS PEQUENAS (Max 768px) --- */
+@media (max-width: 768px) {
+  /* --- AJUSTE DO CABEÇALHO (Para não cortar no iPhone) --- */
+  .header {
+    height: auto; /* Altura se adapta ao conteúdo */
+    padding: 20px 10px; /* Mais espaço interno */
+    flex-direction: column; /* Empilha os itens se precisar */
+  }
+
+  .header-content {
+    padding: 0;
+    width: 100%;
+  }
+
+  .header h1 {
+    font-size: 22px; /* Fonte do título bem menor */
+    line-height: 1.2;
+    margin-bottom: 5px;
+    word-wrap: break-word; /* Quebra palavras longas se necessário */
+  }
+
+  .header p {
+    font-size: 12px;
+    margin-bottom: 15px; /* Espaço para o usuário/logout não colar */
+  }
+
+  /* Posiciona o Usuário e Logout melhor no mobile */
+  #user-display {
+    position: static !important; /* Remove posição fixa */
+    text-align: center !important;
+    margin-bottom: 10px;
+    font-size: 11px !important;
+    width: 100%;
+    display: block;
+  }
+
+  /* Botões de Tema e Logout no topo */
+  .theme-toggle-btn,
+  #logout-btn {
+    top: 15px; /* Ajusta altura */
+  }
+
+  #logout-btn {
+    right: 60px;
+  } /* Ajusta posição para não sobrepor */
+
+  /* --- MENU LATERAL (HAMBURGER) --- */
+
+  /* Barra superior de navegação no celular */
+  .main-nav-container {
+    justify-content: space-between;
+    padding: 10px 15px;
+    background-color: var(--color-surface);
+  }
+
+  /* Mostra o botão de 3 tracinhos */
+  .mobile-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-primary);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px 12px;
+  }
+
+  /* A Nav Tabs vira uma GAVETA LATERAL */
+  .nav-tabs {
+    position: fixed;
+    top: 0;
+    left: -300px; /* Começa escondido na esquerda */
+    width: 280px; /* Largura do menu */
+    height: 100vh; /* Altura total da tela */
+
+    /* Fundo Tech Escuro com Degradê */
+    background: linear-gradient(160deg, #08002e 0%, #024624 100%);
+
+    flex-direction: column; /* Itens um embaixo do outro */
+    justify-content: flex-start; /* Alinha no topo */
+    padding-top: 60px; /* Espaço para o botão fechar */
+
+    z-index: 10000; /* Fica acima de tudo */
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Animação suave */
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.5);
+    overflow-y: auto; /* Permite rolagem se a tela for pequena */
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Classe que o JS adiciona para abrir o menu */
+  .nav-tabs.active {
+    left: 0; /* Desliza para dentro */
+  }
+
+  /* Estilo dos botões DENTRO da Sidebar */
+  .tab-btn {
+    width: 100%;
+    justify-content: flex-start; /* Alinha texto à esquerda */
+    padding: 16px 25px;
+    color: rgba(255, 255, 255, 0.8); /* Texto claro */
+    font-size: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Linha divisória sutil */
+    border-radius: 0;
+    margin: 0;
+  }
+
+  .tab-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+
+  /* Botão Ativo na Sidebar */
+  .tab-btn.active {
+    background-color: rgba(255, 255, 255, 0.15); /* Destaque */
+    color: #fff;
+    border-left: 4px solid #448aff; /* Linha azul na esquerda */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .tab-btn i {
+    width: 24px; /* Alinha os ícones */
+    text-align: center;
+    margin-right: 10px;
+  }
+
+  /* Botão de Fechar (X) dentro do menu */
+  .mobile-close-btn {
+    display: block;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    opacity: 0.8;
+  }
+
+  /* Fundo Escuro (Overlay) atrás do menu */
+  .mobile-menu-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px); /* Efeito borrado moderno */
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+
+  /* Ativa o overlay quando o menu abre */
+  .mobile-menu-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Ajuste nas Ações Globais (Botão CSV) no mobile */
+  .global-actions {
+    display: none; /* Esconde no mobile ou move para dentro do menu se preferir */
+  }
+}
+
+/* ======================================================= */
+/* --- CORREÇÃO FINAL: CABEÇALHO MOBILE (iPhone) --- */
+/* ======================================================= */
+
+@media (max-width: 768px) {
+  /* 1. O Container Principal (Azul) */
+  .header {
+    height: auto !important;
+    min-height: 220px; /* Altura suficiente */
+    padding: 0 !important; /* Remove padding do pai para usar no filho */
+
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+  }
+
+  /* 2. O Container de Conteúdo (Texto + Botões) */
+  .header-content {
+    width: 100%;
+    /* CORREÇÃO CRÍTICA: */
+    margin-top: 0 !important; /* Remove a margem que empurrava tudo para baixo */
+    padding-top: 70px !important; /* Usa PADDING para empurrar só o texto */
+    padding-bottom: 20px;
+
+    text-align: center;
+    position: relative; /* Mantém referência para os botões */
+  }
+
+  /* 3. Botões (Agora ficam no topo real do container) */
+  .theme-toggle-btn {
+    position: absolute !important;
+    top: 15px !important; /* Fixo no topo do container */
+    right: 15px !important; /* Canto direito */
+    width: 32px !important;
+    height: 32px !important;
+    z-index: 200;
+  }
+
+  #logout-btn {
+    position: absolute !important;
+    top: 15px !important;
+    right: 55px !important; /* Ao lado do tema */
+    width: 32px !important;
+    height: 32px !important;
+    z-index: 200;
+  }
+
+  /* 4. Ajustes do Título (Agora empurrado pelo padding) */
+  .header h1 {
+    font-size: 18px !important;
+    line-height: 1.3;
+    margin-bottom: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .header h1 i {
+    font-size: 24px !important;
+    margin: 0 0 8px 0 !important;
+    display: block;
+  }
+
+  .header p {
+    font-size: 11px !important;
+    margin-top: 5px;
+    opacity: 0.8;
+    padding: 0 20px;
+  }
+
+  /* 5. Usuário Logado */
+  #user-display {
+    position: static !important;
+    margin-top: 15px !important;
+    width: 100%;
+    text-align: center !important;
+    font-size: 10px !important;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+}
+
+/* --- CORREÇÃO DASHBOARD MOBILE --- */
+@media (max-width: 768px) {
+  /* 1. Cards em 2 Colunas (Grade 2x2) */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr !important; /* Força 2 colunas iguais */
+    gap: 10px !important; /* Espaço menor entre eles */
+  }
+
+  /* 2. Ajuste interno do Card para caber */
+  .metric-card {
+    flex-direction: column; /* Empilha: Ícone em cima, Texto embaixo */
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 15px 10px;
+    height: 100%; /* Garante altura igual */
+    gap: 10px;
+  }
+
+  /* Ajuste do Ícone */
+  .metric-icon {
+    width: 40px; /* Menor */
+    height: 40px;
+    font-size: 18px;
+    margin-right: 0; /* Remove margem lateral */
+    margin-bottom: 5px;
+  }
+
+  /* Ajuste do Texto */
+  .metric-info h3 {
+    font-size: 24px; /* Número grande */
+    margin-bottom: 2px;
+  }
+
+  .metric-info p {
+    font-size: 11px; /* Texto descritivo menor */
+    line-height: 1.2;
+  }
+
+  /* --- BOTÃO DE EXPANDIR GRÁFICOS --- */
+  .charts-toggle-btn {
+    display: flex !important; /* Aparece só no mobile */
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(90deg, rgb(8, 0, 46) 0%, rgb(2, 70, 36) 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-base);
+    font-family: "Orbitron", sans-serif;
+    font-size: 14px;
+    text-transform: uppercase;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Esconde os gráficos por padrão no mobile */
+  .charts-grid {
+    display: none; /* Começa fechado */
+  }
+
+  /* Classe para mostrar quando aberto */
+  .charts-grid.open {
+    display: grid !important;
+    animation: fadeIn 0.5s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Garante que o botão não apareça no Desktop */
+.charts-toggle-btn {
+  display: none;
+}
+
+/* --- CORREÇÃO: BOTÕES DE CADASTRO NO MOBILE --- */
+@media (max-width: 768px) {
+  
+  .cadastro-toggle {
+    flex-direction: column !important; /* Empilha verticalmente */
+    gap: 10px !important; /* Espaço entre eles */
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .cadastro-toggle .btn {
+    flex-basis: auto !important; /* Remove a largura fixa de 250px */
+    width: 100% !important; /* Ocupa a largura total da tela */
+    padding: 15px !important; /* Botão mais alto para facilitar o toque */
+    justify-content: center; /* Centraliza ícone e texto */
+  }
+  
+  /* Ajuste extra para o container do formulário não colar na borda */
+  .equipment-form {
+    padding: 0 5px;
+  }
+}
+
+/* ======================================================= */
+/* --- OVERRIDE GERAL: FONTE PADRÃO CEBRI (Montserrat) --- */
+/* ======================================================= */
+
+:root {
+  --font-family-base: 'Montserrat', sans-serif;
+  --font-family-mono: 'Montserrat', sans-serif; /* Remove fonte de código */
+}
+
+/* Força TODOS os elementos a usarem Montserrat */
+body, h1, h2, h3, h4, h5, h6, p, span, div, a, li,
+input, select, textarea, button, label,
+.header h1, .header p, 
+.tab-btn, .form-control, .form-label,
+.equipment-table, .equipment-table th, .equipment-table td,
+.metric-info h3, .lixeira-section-title,
+.status-badge, .cor-badge, .btn,
+.form-section legend, .chart-container h3,
+.metric-icon {
+  font-family: 'Montserrat', sans-serif !important;
+  letter-spacing: 0 !important; /* Remove o espaçamento "sci-fi" */
+}
+
+/* Ajustes de Peso (Bold) para manter a hierarquia */
+h1, h2, h3, .header h1, .metric-info h3, .lixeira-section-title, .form-section legend {
+  font-weight: 700 !important;
+}
+
+.form-label, .equipment-table th, .tab-btn {
+  font-weight: 600 !important;
+}
+
+/* Ajuste específico para Inputs e Selects (ficaram com fonte mono antes) */
+.form-control, .minimal-input, .minimal-select {
+  font-size: 14px !important; 
+  font-weight: 400 !important;
+}
+
+/* Ajuste no Título Principal para não ficar gigante com a nova fonte */
+.header h1 {
+  text-transform: uppercase;
+  font-size: 32px !important; /* Ajuste fino para Montserrat */
+}
+
+/* Ajuste nos Badges para ficarem mais legíveis */
+.status-badge, .cor-badge {
+  font-size: 11px !important;
+  font-weight: 700 !important;
 }
