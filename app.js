@@ -1368,7 +1368,7 @@ function desarquivarCartucho(id) {
 
 function atualizarListaCartuchosArquivados() {
   const termo = document
-    .getElementById("search-input-cartuchos-arquivados")
+    .getElementById("search-input-arquivados")
     .value.toLowerCase();
   const tbody = document.getElementById("archived-cartridges-list");
   const emptyState = document.getElementById("archived-cartridges-empty-state");
@@ -1717,7 +1717,14 @@ function criarFormularioEdicao(equipamento) {
   ];
 
   // --- ALTERAÇÃO SALA (1/2): Define as salas padrão para comparar ---
-  const salasPadrao = ["Casa COP", "COPA", "EVENTOS", "FINANCEIRO", "PROJETOS"];
+  const salasPadrao = [
+    "Casa COP",
+    "COPA",
+    "EVENTOS",
+    "FINANCEIRO",
+    "PRESIDENCIA",
+    "PROJETOS",
+  ];
 
   // Verifica se a sala atual é personalizada (não está na lista padrão e não é vazia)
   const isSalaPersonalizada =
@@ -2108,26 +2115,41 @@ function excluirEquipamento(registro) {
 // EVENT LISTENERS
 // ===========================================
 
+// No arquivo app.js, substitua a função configurarEventListeners por esta:
+
 function configurarEventListeners() {
+  // Navegação entre abas
   document
     .querySelectorAll(".tab-btn")
     .forEach(
       (btn) => (btn.onclick = (e) => mostrarTab(e.currentTarget.dataset.tab))
     );
+
+  // Submissão de Formulários
   document.getElementById("equipamento-form").onsubmit = salvarEquipamento;
   document.getElementById("acessorio-form").onsubmit = salvarAcessorio;
   document.getElementById("cartucho-form").onsubmit = salvarCartucho;
+
+  // --- BUSCAS (VINCULADAS CORRETAMENTE AQUI) ---
+  // A busca funciona via 'oninput', chamando a função que filtra os dados e redesenha a tabela.
   document.getElementById("search-input").oninput = aplicarFiltrosEquipamentos;
+
   document.getElementById("search-input-impressoras").oninput =
     filtrarImpressoras;
+
   document.getElementById("search-input-acessorios").oninput =
     aplicarFiltrosAcessorios;
+
   document.getElementById("search-input-cartuchos").oninput =
     atualizarListaCartuchos;
-  document.getElementById("search-input-cartuchos-arquivados").oninput =
-    atualizarListaCartuchosArquivados;
-  document.getElementById("search-input-arquivados").oninput =
-    atualizarListaArquivados;
+
+  // Busca Arquivados (UNIFICADA - Um campo atualiza tudo)
+  document.getElementById("search-input-arquivados").oninput = () => {
+    atualizarListaArquivados();
+    atualizarListaCartuchosArquivados();
+  };
+
+  // Eventos de mudança nos selects
   document.getElementById("tipoEquipamento").onchange = (e) =>
     handleTipoEquipamentoChange(e.target);
 
@@ -2140,13 +2162,13 @@ function configurarEventListeners() {
 
   document.getElementById("acessorio-tipo").onchange = () =>
     handleTipoAcessorioChange();
+
   configurarValidacaoTempoReal();
+
+  // Fecha tooltip ao clicar fora
   document.addEventListener("click", (e) => {
     const tooltip = document.getElementById("acessorio-tooltip");
-
-    // Se o tooltip está ativo...
     if (tooltip.classList.contains("active")) {
-      // Verifica se o clique NÃO foi nos ícones que abrem E NÃO foi dentro do próprio tooltip
       const clicouNoIcone = e.target.closest(
         ".acessorio-badge, .disponibilidade-nao, .icon-doc-pending, .clickable-sala, .icon-kit, .icon-headsets, .icon-monitores, .icon-mouses, .icon-suportes, .icon-outros"
       );
@@ -2158,7 +2180,50 @@ function configurarEventListeners() {
     }
   });
 
-  document.getElementById("theme-toggle").onclick = toggleTheme; // <-- ADIÇÃO PARA TEMA
+  // --- FUNCIONALIDADE DE BUSCA: MANUTENÇÃO (Mantido pois usa lógica diferente) ---
+  const searchManutencao = document.getElementById("search-input-manutencao");
+  if (searchManutencao) {
+    searchManutencao.addEventListener("keyup", function () {
+      const termo = this.value.toLowerCase();
+      const linhas = document.querySelectorAll("#manutencao-list tr");
+      linhas.forEach((linha) => {
+        const texto = linha.innerText.toLowerCase();
+        linha.style.display = texto.includes(termo) ? "" : "none";
+      });
+    });
+  }
+
+  // --- FUNCIONALIDADE DE BUSCA: LIXEIRA (GLOBAL) ---
+  const searchLixeira = document.getElementById("search-input-lixeira");
+  if (searchLixeira) {
+    searchLixeira.addEventListener("keyup", function () {
+      const termo = this.value.toLowerCase();
+      // Seleciona as linhas de TODAS as tabelas da lixeira
+      const linhasEquip = document.querySelectorAll(
+        "#lixeira-equipment-list tr"
+      );
+      const linhasAcess = document.querySelectorAll(
+        "#lixeira-acessorios-list tr"
+      );
+      const linhasCart = document.querySelectorAll(
+        "#lixeira-cartuchos-list tr"
+      );
+
+      const filtrar = (lista) => {
+        lista.forEach((linha) => {
+          const texto = linha.innerText.toLowerCase();
+          linha.style.display = texto.includes(termo) ? "" : "none";
+        });
+      };
+      filtrar(linhasEquip);
+      filtrar(linhasAcess);
+      filtrar(linhasCart);
+    });
+  }
+
+  // Alternador de Tema
+  const themeBtn = document.getElementById("theme-toggle");
+  if (themeBtn) themeBtn.onclick = toggleTheme;
 }
 
 // ===========================================
@@ -4457,4 +4522,48 @@ function gerarRelatorioExcel() {
   link.href = URL.createObjectURL(blob);
   link.download = `Relatorio_TI_${dataHoje}.csv`;
   link.click();
+}
+
+// --- MENU MOBILE ---
+function toggleMobileMenu() {
+  const nav = document.getElementById("main-nav");
+  const overlay = document.getElementById("mobile-menu-overlay");
+
+  // Alterna a classe 'active' para mostrar/esconder
+  nav.classList.toggle("active");
+  overlay.classList.toggle("active");
+}
+
+// Fecha o menu automaticamente ao clicar em um item (opcional, mas recomendado)
+document.querySelectorAll(".tab-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    // Só fecha se estiver em modo mobile (verificando se o menu tem a classe active)
+    const nav = document.getElementById("main-nav");
+    if (window.innerWidth <= 768 && nav.classList.contains("active")) {
+      toggleMobileMenu();
+    }
+  });
+});
+
+// --- FUNÇÃO PARA ABRIR/FECHAR GRÁFICOS NO MOBILE ---
+function toggleCharts() {
+  const chartsDiv = document.getElementById("dashboard-charts");
+  const icon = document.getElementById("charts-icon");
+
+  if (chartsDiv.classList.contains("open")) {
+    // Fechar
+    chartsDiv.classList.remove("open");
+    icon.classList.remove("fa-chevron-up");
+    icon.classList.add("fa-chevron-down");
+  } else {
+    // Abrir
+    chartsDiv.classList.add("open");
+    icon.classList.remove("fa-chevron-down");
+    icon.classList.add("fa-chevron-up");
+
+    // Força o redimensionamento dos gráficos para não ficarem "achatados" ao abrir
+    if (window.tipoChart) window.tipoChart.resize();
+    if (window.statusChart) window.statusChart.resize();
+    if (window.departamentoChart) window.departamentoChart.resize();
+  }
 }
