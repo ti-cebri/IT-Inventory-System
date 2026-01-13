@@ -3923,16 +3923,18 @@ function atualizarLixeiraEquipamentos() {
     tbody.innerHTML = deletados
       .map(
         (eq) => `
-            <tr>
-                <td class="checkbox-cell"><input type="checkbox" class="checkbox-lixeira-equipamentos" value="${
-                  eq.registro
-                }" onclick="verificarSelecao('lixeira-equipamentos')"></td>
+            <tr onclick="toggleCard(this)">
+                <td class="checkbox-cell" onclick="event.stopPropagation()">
+                    <input type="checkbox" class="checkbox-lixeira-equipamentos" value="${
+                      eq.registro
+                    }" onclick="verificarSelecao('lixeira-equipamentos')">
+                </td>
                 <td>${eq.registro}</td>
                 <td>${eq.tipoEquipamento}</td>
                 <td>${eq.numeroSerie}</td>
                 <td>${eq.numeroPatrimonio}</td>
                 <td>${formatarData(eq.deletionDate)}</td>
-                <td>
+                <td onclick="event.stopPropagation()">
                     <div class="action-buttons">
                         <button class="btn-action btn-restore" onclick="restaurarEquipamento('${
                           eq.registro
@@ -3946,10 +3948,10 @@ function atualizarLixeiraEquipamentos() {
         `
       )
       .join("");
-    tbody.closest(".table-container").style.display = "table";
+    tbody.closest(".table-container").style.display = "block";
     emptyState.style.display = "none";
   }
-  verificarSelecao("lixeira-equipamentos"); // <-- MODIFICAÇÃO
+  verificarSelecao("lixeira-equipamentos");
 }
 
 function restaurarEquipamento(registro) {
@@ -4053,15 +4055,17 @@ function atualizarLixeiraAcessorios() {
     tbody.innerHTML = deletados
       .map(
         (ac) => `
-            <tr>
-                <td class="checkbox-cell"><input type="checkbox" class="checkbox-lixeira-acessorios" value="${
-                  ac.id
-                }" onclick="verificarSelecao('lixeira-acessorios')"></td>
+            <tr onclick="toggleCard(this)">
+                <td class="checkbox-cell" onclick="event.stopPropagation()">
+                    <input type="checkbox" class="checkbox-lixeira-acessorios" value="${
+                      ac.id
+                    }" onclick="verificarSelecao('lixeira-acessorios')">
+                </td>
                 <td>${ac.id}</td>
                 <td>${ac.categoria}</td>
                 <td>${ac.modelo}</td>
                 <td>${formatarData(ac.deletionDate)}</td>
-                <td>
+                <td onclick="event.stopPropagation()">
                     <div class="action-buttons">
                         <button class="btn-action btn-restore" onclick="restaurarAcessorio('${
                           ac.id
@@ -4075,10 +4079,10 @@ function atualizarLixeiraAcessorios() {
         `
       )
       .join("");
-    tbody.closest(".table-container").style.display = "table";
+    tbody.closest(".table-container").style.display = "block";
     emptyState.style.display = "none";
   }
-  verificarSelecao("lixeira-acessorios"); // <-- MODIFICAÇÃO
+  verificarSelecao("lixeira-acessorios");
 }
 
 function restaurarAcessorio(id) {
@@ -4159,15 +4163,17 @@ function atualizarLixeiraCartuchos() {
     tbody.innerHTML = deletados
       .map(
         (ca) => `
-            <tr>
-                <td class="checkbox-cell"><input type="checkbox" class="checkbox-lixeira-cartuchos" value="${
-                  ca.id
-                }" onclick="verificarSelecao('lixeira-cartuchos')"></td>
+            <tr onclick="toggleCard(this)">
+                <td class="checkbox-cell" onclick="event.stopPropagation()">
+                    <input type="checkbox" class="checkbox-lixeira-cartuchos" value="${
+                      ca.id
+                    }" onclick="verificarSelecao('lixeira-cartuchos')">
+                </td>
                 <td>${ca.id}</td>
                 <td>${ca.numeroSerie}</td>
                 <td>${ca.cor}</td>
                 <td>${formatarData(ca.deletionDate)}</td>
-                <td>
+                <td onclick="event.stopPropagation()">
                     <div class="action-buttons">
                         <button class="btn-action btn-restore" onclick="restaurarCartucho('${
                           ca.id
@@ -4181,10 +4187,10 @@ function atualizarLixeiraCartuchos() {
         `
       )
       .join("");
-    tbody.closest(".table-container").style.display = "table";
+    tbody.closest(".table-container").style.display = "block";
     emptyState.style.display = "none";
   }
-  verificarSelecao("lixeira-cartuchos"); // <-- MODIFICAÇÃO
+  verificarSelecao("lixeira-cartuchos");
 }
 
 function restaurarCartucho(id) {
