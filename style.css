@@ -3588,8 +3588,19 @@ h3,
     content: "Motivo:";
   }
 
+  /* CORREÇÃO: Esconde o checkbox quando o card está expandido 
+     para não ficar atrás do botão "X" */
+  .equipment-table tr.mobile-expanded td.checkbox-cell {
+    display: none !important;
+  }
+
+  /* NOVO: Empurra o conteúdo para baixo para dar espaço ao botão X */
+  .equipment-table tr.mobile-expanded {
+    padding-top: 50px;
+  }
+
   /* ==========================================
-     CORREÇÃO DOS CARDS DE ARQUIVADOS (MOBILE)
+    CORREÇÃO DOS CARDS DE ARQUIVADOS (MOBILE)
      ========================================== */
 
   /* --- GRUPO 1: COMPUTADORES E INFRA (Id: #archived-equipment-table) --- */
@@ -3777,4 +3788,131 @@ h3,
 @keyframes loadingBar {
   0% { left: -50%; }
   100% { left: 100%; }
+}
+
+/* ======================================================= */
+/* --- CORREÇÃO DA LIXEIRA NO MOBILE (CARDS ESPECÍFICOS) --- */
+/* ======================================================= */
+
+@media (max-width: 768px) {
+
+  /* --- 1. LIXEIRA DE EQUIPAMENTOS --- */
+  /* Colunas Desktop: [1:Check, 2:ID, 3:Tipo, 4:Série, 5:Patrimônio, 6:Data, 7:Ações] */
+
+  /* Visibilidade Resumida (Card Fechado) */
+  /* Mostra Checkbox(1), ID(2), Tipo(3) e Data(6) */
+  #lixeira-equipment-table tr:not(.mobile-expanded) td:nth-child(1),
+  #lixeira-equipment-table tr:not(.mobile-expanded) td:nth-child(2),
+  #lixeira-equipment-table tr:not(.mobile-expanded) td:nth-child(3), 
+  #lixeira-equipment-table tr:not(.mobile-expanded) td:nth-child(6)  
+  { display: flex !important; }
+
+  /* Rótulos (Labels) Corretos */
+  #lixeira-equipment-table td:nth-child(2)::before { content: "ID:"; }
+  #lixeira-equipment-table td:nth-child(3)::before { content: "Tipo:"; }
+  #lixeira-equipment-table td:nth-child(4)::before { content: "Série:"; }
+  #lixeira-equipment-table td:nth-child(5)::before { content: "Patrimônio:"; }
+  #lixeira-equipment-table td:nth-child(6)::before { content: "Excluído em:"; }
+
+
+  /* --- 2. LIXEIRA DE ACESSÓRIOS --- */
+  /* Colunas Desktop: [1:Check, 2:ID, 3:Categoria, 4:Modelo, 5:Data, 6:Ações] */
+
+  /* Visibilidade Resumida (Card Fechado) */
+  /* Mostra Checkbox(1), ID(2), Categoria(3) e Modelo(4) */
+  #lixeira-acessorios-table tr:not(.mobile-expanded) td:nth-child(1),
+  #lixeira-acessorios-table tr:not(.mobile-expanded) td:nth-child(2),
+  #lixeira-acessorios-table tr:not(.mobile-expanded) td:nth-child(3),
+  #lixeira-acessorios-table tr:not(.mobile-expanded) td:nth-child(4)
+  { display: flex !important; }
+
+  /* Rótulos (Labels) Corretos */
+  #lixeira-acessorios-table td:nth-child(2)::before { content: "ID:"; }
+  #lixeira-acessorios-table td:nth-child(3)::before { content: "Categoria:"; }
+  #lixeira-acessorios-table td:nth-child(4)::before { content: "Modelo:"; }
+  #lixeira-acessorios-table td:nth-child(5)::before { content: "Excluído em:"; }
+
+
+  /* --- 3. LIXEIRA DE CARTUCHOS --- */
+  /* Colunas Desktop: [1:Check, 2:ID, 3:Série, 4:Cor, 5:Data, 6:Ações] */
+
+  /* Visibilidade Resumida (Card Fechado) */
+  /* Mostra Checkbox(1), ID(2), Cor(4) e Data(5) */
+  #lixeira-cartuchos-table tr:not(.mobile-expanded) td:nth-child(1),
+  #lixeira-cartuchos-table tr:not(.mobile-expanded) td:nth-child(2),
+  #lixeira-cartuchos-table tr:not(.mobile-expanded) td:nth-child(4),
+  #lixeira-cartuchos-table tr:not(.mobile-expanded) td:nth-child(5)
+  { display: flex !important; }
+
+  /* Rótulos (Labels) Corretos */
+  #lixeira-cartuchos-table td:nth-child(2)::before { content: "ID:"; }
+  #lixeira-cartuchos-table td:nth-child(3)::before { content: "Série:"; }
+  #lixeira-cartuchos-table td:nth-child(4)::before { content: "Cor:"; }
+  #lixeira-cartuchos-table td:nth-child(5)::before { content: "Excluído em:"; }
+  
+}
+
+/* ======================================================= */
+/* --- CORREÇÃO DA LIXEIRA NO MOBILE (CARDS ESPECÍFICOS) --- */
+/* ======================================================= */
+
+@media (max-width: 768px) {
+
+  /* --- 1. LIXEIRA DE EQUIPAMENTOS --- */
+  /* REMOVIDO: td:nth-child(1) da lista abaixo para ocultar o checkbox */
+  
+  #lixeira-equipment-table tr:not(.mobile-expanded) td:nth-child(2), /* ID */
+  #lixeira-equipment-table tr:not(.mobile-expanded) td:nth-child(3), /* Tipo */
+  #lixeira-equipment-table tr:not(.mobile-expanded) td:nth-child(6)  /* Data */
+  { display: flex !important; }
+
+  /* Rótulos (Labels) */
+  #lixeira-equipment-table td:nth-child(2)::before { content: "ID:"; }
+  #lixeira-equipment-table td:nth-child(3)::before { content: "Tipo:"; }
+  #lixeira-equipment-table td:nth-child(4)::before { content: "Série:"; }
+  #lixeira-equipment-table td:nth-child(5)::before { content: "Patrimônio:"; }
+  #lixeira-equipment-table td:nth-child(6)::before { content: "Excluído em:"; }
+
+
+  /* --- 2. LIXEIRA DE ACESSÓRIOS --- */
+  /* REMOVIDO: td:nth-child(1) da lista abaixo */
+  
+  #lixeira-acessorios-table tr:not(.mobile-expanded) td:nth-child(2), /* ID */
+  #lixeira-acessorios-table tr:not(.mobile-expanded) td:nth-child(3), /* Categoria */
+  #lixeira-acessorios-table tr:not(.mobile-expanded) td:nth-child(4)  /* Modelo */
+  { display: flex !important; }
+
+  /* Rótulos (Labels) */
+  #lixeira-acessorios-table td:nth-child(2)::before { content: "ID:"; }
+  #lixeira-acessorios-table td:nth-child(3)::before { content: "Categoria:"; }
+  #lixeira-acessorios-table td:nth-child(4)::before { content: "Modelo:"; }
+  #lixeira-acessorios-table td:nth-child(5)::before { content: "Excluído em:"; }
+
+
+  /* --- 3. LIXEIRA DE CARTUCHOS --- */
+  /* REMOVIDO: td:nth-child(1) da lista abaixo */
+  
+  #lixeira-cartuchos-table tr:not(.mobile-expanded) td:nth-child(2), /* ID */
+  #lixeira-cartuchos-table tr:not(.mobile-expanded) td:nth-child(4), /* Cor */
+  #lixeira-cartuchos-table tr:not(.mobile-expanded) td:nth-child(5)  /* Data */
+  { display: flex !important; }
+
+  /* Rótulos (Labels) */
+  #lixeira-cartuchos-table td:nth-child(2)::before { content: "ID:"; }
+  #lixeira-cartuchos-table td:nth-child(3)::before { content: "Série:"; }
+  #lixeira-cartuchos-table td:nth-child(4)::before { content: "Cor:"; }
+  #lixeira-cartuchos-table td:nth-child(5)::before { content: "Excluído em:"; }
+  
+}
+
+/* --- CORREÇÃO FINAL: Ocultar Checkbox na Lixeira (Mobile) --- */
+@media (max-width: 768px) {
+  
+  /* Garante que a 1ª coluna (Checkbox) nunca apareça no card FECHADO */
+  #lixeira-equipment-table tr:not(.mobile-expanded) td:nth-child(1),
+  #lixeira-acessorios-table tr:not(.mobile-expanded) td:nth-child(1),
+  #lixeira-cartuchos-table tr:not(.mobile-expanded) td:nth-child(1) {
+    display: none !important;
+  }
+
 }
