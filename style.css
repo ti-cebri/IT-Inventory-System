@@ -1,5 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap");
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap");
 
 :root {
   /* Colors - TEMA (Azul Marinho + Cinzas Neutros + Verde Sucesso) */
@@ -3041,7 +3041,6 @@ button:disabled i,
 
 /* --- CORREÇÃO: BOTÕES DE CADASTRO NO MOBILE --- */
 @media (max-width: 768px) {
-  
   .cadastro-toggle {
     flex-direction: column !important; /* Empilha verticalmente */
     gap: 10px !important; /* Espaço entre eles */
@@ -3055,10 +3054,84 @@ button:disabled i,
     padding: 15px !important; /* Botão mais alto para facilitar o toque */
     justify-content: center; /* Centraliza ícone e texto */
   }
-  
+
   /* Ajuste extra para o container do formulário não colar na borda */
   .equipment-form {
     padding: 0 5px;
+  }
+}
+
+/* ======================================================= */
+/* --- CORREÇÃO: CABEÇALHO DA LISTA EM 2 LINHAS (MOBILE) --- */
+/* ======================================================= */
+
+@media (max-width: 768px) {
+  /* Container Principal do Cabeçalho da Lista */
+  .list-header {
+    flex-direction: column !important; /* Mantém bloco Esquerda acima do Direita */
+    gap: 10px !important; /* Espaço pequeno entre as linhas */
+    padding: 10px !important;
+    align-items: stretch !important; /* Garante largura total */
+  }
+
+  /* --- LINHA 1: Resumo + Botão Exportar --- */
+  .header-left {
+    flex-direction: row !important; /* Força ficar lado a lado */
+    justify-content: space-between; /* Um na ponta, outro na outra */
+    align-items: center;
+    width: 100%;
+    gap: 10px;
+  }
+
+  /* Ajuste do Texto "Quantidade..." */
+  .summary-text {
+    flex: 1; /* Ocupa o espaço disponível */
+    text-align: left;
+    font-size: 11px !important; /* Fonte menor para caber */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0 !important;
+    padding: 6px 10px !important;
+  }
+
+  /* Ajuste do Botão "Exportar CSV" */
+  #btn-exportar-csv {
+    width: auto !important; /* Tamanho automático, não 100% */
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+    height: 30px !important; /* Altura compacta */
+  }
+
+  /* --- LINHA 2: Filtro + Busca --- */
+  .header-right {
+    flex-direction: row !important; /* Força ficar lado a lado */
+    width: 100%;
+    gap: 8px; /* Espaço entre os inputs */
+  }
+
+  /* Os wrappers dos inputs (divs que seguram o ícone e o campo) */
+  .filter-wrapper,
+  .search-wrapper {
+    flex: 1; /* Cada um pega 50% da tela */
+    width: auto !important;
+  }
+
+  /* Os campos de input e select */
+  .minimal-select,
+  .minimal-input {
+    width: 100% !important; /* Enche o wrapper */
+    min-width: 0 !important; /* Permite encolher sem quebrar */
+    font-size: 12px !important;
+    padding-left: 28px !important; /* Espaço para o ícone */
+    height: 36px !important;
+  }
+
+  /* Ajuste fino nos ícones dentro dos campos */
+  .filter-wrapper i,
+  .search-wrapper i {
+    font-size: 10px !important;
+    top: 13px !important; /* Centraliza verticalmente */
   }
 }
 
@@ -3067,36 +3140,70 @@ button:disabled i,
 /* ======================================================= */
 
 :root {
-  --font-family-base: 'Montserrat', sans-serif;
-  --font-family-mono: 'Montserrat', sans-serif; /* Remove fonte de código */
+  --font-family-base: "Montserrat", sans-serif;
+  --font-family-mono: "Montserrat", sans-serif; /* Remove fonte de código */
 }
 
 /* Força TODOS os elementos a usarem Montserrat */
-body, h1, h2, h3, h4, h5, h6, p, span, div, a, li,
-input, select, textarea, button, label,
-.header h1, .header p, 
-.tab-btn, .form-control, .form-label,
-.equipment-table, .equipment-table th, .equipment-table td,
-.metric-info h3, .lixeira-section-title,
-.status-badge, .cor-badge, .btn,
-.form-section legend, .chart-container h3,
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+div,
+a,
+li,
+input,
+select,
+textarea,
+button,
+label,
+.header h1,
+.header p,
+.tab-btn,
+.form-control,
+.form-label,
+.equipment-table,
+.equipment-table th,
+.equipment-table td,
+.metric-info h3,
+.lixeira-section-title,
+.status-badge,
+.cor-badge,
+.btn,
+.form-section legend,
+.chart-container h3,
 .metric-icon {
-  font-family: 'Montserrat', sans-serif !important;
+  font-family: "Montserrat", sans-serif !important;
   letter-spacing: 0 !important; /* Remove o espaçamento "sci-fi" */
 }
 
 /* Ajustes de Peso (Bold) para manter a hierarquia */
-h1, h2, h3, .header h1, .metric-info h3, .lixeira-section-title, .form-section legend {
+h1,
+h2,
+h3,
+.header h1,
+.metric-info h3,
+.lixeira-section-title,
+.form-section legend {
   font-weight: 700 !important;
 }
 
-.form-label, .equipment-table th, .tab-btn {
+.form-label,
+.equipment-table th,
+.tab-btn {
   font-weight: 600 !important;
 }
 
 /* Ajuste específico para Inputs e Selects (ficaram com fonte mono antes) */
-.form-control, .minimal-input, .minimal-select {
-  font-size: 14px !important; 
+.form-control,
+.minimal-input,
+.minimal-select {
+  font-size: 14px !important;
   font-weight: 400 !important;
 }
 
@@ -3107,7 +3214,230 @@ h1, h2, h3, .header h1, .metric-info h3, .lixeira-section-title, .form-section l
 }
 
 /* Ajuste nos Badges para ficarem mais legíveis */
-.status-badge, .cor-badge {
+.status-badge,
+.cor-badge {
   font-size: 11px !important;
   font-weight: 700 !important;
+}
+
+/* ======================================================= */
+/* --- TRANSFORMAÇÃO TABELA -> CARDS (MOBILE ONLY) --- */
+/* ======================================================= */
+
+@media (max-width: 768px) {
+  /* 1. Desmonta a estrutura de tabela */
+  .equipment-table,
+  .equipment-table tbody,
+  .equipment-table tr,
+  .equipment-table td {
+    display: block;
+    width: 100%;
+  }
+
+  /* Esconde o cabeçalho da tabela (Títulos) */
+  .equipment-table thead {
+    display: none;
+  }
+
+  /* 2. Estilo do Card (A linha TR vira o Card) */
+  .equipment-table tr {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px; /* Cantos arredondados */
+    margin-bottom: 15px; /* Espaço entre cards */
+    box-shadow: var(--shadow-sm);
+    position: relative; /* Para posicionar o botão X */
+    padding: 15px;
+    transition: all 0.3s ease;
+  }
+
+  /* Efeito de toque */
+  .equipment-table tr:active {
+    transform: scale(0.98);
+    border-color: var(--color-primary);
+  }
+
+  /* 3. Comportamento das Células (Linhas do Card) */
+  .equipment-table td {
+    border: none;
+    padding: 5px 0;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05); /* Linha fina separadora */
+    display: flex;
+    justify-content: space-between; /* Texto na esquerda, Valor na direita */
+    align-items: center;
+    text-align: right;
+  }
+
+  /* Remove a borda da última linha */
+  .equipment-table td:last-child {
+    border-bottom: none;
+  }
+
+  /* 4. REGRAS DE VISIBILIDADE (RESUMO VS EXPANDIDO) */
+
+  /* Por padrão (Card Fechado), esconde TUDO */
+  .equipment-table td {
+    display: none;
+  }
+
+  /* MOSTRA APENAS O RESUMO (User, Tipo, Série, Patrimônio) */
+  /* Coluna 3: Usuário | Col 4: Tipo | Col 5: Série | Col 6: Patrimônio */
+  /* Coluna 7: Status (Importante ver logo) */
+
+  .equipment-table tr:not(.mobile-expanded) td:nth-child(3), /* Usuário */
+  .equipment-table tr:not(.mobile-expanded) td:nth-child(4), /* Tipo */
+  .equipment-table tr:not(.mobile-expanded) td:nth-child(5), /* Série */
+  .equipment-table tr:not(.mobile-expanded) td:nth-child(6), /* Patrimônio */
+  .equipment-table tr:not(.mobile-expanded) td:nth-child(7)  /* Status */ {
+    display: flex; /* Mostra no resumo */
+  }
+
+  /* QUANDO O CARD ESTÁ EXPANDIDO (.mobile-expanded) */
+  .equipment-table tr.mobile-expanded td {
+    display: flex; /* Mostra TUDO */
+    animation: fadeIn 0.3s ease;
+  }
+
+  /* 5. Labels (Rótulos) antes dos valores */
+  /* Adiciona "Usuário:", "Série:", etc. via CSS para não sujar o HTML */
+
+  .equipment-table td:nth-child(2)::before {
+    content: "ID:";
+    font-weight: bold;
+    color: var(--color-text-secondary);
+  }
+  .equipment-table td:nth-child(3)::before {
+    content: "Usuário:";
+    font-weight: bold;
+    color: var(--color-text-secondary);
+  }
+  .equipment-table td:nth-child(4)::before {
+    content: "Tipo:";
+    font-weight: bold;
+    color: var(--color-text-secondary);
+  }
+  .equipment-table td:nth-child(5)::before {
+    content: "Série:";
+    font-weight: bold;
+    color: var(--color-text-secondary);
+  }
+  .equipment-table td:nth-child(6)::before {
+    content: "Patrimônio:";
+    font-weight: bold;
+    color: var(--color-text-secondary);
+  }
+  .equipment-table td:nth-child(7)::before {
+    content: "Status:";
+    font-weight: bold;
+    color: var(--color-text-secondary);
+  }
+  .equipment-table td:nth-child(8)::before {
+    content: "Depto/Sala:";
+    font-weight: bold;
+    color: var(--color-text-secondary);
+  }
+  .equipment-table td:nth-child(9)::before {
+    content: "Detalhes:";
+    font-weight: bold;
+    color: var(--color-text-secondary);
+  }
+  .equipment-table td:nth-child(10)::before {
+    content: "Docs:";
+    font-weight: bold;
+    color: var(--color-text-secondary);
+  }
+
+  /* Ajuste especial para a coluna de Ações (Botões) */
+  .equipment-table td:last-child {
+    display: flex !important; /* Sempre desenha no DOM, mas visibilidade controlada */
+    justify-content: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* Esconde ações no modo fechado */
+  .equipment-table tr:not(.mobile-expanded) td:last-child {
+    display: none !important;
+  }
+
+  /* 6. BOTÃO DE FECHAR (X) */
+  .card-close-btn {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 30px;
+    height: 30px;
+    background: var(--color-error);
+    color: white;
+    border-radius: 50%;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    cursor: pointer;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes popIn {
+    from {
+      transform: scale(0);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+}
+
+/* --- PAGINAÇÃO (BOTOES) --- */
+.pagination-controls {
+  display: flex;
+  justify-content: flex-end; /* Alinha à direita */
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--color-border); /* Linha separadora sutil */
+  margin-top: 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background-color: var(--color-surface); /* Garante fundo correto */
+  border-radius: 0 0 8px 8px; /* Arredonda cantos inferiores */
+}
+
+.btn-page {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s;
+}
+
+.btn-page:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.btn-page:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* No celular, espalha os botões */
+@media (max-width: 768px) {
+  .pagination-controls {
+    justify-content: space-between;
+    padding: 10px;
+  }
 }
