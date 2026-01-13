@@ -2378,17 +2378,22 @@ function configurarEventListeners() {
   document.getElementById("acessorio-form").onsubmit = salvarAcessorio;
   document.getElementById("cartucho-form").onsubmit = salvarCartucho;
 
-  // --- BUSCAS (VINCULADAS CORRETAMENTE AQUI) ---
-  // A busca funciona via 'oninput', chamando a função que filtra os dados e redesenha a tabela.
-  document.getElementById("search-input").oninput =
+  // --- BUSCAS (CORRIGIDO) ---
+  // Usamos () => para garantir que a função só rode quando você digitar
+
+  // 1. Equipamentos
+  document.getElementById("search-input").oninput = () =>
     aplicarFiltrosEquipamentos(true);
 
+  // 2. Impressoras
   document.getElementById("search-input-impressoras").oninput =
     filtrarImpressoras;
 
-  document.getElementById("search-input-acessorios").oninput =
-    aplicarFiltrosAcessorios;
+  // 3. Acessórios
+  document.getElementById("search-input-acessorios").oninput = () =>
+    aplicarFiltrosAcessorios(true);
 
+  // 4. Cartuchos
   document.getElementById("search-input-cartuchos").oninput =
     atualizarListaCartuchos;
 
