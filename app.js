@@ -12,6 +12,13 @@ let acessoriosSelecionadosTemporariamente = [];
 let dadosForamAlterados = false;
 let tipoChart, statusChart, departamentoChart;
 
+// Configuração de Paginação
+let paginasAtuais = {
+  computing: 1,
+  infra: 1,
+  others: 1,
+};
+
 // ===========================================
 // INTEGRAÇÃO COM FIREBASE (NOVO)
 // ===========================================
@@ -1427,10 +1434,159 @@ function atualizarListaCartuchosArquivados() {
 // FILTROS, BUSCA E SELETORES
 // ===========================================
 
-function aplicarFiltrosEquipamentos() {
-  const tipo = document.getElementById("filtro-tipo-equipamento").value;
-  const termo = document.getElementById("search-input").value;
-  atualizarLista(tipo, termo);
+// --- FUNÇÃO PRINCIPAL: FILTRO, DIVISÃO E PAGINAÇÃO ---
+function aplicarFiltrosEquipamentos(resetarPagina = true) {
+  const termo = document.getElementById("search-input").value.toLowerCase();
+  const filtroTipo = document.getElementById("filtro-tipo-equipamento").value;
+
+  // Se for uma nova busca (digitação ou filtro), volta para a página 1
+  if (resetarPagina) {
+    paginasAtuais = { computing: 1, infra: 1, others: 1 };
+  }
+
+  // 1. Filtra a lista completa de equipamentos
+  const filtrados = equipamentos.filter((eq) => {
+    // Verifica se as propriedades existem para evitar erro de .toLowerCase() em null
+    const matchTermo =
+      String(eq.registro || "")
+        .toLowerCase()
+        .includes(termo) ||
+      String(eq.nomeUsuario || "")
+        .toLowerCase()
+        .includes(termo) ||
+      String(eq.numeroSerie || "")
+        .toLowerCase()
+        .includes(termo);
+
+    // Se filtro for "todos", aceita qualquer coisa, senão tem que bater o tipo
+    const matchTipo =
+      filtroTipo === "todos" || eq.tipoEquipamento === filtroTipo;
+
+    // Ignora itens excluídos ou arquivados (se houver essa lógica no seu sistema)
+    return matchTermo && matchTipo && !eq.isDeleted && !eq.isArchived;
+  });
+
+  // 2. Separa os itens filtrados nas 3 categorias do seu HTML
+  const grupos = {
+    computing: [], // Notebook, Desktop, Tablet
+    infra: [], // Servidor, Roteador, Switch
+    others: [], // Outros
+  };
+
+  filtrados.forEach((eq) => {
+    if (["Notebook", "Desktop", "Tablet"].includes(eq.tipoEquipamento)) {
+      grupos.computing.push(eq);
+    } else if (
+      ["Servidor", "Roteador", "Switch"].includes(eq.tipoEquipamento)
+    ) {
+      grupos.infra.push(eq);
+    } else {
+      grupos.others.push(eq);
+    }
+  });
+
+  // 3. Renderiza cada seção separadamente com sua paginação
+  // IDs baseados no seu HTML: tbody, section, chave interna
+  renderizarSecaoPaginada(
+    grupos.computing,
+    "list-computing",
+    "section-computing",
+    "computing"
+  );
+  renderizarSecaoPaginada(grupos.infra, "list-infra", "section-infra", "infra");
+  renderizarSecaoPaginada(
+    grupos.others,
+    "list-others",
+    "section-others",
+    "others"
+  );
+
+  // 4. Se não sobrou nada, mostra o desenho de "Vazio"
+  const emptyState = document.getElementById("empty-state");
+  const temItens = filtrados.length > 0;
+  if (emptyState) emptyState.style.display = temItens ? "none" : "flex";
+
+  // Atualiza o contador de texto no topo
+  const resumo = document.getElementById("equipamentos-summary");
+  if (resumo) resumo.innerText = `${filtrados.length} Itens Listados`;
+}
+
+// --- FUNÇÃO AUXILIAR 1: DESENHA A TABELA E OS BOTÕES ---
+function renderizarSecaoPaginada(lista, tbodyId, sectionId, categoriaKey) {
+  const tbody = document.getElementById(tbodyId);
+  const section = document.getElementById(sectionId);
+
+  if (!tbody || !section) return;
+
+  // Se a lista está vazia, esconde a seção
+  if (lista.length === 0) {
+    section.style.display = "none";
+    return;
+  }
+
+  // Se tem itens, mostra a seção e limpa o tbody
+  section.style.display = "block";
+  tbody.innerHTML = "";
+
+  // --- MUDANÇA AQUI: Define limite baseado na largura da tela ---
+  // Se largura <= 768px (celular), usa 5. Senão (PC), usa 20.
+  const itensPorPagina = window.innerWidth <= 768 ? 5 : 20;
+
+  // Cálculos matemáticos da paginação usando o novo limite
+  const totalPaginas = Math.ceil(lista.length / itensPorPagina);
+
+  // Segurança: se a página atual estourar o limite (ex: mudou de 5 pra 20 itens), volta pra 1
+  if (paginasAtuais[categoriaKey] > totalPaginas)
+    paginasAtuais[categoriaKey] = 1;
+
+  const inicio = (paginasAtuais[categoriaKey] - 1) * itensPorPagina;
+  const fim = inicio + itensPorPagina;
+  const itensPagina = lista.slice(inicio, fim);
+
+  // Renderiza as Linhas
+  itensPagina.forEach((eq) => {
+    const tipoTabela = categoriaKey === "computing" ? "computing" : "infra";
+    tbody.innerHTML += criarLinhaEquipamento(
+      eq,
+      `checkbox-${categoriaKey}`,
+      tipoTabela
+    );
+  });
+
+  // --- CONTROLES DE PAGINAÇÃO ---
+  let divPag = section.querySelector(".pagination-controls");
+
+  if (!divPag) {
+    divPag = document.createElement("div");
+    divPag.className = "pagination-controls";
+    const tableContainer = section.querySelector(".table-container");
+    if (tableContainer) tableContainer.after(divPag);
+  }
+
+  // Preenche o HTML dos botões
+  divPag.innerHTML = `
+    <span>Pág ${paginasAtuais[categoriaKey]} de ${totalPaginas}</span>
+    <div style="display:flex; gap:5px;">
+      <button class="btn-page" onclick="mudarPagina('${categoriaKey}', -1)" ${
+    paginasAtuais[categoriaKey] === 1 ? "disabled" : ""
+  }>
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button class="btn-page" onclick="mudarPagina('${categoriaKey}', 1)" ${
+    paginasAtuais[categoriaKey] >= totalPaginas ? "disabled" : ""
+  }>
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  `;
+}
+
+// --- FUNÇÃO AUXILIAR 2: CLIQUE NOS BOTÕES ---
+function mudarPagina(categoria, delta) {
+  // Atualiza a página (Soma +1 ou Subtrai -1)
+  paginasAtuais[categoria] += delta;
+  // Chama o filtro novamente, mas FALSE para NÃO resetar para a página 1
+  aplicarFiltrosEquipamentos(false);
 }
 
 function aplicarFiltrosAcessorios() {
@@ -2132,7 +2288,8 @@ function configurarEventListeners() {
 
   // --- BUSCAS (VINCULADAS CORRETAMENTE AQUI) ---
   // A busca funciona via 'oninput', chamando a função que filtra os dados e redesenha a tabela.
-  document.getElementById("search-input").oninput = aplicarFiltrosEquipamentos;
+  document.getElementById("search-input").oninput =
+    aplicarFiltrosEquipamentos(true);
 
   document.getElementById("search-input-impressoras").oninput =
     filtrarImpressoras;
@@ -2225,6 +2382,8 @@ function configurarEventListeners() {
   const themeBtn = document.getElementById("theme-toggle");
   if (themeBtn) themeBtn.onclick = toggleTheme;
 }
+
+// window.onresize = () => aplicarFiltrosEquipamentos(false);
 
 // ===========================================
 // CSV, ESTADO E PERSISTÊNCIA
@@ -3077,12 +3236,9 @@ function criarLinhaEquipamento(
     Disponível: "disponivel",
   };
 
-  // Define o conteúdo das colunas variáveis (Meio da tabela)
   let colunasVariaveis = "";
 
   if (tipoTabela === "computing") {
-    // === Lógica para Computadores: Mostra Acessórios e Documentos ===
-
     // 1. Acessórios
     let acessoriosHtml = '<div class="acessorios-container">Nenhum</div>';
     if (eq.acessorios && eq.acessorios.length) {
@@ -3111,12 +3267,8 @@ function criarLinhaEquipamento(
           const tooltipText = `${acc.categoria} (${
             acc.modelo || "Sem modelo"
           })`;
-          return `<i class="${info.icon} ${
-            info.styleClass
-          }" title="${tooltipText.replace(
-            /"/g,
-            "&quot;"
-          )}" onclick="mostrarTooltipAcessorio(event, '${acc.id}')"></i>`;
+          // Adicionado stopPropagation para o tooltip não abrir o card
+          return `<i class="${info.icon} ${info.styleClass}" title="${tooltipText}" onclick="mostrarTooltipAcessorio(event, '${acc.id}'); event.stopPropagation();"></i>`;
         })
         .join("")}</div>`;
     }
@@ -3128,42 +3280,44 @@ function criarLinhaEquipamento(
         eq.termoResponsabilidade
           ? "fa-check-circle icon-doc-ok"
           : "fa-exclamation-triangle icon-doc-pending"
-      }" title="Termo ${eq.termoResponsabilidade ? "OK" : "Pendente"}" ${
-        !eq.termoResponsabilidade
-          ? "onclick=\"mostrarTooltipDocumento(event, 'Termo Pendente')\""
-          : ""
-      }></i>`;
+      }" 
+        title="Termo ${eq.termoResponsabilidade ? "OK" : "Pendente"}" 
+        ${
+          !eq.termoResponsabilidade
+            ? "onclick=\"mostrarTooltipDocumento(event, 'Termo Pendente'); event.stopPropagation();\""
+            : ""
+        }></i>`;
+
       const fotoIcon = `<i class="fas ${
         eq.fotoNotebook
           ? "fa-check-circle icon-doc-ok"
           : "fa-exclamation-triangle icon-doc-pending"
-      }" title="Foto ${eq.fotoNotebook ? "OK" : "Pendente"}" ${
-        !eq.fotoNotebook
-          ? "onclick=\"mostrarTooltipDocumento(event, 'Foto Pendente')\""
-          : ""
-      }></i>`;
+      }" 
+        title="Foto ${eq.fotoNotebook ? "OK" : "Pendente"}" 
+        ${
+          !eq.fotoNotebook
+            ? "onclick=\"mostrarTooltipDocumento(event, 'Foto Pendente'); event.stopPropagation();\""
+            : ""
+        }></i>`;
       documentosHtml = `<div class="documentos-container">${termoIcon} ${fotoIcon}</div>`;
     }
-
     colunasVariaveis = `<td>${acessoriosHtml}</td><td>${documentosHtml}</td>`;
   } else {
-    // === Lógica para Infra e Outros: Mostra APENAS a Sala ===
-    // Se a sala não estiver preenchida, mostra N/A ou vazio
     colunasVariaveis = `<td>${eq.sala || "N/A"}</td>`;
   }
 
-  // === Botão de Manutenção ===
   const isManutencaoTarget = ["Notebook", "Desktop"].includes(
     eq.tipoEquipamento
   );
+  // Adicionado stopPropagation nos botões
   const manutencaoBtn = isManutencaoTarget
-    ? `<button class="btn-action" onclick="enviarParaManutencao('${eq.registro}')" title="Enviar para Manutenção"><i class="fas fa-tools"></i></button>`
+    ? `<button class="btn-action" onclick="event.stopPropagation(); enviarParaManutencao('${eq.registro}')" title="Enviar para Manutenção"><i class="fas fa-tools"></i></button>`
     : "";
 
-  // === Renderização da Linha ===
+  // === Renderização da Linha (COM ONCLICK) ===
   return `
-    <tr>
-      <td class="checkbox-cell">
+    <tr onclick="toggleCard(this)">
+      <td class="checkbox-cell" onclick="event.stopPropagation()">
         <input type="checkbox" class="checkbox-equipamentos ${checkboxClass}" value="${
     eq.registro
   }" onclick="verificarSelecao('equipamentos')">
@@ -3178,16 +3332,18 @@ function criarLinhaEquipamento(
       }">${eq.statusOperacional || ""}</span></td>
       <td>${eq.departamento || "Nenhum"}</td>
       
-      ${colunasVariaveis} <td>
+      ${colunasVariaveis} 
+      
+      <td onclick="event.stopPropagation()">
         <div class="action-buttons">
           ${manutencaoBtn}
-          <button class="btn-action btn-archive" onclick="arquivarEquipamento('${
+          <button class="btn-action btn-archive" onclick="event.stopPropagation(); arquivarEquipamento('${
             eq.registro
           }')" title="Arquivar"><i class="fas fa-archive"></i></button>
-          <button class="btn-action btn-edit" onclick="editarEquipamento('${
+          <button class="btn-action btn-edit" onclick="event.stopPropagation(); editarEquipamento('${
             eq.registro
           }')" title="Editar"><i class="fas fa-edit"></i></button>
-          <button class="btn-action btn-delete" onclick="excluirEquipamento('${
+          <button class="btn-action btn-delete" onclick="event.stopPropagation(); excluirEquipamento('${
             eq.registro
           }')" title="Mover para Lixeira"><i class="fas fa-trash"></i></button>
         </div>
@@ -4566,4 +4722,47 @@ function toggleCharts() {
     if (window.statusChart) window.statusChart.resize();
     if (window.departamentoChart) window.departamentoChart.resize();
   }
+}
+
+// --- FUNÇÃO DE CARD EXPANSÍVEL (MOBILE) ---
+function toggleCard(row) {
+  // Verifica se é mobile (se não for, ignora o clique na linha)
+  if (window.innerWidth > 768) return;
+
+  // Se já estiver expandido, apenas fecha (remove a classe)
+  if (row.classList.contains("mobile-expanded")) {
+    fecharCard(row);
+    return;
+  }
+
+  // --- Lógica de Abrir ---
+
+  // 1. Fecha todos os outros cards abertos (opcional, para manter organizado)
+  document.querySelectorAll("tr.mobile-expanded").forEach((otherRow) => {
+    fecharCard(otherRow);
+  });
+
+  // 2. Expande o atual
+  row.classList.add("mobile-expanded");
+
+  // 3. Cria e adiciona o botão "X"
+  if (!row.querySelector(".card-close-btn")) {
+    const closeBtn = document.createElement("div");
+    closeBtn.className = "card-close-btn";
+    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+
+    // Evento para fechar ao clicar no X
+    closeBtn.onclick = (e) => {
+      e.stopPropagation(); // Impede que o clique no X re-abra o card
+      fecharCard(row);
+    };
+
+    row.appendChild(closeBtn);
+  }
+}
+
+function fecharCard(row) {
+  row.classList.remove("mobile-expanded");
+  const btn = row.querySelector(".card-close-btn");
+  if (btn) btn.remove();
 }
