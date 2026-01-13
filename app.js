@@ -17,6 +17,7 @@ let paginasAtuais = {
   computing: 1,
   infra: 1,
   others: 1,
+  acessorios: 1,
 };
 
 // ===========================================
@@ -657,11 +658,24 @@ function salvarAcessorio(e) {
   limparFormularioAcessorio();
 }
 
-function atualizarListaAcessorios(categoriaFiltro = "todos", termoBusca = "") {
+function atualizarListaAcessorios(
+  categoriaFiltro = "todos",
+  termoBusca = "",
+  resetarPagina = true
+) {
   atualizarContagemAcessoriosDisponiveis();
+
+  // Se for uma nova busca/filtro, volta para página 1
+  if (resetarPagina) {
+    paginasAtuais.acessorios = 1;
+  }
+
   const tbody = document.getElementById("acessorios-list");
   const emptyState = document.getElementById("acessorios-empty-state");
+
+  // 1. Filtragem e Ordenação
   let acessoriosFiltrados = acessorios.filter((a) => !a.isDeleted);
+
   if (categoriaFiltro !== "todos") {
     acessoriosFiltrados = acessoriosFiltrados.filter(
       (a) => a.categoria === categoriaFiltro
@@ -675,7 +689,6 @@ function atualizarListaAcessorios(categoriaFiltro = "todos", termoBusca = "") {
   }
 
   acessoriosFiltrados.sort((a, b) => {
-    // 1. Critério principal: Ordenar por Categoria (alfabética)
     const catA = a.categoria || "";
     const catB = b.categoria || "";
     const categoriaCompare = catA.localeCompare(catB);
@@ -684,43 +697,47 @@ function atualizarListaAcessorios(categoriaFiltro = "todos", termoBusca = "") {
       return categoriaCompare;
     }
 
-    // 2. Critério secundário: Ordenar por Patrimônio (crescente)
-    // Acessórios sem patrimônio (vazio ou "N/A") devem ir para o final.
     const pA = a.patrimonio;
     const pB = b.patrimonio;
-
     const pA_valido = pA && pA !== "N/A";
     const pB_valido = pB && pB !== "N/A";
 
-    if (pA_valido && !pB_valido) {
-      return -1; // pA (com patrimônio) vem antes
-    }
-    if (!pA_valido && pB_valido) {
-      return 1; // pB (com patrimônio) vem antes
-    }
-    if (!pA_valido && !pB_valido) {
-      // 3. Critério de desempate (se ambos não têm patrimônio): Ordenar por Modelo
+    if (pA_valido && !pB_valido) return -1;
+    if (!pA_valido && pB_valido) return 1;
+    if (!pA_valido && !pB_valido)
       return (a.modelo || "").localeCompare(b.modelo || "");
-    }
 
-    // Ambos têm patrimônio, comparar usando 'numeric: true' para tratar números em strings
     return pA.localeCompare(pB, undefined, {
       numeric: true,
       sensitivity: "base",
     });
   });
 
+  // 2. Lógica de Paginação (Igual à de Equipamentos)
+  const itensPorPagina = window.innerWidth <= 768 ? 5 : 20;
+  const totalPaginas =
+    Math.ceil(acessoriosFiltrados.length / itensPorPagina) || 1;
+
+  // Segurança
+  if (paginasAtuais.acessorios > totalPaginas) paginasAtuais.acessorios = 1;
+
+  const inicio = (paginasAtuais.acessorios - 1) * itensPorPagina;
+  const fim = inicio + itensPorPagina;
+  const itensPagina = acessoriosFiltrados.slice(inicio, fim);
+
+  // 3. Renderização da Tabela
   tbody.innerHTML =
-    acessoriosFiltrados.length > 0
-      ? acessoriosFiltrados
+    itensPagina.length > 0
+      ? itensPagina
           .map((acessorio) => {
             const dispClass = acessorio.disponivel ? "sim" : "nao";
             const dispText = acessorio.disponivel ? "Sim" : "Não";
             return `
-        <tr>
-          <td class="checkbox-cell"><input type="checkbox" class="checkbox-acessorios" value="${
-            acessorio.id
-          }" onclick="verificarSelecao('acessorios')"></td>
+        <tr onclick="toggleCard(this)"> <td class="checkbox-cell" onclick="event.stopPropagation()">
+            <input type="checkbox" class="checkbox-acessorios" value="${
+              acessorio.id
+            }" onclick="verificarSelecao('acessorios')">
+          </td>
           <td>${acessorio.id}</td>
           <td>${acessorio.categoria}</td>
           <td>${acessorio.modelo}</td>
@@ -729,11 +746,10 @@ function atualizarListaAcessorios(categoriaFiltro = "todos", termoBusca = "") {
           <td>${acessorio.numeroSerie || "N/A"}</td>
           <td><span class="disponibilidade-${dispClass}" ${
               !acessorio.disponivel
-                ? `onclick="mostrarTooltipUsuario(event, '${acessorio.id}')"`
+                ? `onclick="event.stopPropagation(); mostrarTooltipUsuario(event, '${acessorio.id}')"`
                 : ""
             }>${dispText}</span></td>
-          <td>
-            <div class="action-buttons">
+          <td onclick="event.stopPropagation()"> <div class="action-buttons">
               <button class="btn-action btn-edit" onclick="editarAcessorio('${
                 acessorio.id
               }')" title="Editar"><i class="fas fa-edit"></i></button>
@@ -746,10 +762,45 @@ function atualizarListaAcessorios(categoriaFiltro = "todos", termoBusca = "") {
           })
           .join("")
       : "";
-  emptyState.style.display =
-    acessorios.filter((a) => !a.isDeleted).length === 0 ? "block" : "none";
-  tbody.closest(".table-container").style.display =
-    acessoriosFiltrados.length > 0 ? "block" : "none";
+
+  // Controle de Visibilidade (Empty State vs Tabela)
+  const temItens = acessoriosFiltrados.length > 0;
+  emptyState.style.display = temItens ? "none" : "block";
+  tbody.closest(".table-container").style.display = temItens ? "block" : "none";
+
+  // 4. Renderização dos Botões de Paginação
+  const tabContent = document.getElementById("acessorios");
+  let divPag = tabContent.querySelector(".pagination-controls");
+
+  // Se tem itens, mostra/cria paginação. Se não, remove.
+  if (temItens) {
+    if (!divPag) {
+      divPag = document.createElement("div");
+      divPag.className = "pagination-controls";
+      // Insere logo após a tabela
+      tbody.closest(".table-container").after(divPag);
+    }
+
+    divPag.innerHTML = `
+      <span>Pág ${paginasAtuais.acessorios} de ${totalPaginas}</span>
+      <div style="display:flex; gap:5px;">
+        <button class="btn-page" onclick="mudarPagina('acessorios', -1)" ${
+          paginasAtuais.acessorios === 1 ? "disabled" : ""
+        }>
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="btn-page" onclick="mudarPagina('acessorios', 1)" ${
+          paginasAtuais.acessorios >= totalPaginas ? "disabled" : ""
+        }>
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    `;
+    divPag.style.display = "flex"; // Garante que apareça
+  } else {
+    if (divPag) divPag.style.display = "none";
+  }
+
   popularFiltroCategorias();
   verificarSelecao("acessorios");
 }
@@ -1104,8 +1155,7 @@ function atualizarListaCartuchos() {
       return orderA - orderB;
     }
 
-    // Ordenar por patrimônio como desempate (tratando N/A)
-    const patA = a.patrimonio === "N/A" ? "ZZZ" : a.patrimonio; // N/A vai para o fim
+    const patA = a.patrimonio === "N/A" ? "ZZZ" : a.patrimonio;
     const patB = b.patrimonio === "N/A" ? "ZZZ" : b.patrimonio;
     return patA.localeCompare(patB, undefined, {
       numeric: true,
@@ -1129,10 +1179,11 @@ function atualizarListaCartuchos() {
         const statusClasse =
           cartucho.status === "Disponível" ? "disponivel" : "ativo";
         return `
-        <tr>
-          <td class="checkbox-cell"><input type="checkbox" class="checkbox-cartuchos" value="${
-            cartucho.id
-          }" onclick="verificarSelecao('cartuchos')"></td>
+        <tr onclick="toggleCard(this)"> <td class="checkbox-cell" onclick="event.stopPropagation()">
+             <input type="checkbox" class="checkbox-cartuchos" value="${
+               cartucho.id
+             }" onclick="verificarSelecao('cartuchos')">
+          </td>
           <td>${cartucho.id}</td>
           <td>${cartucho.numeroSerie}</td>
           <td>${cartucho.patrimonio}</td>
@@ -1141,8 +1192,7 @@ function atualizarListaCartuchos() {
           cartucho.status
         }</span></td>
           <td>${cartucho.impressoraVinculada || "Nenhum"}</td>
-          <td>
-            <div class="action-buttons">
+          <td onclick="event.stopPropagation()"> <div class="action-buttons">
               <button class="btn-action btn-archive" onclick="arquivarCartucho('${
                 cartucho.id
               }')" title="Arquivar"><i class="fas fa-archive"></i></button>
@@ -1158,7 +1208,7 @@ function atualizarListaCartuchos() {
       })
       .join("");
   }
-  verificarSelecao("cartuchos"); // Garante estado inicial do botão de apagar
+  verificarSelecao("cartuchos");
 }
 
 function editarCartucho(id) {
@@ -1434,7 +1484,7 @@ function atualizarListaCartuchosArquivados() {
 // FILTROS, BUSCA E SELETORES
 // ===========================================
 
-// --- FUNÇÃO PRINCIPAL: FILTRO, DIVISÃO E PAGINAÇÃO ---
+// --- FUNÇÃO PRINCIPAL: FILTRO, DIVISÃO, ORDENAÇÃO E PAGINAÇÃO ---
 function aplicarFiltrosEquipamentos(resetarPagina = true) {
   const termo = document.getElementById("search-input").value.toLowerCase();
   const filtroTipo = document.getElementById("filtro-tipo-equipamento").value;
@@ -1446,7 +1496,6 @@ function aplicarFiltrosEquipamentos(resetarPagina = true) {
 
   // 1. Filtra a lista completa de equipamentos
   const filtrados = equipamentos.filter((eq) => {
-    // Verifica se as propriedades existem para evitar erro de .toLowerCase() em null
     const matchTermo =
       String(eq.registro || "")
         .toLowerCase()
@@ -1458,19 +1507,25 @@ function aplicarFiltrosEquipamentos(resetarPagina = true) {
         .toLowerCase()
         .includes(termo);
 
-    // Se filtro for "todos", aceita qualquer coisa, senão tem que bater o tipo
     const matchTipo =
       filtroTipo === "todos" || eq.tipoEquipamento === filtroTipo;
 
-    // Ignora itens excluídos ou arquivados (se houver essa lógica no seu sistema)
-    return matchTermo && matchTipo && !eq.isDeleted && !eq.isArchived;
+    // CORREÇÃO 2: Adicionado '&& eq.tipoEquipamento !== "Impressora"'
+    // Isso impede que impressoras apareçam na aba Equipamentos (nem em Outros)
+    return (
+      matchTermo &&
+      matchTipo &&
+      !eq.isDeleted &&
+      !eq.isArchived &&
+      eq.tipoEquipamento !== "Impressora"
+    );
   });
 
-  // 2. Separa os itens filtrados nas 3 categorias do seu HTML
+  // 2. Separa os itens filtrados nas 3 categorias
   const grupos = {
     computing: [], // Notebook, Desktop, Tablet
     infra: [], // Servidor, Roteador, Switch
-    others: [], // Outros
+    others: [], // Outros (Teclado, Mouse, etc)
   };
 
   filtrados.forEach((eq) => {
@@ -1485,8 +1540,36 @@ function aplicarFiltrosEquipamentos(resetarPagina = true) {
     }
   });
 
+  // --- CORREÇÃO 1: ORDENAÇÃO COMPUTADORES ---
+  // Lógica: 1º "Disponível" no topo. 2º Ordem Alfabética de Usuário.
+  grupos.computing.sort((a, b) => {
+    // Prioridade para Status "Disponível"
+    const isDispA = a.statusOperacional === "Disponível";
+    const isDispB = b.statusOperacional === "Disponível";
+
+    if (isDispA && !isDispB) return -1; // A sobe
+    if (!isDispA && isDispB) return 1; // B sobe
+
+    // Se ambos forem iguais (ambos disponíveis ou ambos indisponíveis), ordena por Nome
+    const nomeA = a.nomeUsuario || "";
+    const nomeB = b.nomeUsuario || "";
+    return nomeA.localeCompare(nomeB);
+  });
+
+  // --- CORREÇÃO 2: ORDENAÇÃO OUTROS ---
+  // Lógica: Ordem Alfabética por TIPO
+  grupos.others.sort((a, b) => {
+    const tipoA = a.tipoEquipamento || "";
+    const tipoB = b.tipoEquipamento || "";
+    return tipoA.localeCompare(tipoB);
+  });
+
+  // (Opcional) Ordenação para Infra: Por Tipo também
+  grupos.infra.sort((a, b) =>
+    (a.tipoEquipamento || "").localeCompare(b.tipoEquipamento || "")
+  );
+
   // 3. Renderiza cada seção separadamente com sua paginação
-  // IDs baseados no seu HTML: tbody, section, chave interna
   renderizarSecaoPaginada(
     grupos.computing,
     "list-computing",
@@ -1504,11 +1587,12 @@ function aplicarFiltrosEquipamentos(resetarPagina = true) {
   // 4. Se não sobrou nada, mostra o desenho de "Vazio"
   const emptyState = document.getElementById("empty-state");
   const temItens = filtrados.length > 0;
-  if (emptyState) emptyState.style.display = temItens ? "none" : "flex";
+  if (emptyState) emptyState.style.display = temItens ? "none" : "block"; // Corrigido para 'block' para centralizar melhor se usar flex no CSS
 
   // Atualiza o contador de texto no topo
   const resumo = document.getElementById("equipamentos-summary");
-  if (resumo) resumo.innerText = `${filtrados.length} Itens Listados`;
+  if (resumo)
+    resumo.innerHTML = `Quantidade: <span class="summary-color">${filtrados.length} Itens Listados</span>`;
 }
 
 // --- FUNÇÃO AUXILIAR 1: DESENHA A TABELA E OS BOTÕES ---
@@ -1585,14 +1669,22 @@ function renderizarSecaoPaginada(lista, tbodyId, sectionId, categoriaKey) {
 function mudarPagina(categoria, delta) {
   // Atualiza a página (Soma +1 ou Subtrai -1)
   paginasAtuais[categoria] += delta;
-  // Chama o filtro novamente, mas FALSE para NÃO resetar para a página 1
-  aplicarFiltrosEquipamentos(false);
+
+  // Se for acessórios, chama o filtro de acessórios
+  if (categoria === "acessorios") {
+    aplicarFiltrosAcessorios(false); // false para NÃO resetar para página 1
+  } else {
+    // Senão, chama o de equipamentos
+    aplicarFiltrosEquipamentos(false);
+  }
 }
 
-function aplicarFiltrosAcessorios() {
+function aplicarFiltrosAcessorios(resetarPagina = true) {
   const categoria = document.getElementById("filtro-categoria-acessorio").value;
   const termo = document.getElementById("search-input-acessorios").value;
-  atualizarListaAcessorios(categoria, termo);
+
+  // Passamos o parâmetro resetarPagina adiante
+  atualizarListaAcessorios(categoria, termo, resetarPagina);
 }
 
 function popularFiltroCategorias() {
@@ -3356,19 +3448,26 @@ function criarLinhaEquipamento(
 // ===========================================
 
 function atualizarListaImpressoras() {
+  // 1. Filtra as impressoras ativas
   const impressoras = equipamentos.filter(
     (eq) =>
       eq.tipoEquipamento === "Impressora" && !eq.isArchived && !eq.isDeleted
   );
+
+  // 2. ORDENAÇÃO POR IP (Nova lógica)
+  impressoras.sort((a, b) => {
+    // Garante que não quebre se o IP estiver vazio
+    const ipA = a.ip || "";
+    const ipB = b.ip || "";
+
+    // Usa 'numeric: true' para que 10 venha depois de 2 (ordenação natural de IPs)
+    return ipA.localeCompare(ipB, undefined, { numeric: true });
+  });
+
   const tbody = document.getElementById("impressoras-list");
   const emptyState = document.getElementById("impressoras-empty-state");
 
-  if (
-    equipamentos.filter(
-      (eq) =>
-        eq.tipoEquipamento === "Impressora" && !eq.isArchived && !eq.isDeleted
-    ).length === 0
-  ) {
+  if (impressoras.length === 0) {
     tbody.innerHTML = "";
     tbody.closest(".table-container").style.display = "none";
     emptyState.style.display = "block";
@@ -3378,20 +3477,20 @@ function atualizarListaImpressoras() {
     tbody.innerHTML = impressoras
       .map(
         (imp) => `
-      <tr>
-        <td class="checkbox-cell"><input type="checkbox" class="checkbox-impressoras" value="${
-          imp.registro
-        }" onclick="verificarSelecao('impressoras')"></td>
+      <tr onclick="toggleCard(this)"> <td class="checkbox-cell" onclick="event.stopPropagation()">
+            <input type="checkbox" class="checkbox-impressoras" value="${
+              imp.registro
+            }" onclick="verificarSelecao('impressoras')">
+        </td>
         <td>${imp.registro}</td>
         <td>${imp.numeroSerie || ""}</td>
         <td>${imp.numeroPatrimonio || "N/A"}</td>
-        <td><span class="clickable-sala" onclick="mostrarTooltipCartuchos(event, '${
+        <td><span class="clickable-sala" onclick="event.stopPropagation(); mostrarTooltipCartuchos(event, '${
           imp.sala
         }')">${imp.sala || "N/A"}</span></td>
         <td>${imp.ip || "N/A"}</td>
         <td>${imp.observacoes || ""}</td>
-        <td>
-          <div class="action-buttons">
+        <td onclick="event.stopPropagation()"> <div class="action-buttons">
             <button class="btn-action btn-archive" onclick="arquivarEquipamento('${
               imp.registro
             }')" title="Arquivar"><i class="fas fa-archive"></i></button>
@@ -3492,16 +3591,14 @@ function atualizarListaManutencao() {
   tbody.innerHTML = emManutencao
     .map(
       (eq) => `
-    <tr>
-      <td>${eq.registro}</td>
+    <tr onclick="toggleCard(this)"> <td>${eq.registro}</td>
       <td>${eq.nomeUsuario || "Nenhum"}</td>
       <td>${eq.tipoEquipamento || ""}</td>
       <td>${eq.numeroSerie || ""}</td>
       <td>${eq.numeroPatrimonio || "N/A"}</td>
       <td>${formatarData(eq.dataEntradaManutencao)}</td>
       <td>${eq.motivoManutencao || "N/A"}</td>
-      <td>
-        <div class="action-buttons">
+      <td onclick="event.stopPropagation()"> <div class="action-buttons">
           <button class="btn-action btn-restore" onclick="concluirManutencao('${
             eq.registro
           }')" title="Concluir Manutenção"><i class="fas fa-check-circle"></i></button>
@@ -3600,41 +3697,46 @@ function confirmarExclusaoEquipamento(registro) {
   );
 }
 
+// --- FUNÇÃO MESTRE: Chama as atualizações das 4 tabelas ---
 function atualizarListaArquivados() {
+  atualizarListaGeralArquivados();
+  atualizarListaImpressorasArquivadas();
+  atualizarListaAcessoriosArquivados();
+  atualizarListaCartuchosArquivados();
+}
+
+// 1. COMPUTADORES E INFRA (Exclui Impressoras)
+function atualizarListaGeralArquivados() {
   const termo = document
     .getElementById("search-input-arquivados")
     .value.toLowerCase();
-  const tbody = document.getElementById("archived-equipment-list");
-  const emptyState = document.getElementById("archived-empty-state");
-  const arquivados = equipamentos.filter(
+  const tbody = document.getElementById("archived-general-list");
+  const emptyState = document.getElementById("archived-general-empty-state");
+
+  const lista = equipamentos.filter(
     (eq) =>
       eq.isArchived &&
       !eq.isDeleted &&
+      eq.tipoEquipamento !== "Impressora" &&
       Object.values(eq).some((val) => String(val).toLowerCase().includes(termo))
   );
 
-  emptyState.style.display =
-    equipamentos.filter((eq) => eq.isArchived && !eq.isDeleted).length === 0
-      ? "block"
-      : "none";
-  tbody.closest(".table-container").style.display =
-    arquivados.length > 0 ? "block" : "none";
-  tbody.innerHTML = arquivados
-    .map(
-      (eq) => `
-    <tr>
-      <td>${eq.registro}</td>
+  tratarExibicaoTabelaArquivados(
+    tbody,
+    emptyState,
+    lista,
+    (eq) => `
+    <tr onclick="toggleCard(this)"> <td>${eq.registro}</td>
       <td>${eq.nomeUsuario || "Nenhum"}</td>
-      <td>${eq.tipoEquipamento || ""}</td>
-      <td>${eq.numeroSerie || ""}</td>
+      <td>${eq.tipoEquipamento}</td>
+      <td>${eq.numeroSerie}</td>
       <td>${eq.numeroPatrimonio || "N/A"}</td>
       <td><span class="status-badge arquivado">${
-        eq.statusOperacional || "" /* Exibe status Arquivado */
+        eq.statusOperacional
       }</span></td>
       <td>${formatarData(eq.archiveDate)}</td>
       <td>${eq.motivoArquivamento || "N/A"}</td>
-      <td>
-        <div class="action-buttons">
+      <td onclick="event.stopPropagation()"> <div class="action-buttons">
           <button class="btn-action btn-restore" onclick="desarquivarEquipamento('${
             eq.registro
           }')" title="Restaurar"><i class="fas fa-box-open"></i></button>
@@ -3643,12 +3745,157 @@ function atualizarListaArquivados() {
           }')" title="Editar"><i class="fas fa-edit"></i></button>
           <button class="btn-action btn-delete" onclick="excluirEquipamento('${
             eq.registro
-          }')" title="Mover para Lixeira"><i class="fas fa-trash"></i></button>
+          }')" title="Excluir Definitivamente"><i class="fas fa-trash"></i></button>
         </div>
       </td>
-    </tr>`
-    )
-    .join("");
+    </tr>
+  `
+  );
+}
+
+// 2. IMPRESSORAS ARQUIVADAS
+function atualizarListaImpressorasArquivadas() {
+  const termo = document
+    .getElementById("search-input-arquivados")
+    .value.toLowerCase();
+  const tbody = document.getElementById("archived-printers-list");
+  const emptyState = document.getElementById("archived-printers-empty-state");
+
+  const lista = equipamentos.filter(
+    (eq) =>
+      eq.isArchived &&
+      !eq.isDeleted &&
+      eq.tipoEquipamento === "Impressora" &&
+      Object.values(eq).some((val) => String(val).toLowerCase().includes(termo))
+  );
+
+  tratarExibicaoTabelaArquivados(
+    tbody,
+    emptyState,
+    lista,
+    (eq) => `
+    <tr onclick="toggleCard(this)"> <td>${eq.registro}</td>
+      <td>${eq.modelo || eq.tipoEquipamento}</td>
+      <td>${eq.numeroSerie}</td>
+      <td>${eq.numeroPatrimonio || "N/A"}</td>
+      <td>${eq.sala || "N/A"}</td>
+      <td>${eq.ip || "N/A"}</td>
+      <td>${formatarData(eq.archiveDate)}</td>
+      <td onclick="event.stopPropagation()"> <div class="action-buttons">
+          <button class="btn-action btn-restore" onclick="desarquivarEquipamento('${
+            eq.registro
+          }')" title="Restaurar"><i class="fas fa-box-open"></i></button>
+          <button class="btn-action btn-delete" onclick="excluirEquipamento('${
+            eq.registro
+          }')" title="Excluir Definitivamente"><i class="fas fa-trash"></i></button>
+        </div>
+      </td>
+    </tr>
+  `
+  );
+}
+
+// 3. ACESSÓRIOS ARQUIVADOS
+function atualizarListaAcessoriosArquivados() {
+  const termo = document
+    .getElementById("search-input-arquivados")
+    .value.toLowerCase();
+  const tbody = document.getElementById("archived-accessories-list");
+  const emptyState = document.getElementById(
+    "archived-accessories-empty-state"
+  );
+
+  // Nota: Verifique se seus objetos acessórios possuem o campo 'isArchived'
+  const lista = acessorios.filter(
+    (a) =>
+      a.isArchived &&
+      !a.isDeleted &&
+      Object.values(a).some((val) => String(val).toLowerCase().includes(termo))
+  );
+
+  tratarExibicaoTabelaArquivados(
+    tbody,
+    emptyState,
+    lista,
+    (a) => `
+    <tr onclick="toggleCard(this)"> <td>${a.id}</td>
+      <td>${a.categoria}</td>
+      <td>${a.modelo}</td>
+      <td>${a.patrimonio || "N/A"}</td>
+      <td>${a.numeroSerie || "N/A"}</td>
+      <td>${formatarData(a.archiveDate)}</td>
+      <td onclick="event.stopPropagation()"> <div class="action-buttons">
+          <button class="btn-action btn-restore" onclick="desarquivarAcessorio('${
+            a.id
+          }')" title="Restaurar"><i class="fas fa-box-open"></i></button>
+           <button class="btn-action btn-delete" onclick="excluirAcessorio('${
+             a.id
+           }')" title="Excluir Definitivamente"><i class="fas fa-trash"></i></button>
+        </div>
+      </td>
+    </tr>
+  `
+  );
+}
+
+// 4. CARTUCHOS ARQUIVADOS
+function atualizarListaCartuchosArquivados() {
+  const termo = document
+    .getElementById("search-input-arquivados")
+    .value.toLowerCase();
+  const tbody = document.getElementById("archived-cartridges-list");
+  const emptyState = document.getElementById("archived-cartridges-empty-state");
+
+  const lista = cartuchos.filter(
+    (c) =>
+      c.isArchived &&
+      !c.isDeleted &&
+      (c.numeroSerie.toLowerCase().includes(termo) ||
+        c.patrimonio.toLowerCase().includes(termo))
+  );
+
+  tratarExibicaoTabelaArquivados(
+    tbody,
+    emptyState,
+    lista,
+    (c) => `
+    <tr onclick="toggleCard(this)"> <td>${c.id}</td>
+      <td>${c.numeroSerie}</td>
+      <td>${c.cor}</td>
+      <td>${c.patrimonio}</td>
+      <td><span class="status-badge arquivado">${c.status}</span></td>
+      <td>${formatarData(c.archiveDate)}</td>
+      <td>${c.impressoraVinculada || "Nenhum"}</td>
+      <td onclick="event.stopPropagation()"> <div class="action-buttons">
+          <button class="btn-action btn-restore" onclick="desarquivarCartucho('${
+            c.id
+          }')" title="Restaurar"><i class="fas fa-box-open"></i></button>
+          <button class="btn-action btn-delete" onclick="excluirCartucho('${
+            c.id
+          }')" title="Excluir Definitivamente"><i class="fas fa-trash"></i></button>
+        </div>
+      </td>
+    </tr>
+  `
+  );
+}
+
+// --- FUNÇÃO AUXILIAR PARA EVITAR REPETIÇÃO DE CÓDIGO ---
+function tratarExibicaoTabelaArquivados(
+  tbody,
+  emptyState,
+  lista,
+  renderRowFunction
+) {
+  if (lista.length === 0) {
+    tbody.innerHTML = "";
+    tbody.closest(".table-container").style.display = "none"; // Esconde a tabela vazia
+    emptyState.style.display = "block"; // Mostra o ícone de vazio
+  } else {
+    tbody.closest(".table-container").style.display = "block";
+    emptyState.style.display = "none";
+    tbody.innerHTML = lista.map(renderRowFunction).join("");
+  }
 }
 
 // ===========================================
