@@ -125,13 +125,16 @@
             placeholder="Seu e-mail"
             required
           />
-          <input
-            type="password"
-            id="login-password"
-            class="login-input"
-            placeholder="Sua senha"
-            required
-          />
+          <div class="password-wrapper">
+            <input
+              type="password"
+              id="login-password"
+              class="login-input"
+              placeholder="Sua senha"
+              required
+            />
+            <i class="fas fa-eye" id="toggle-password"></i>
+          </div>
           <button type="submit" class="login-btn">Entrar</button>
         </form>
         <div id="loading-spinner" class="spinner"></div>
@@ -1557,7 +1560,7 @@
                   type="text"
                   id="search-input-arquivados"
                   class="form-control minimal-input"
-                  placeholder="Buscar em todos os arquivos..."
+                  placeholder="Buscar..."
                 />
               </div>
             </div>
@@ -2295,6 +2298,24 @@
         });
       });
     </script>
+
+<script>
+  // Lógica do Olhinho da Senha
+  const togglePass = document.getElementById('toggle-password');
+  const inputPass = document.getElementById('login-password');
+
+  if(togglePass && inputPass) {
+    togglePass.addEventListener('click', function() {
+      // Troca o tipo
+      const type = inputPass.getAttribute('type') === 'password' ? 'text' : 'password';
+      inputPass.setAttribute('type', type);
+      
+      // Troca o ícone
+      this.classList.toggle('fa-eye');
+      this.classList.toggle('fa-eye-slash');
+    });
+  }
+</script>
 
     <script src="app.js"></script>
     <div id="acessorio-tooltip"></div>
