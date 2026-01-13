@@ -1796,7 +1796,10 @@ button:disabled i,
   display: none;
   position: absolute;
   z-index: 1010;
-  width: 300px;
+
+  width: auto; /* Largura automática */
+  max-width: 300px; /* Máximo de 300px no PC */
+  min-width: 250px; /* Mínimo para não ficar muito espremido */
 
   /* Visual Tech */
   background-color: var(--color-surface);
@@ -1813,6 +1816,13 @@ button:disabled i,
   pointer-events: auto; /* Permite clicar e selecionar */
   user-select: text; /* Garante que o navegador permita seleção de texto */
   cursor: text; /* Muda o cursor para o "I" de texto */
+}
+
+/* Garante que no celular ele nunca estoure a largura da tela */
+@media (max-width: 768px) {
+  #acessorio-tooltip {
+    max-width: 90vw; /* Ocupa no máximo 90% da largura da tela */
+  }
 }
 
 #acessorio-tooltip.active {
@@ -3274,29 +3284,84 @@ h3,
     border-bottom: none;
   }
 
-  /* 4. REGRAS DE VISIBILIDADE (RESUMO VS EXPANDIDO) */
+  /* --- 4. REGRAS DE VISIBILIDADE (RESUMO VS EXPANDIDO) --- */
 
   /* Por padrão (Card Fechado), esconde TUDO */
   .equipment-table td {
     display: none;
   }
 
-  /* MOSTRA APENAS O RESUMO (User, Tipo, Série, Patrimônio) */
-  /* Coluna 3: Usuário | Col 4: Tipo | Col 5: Série | Col 6: Patrimônio */
-  /* Coluna 7: Status (Importante ver logo) */
+  /* === TABELAS COM CHECKBOX (Equipamentos, Impressoras, Cartuchos, Acessórios, Lixeira) === */
+  /* Col 1: Check | Col 2: ID | Mostraremos Col 3, 4, 5, 6 */
 
-  .equipment-table tr:not(.mobile-expanded) td:nth-child(3), /* Usuário */
-  .equipment-table tr:not(.mobile-expanded) td:nth-child(4), /* Tipo */
-  .equipment-table tr:not(.mobile-expanded) td:nth-child(5), /* Série */
-  .equipment-table tr:not(.mobile-expanded) td:nth-child(6), /* Patrimônio */
-  .equipment-table tr:not(.mobile-expanded) td:nth-child(7)  /* Status */ {
-    display: flex; /* Mostra no resumo */
+  .equipment-table tr:not(.mobile-expanded) td:nth-child(3), /* Usuário/Série/Cat */
+  .equipment-table tr:not(.mobile-expanded) td:nth-child(4), /* Tipo/Pat/Modelo */
+  .equipment-table tr:not(.mobile-expanded) td:nth-child(5), /* Série/Cor/Tipo */
+  .equipment-table tr:not(.mobile-expanded) td:nth-child(6)  /* Pat/Status */ {
+    display: flex;
+  }
+
+  /* Exceção para Cartuchos (Cor e Status são importantes) */
+  #cartuchos-table tr:not(.mobile-expanded) td:nth-child(5), /* Cor */
+  #cartuchos-table tr:not(.mobile-expanded) td:nth-child(6)  /* Status */ {
+    display: flex;
+  }
+
+  /* === TABELAS SEM CHECKBOX (Manutenção, Arquivados) === */
+  /* Col 1: ID | Col 2: Usuário | Col 3: Tipo ... (Tudo deslocado -1) */
+
+  /* Manutenção e Arquivados precisam de regras específicas para mostrar os dados certos */
+  #manutencao-list tr:not(.mobile-expanded) td:nth-child(2), /* Usuário */
+  #manutencao-list tr:not(.mobile-expanded) td:nth-child(3), /* Tipo */
+  #manutencao-list tr:not(.mobile-expanded) td:nth-child(7), /* Motivo */
+  
+  #archived-equipment-list tr:not(.mobile-expanded) td:nth-child(2), /* Usuário */
+  #archived-equipment-list tr:not(.mobile-expanded) td:nth-child(3), /* Tipo */
+  #archived-equipment-list tr:not(.mobile-expanded) td:nth-child(6)  /* Status */ {
+    display: flex !important;
   }
 
   /* QUANDO O CARD ESTÁ EXPANDIDO (.mobile-expanded) */
   .equipment-table tr.mobile-expanded td {
-    display: flex; /* Mostra TUDO */
+    display: flex !important; /* Mostra TUDO */
     animation: fadeIn 0.3s ease;
+  }
+
+  /* RÓTULOS GENÉRICOS (Labels antes dos valores) */
+  /* Removemos os labels hardcoded anteriores e usamos uma abordagem mais limpa */
+
+  .equipment-table td::before {
+    /* Pega o conteúdo do cabeçalho correspondente (Solução Avançada) 
+      Nota: Isso requer data-label no HTML, mas como não temos, 
+      vamos usar labels visuais simples baseados no contexto ou deixar sem label
+      para ficar mais limpo, como nos apps modernos.
+      Se quiser labels fixos, mantenha os anteriores, mas eles podem falhar em tabelas diferentes.
+    */
+    content: attr(data-label); /* Preparação para futuro */
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    margin-right: 10px;
+    text-align: left;
+  }
+
+  /* Mantendo labels manuais principais para não quebrar o visual atual */
+  .equipment-table td:nth-child(2)::before {
+    content: "ID:";
+  }
+
+  /* Ajuste especial para a coluna de Ações (Botões) */
+  .equipment-table td:last-child {
+    display: flex !important;
+    justify-content: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--color-border);
+    width: 100%;
+  }
+
+  /* Esconde ações no modo fechado */
+  .equipment-table tr:not(.mobile-expanded) td:last-child {
+    display: none !important;
   }
 
   /* 5. Labels (Rótulos) antes dos valores */
@@ -3365,8 +3430,8 @@ h3,
   /* 6. BOTÃO DE FECHAR (X) */
   .card-close-btn {
     position: absolute;
-    top: -10px;
-    right: -10px;
+    top: 8px; /* Traz para baixo, dentro do card */
+    right: 8px; /* Traz para a esquerda, dentro do card */
     width: 30px;
     height: 30px;
     background: var(--color-error);
@@ -3382,6 +3447,213 @@ h3,
     cursor: pointer;
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
+
+  /* --- CORREÇÃO ESPECÍFICA PARA IMPRESSORAS (MOBILE) --- */
+
+  /* Coluna 3: Era Usuário -> Vira Série */
+  #impressoras .equipment-table td:nth-child(3)::before {
+    content: "Série:";
+  }
+
+  /* Coluna 4: Era Tipo -> Vira Patrimônio */
+  #impressoras .equipment-table td:nth-child(4)::before {
+    content: "Patrimônio:";
+  }
+
+  /* Coluna 5: Era Série -> Vira Sala */
+  #impressoras .equipment-table td:nth-child(5)::before {
+    content: "Sala:";
+  }
+
+  /* Coluna 6: Era Patrimônio -> Vira IP */
+  #impressoras .equipment-table td:nth-child(6)::before {
+    content: "IP:";
+  }
+
+  /* Coluna 7: Vira Obs */
+  #impressoras .equipment-table td:nth-child(7)::before {
+    content: "Obs:";
+  }
+
+  /* --- CORREÇÃO ESPECÍFICA PARA CARTUCHOS (MOBILE) --- */
+  
+  /* Coluna 3: Era Usuário -> Vira Série */
+  #cartuchos-table td:nth-child(3)::before {
+    content: "Série:";
+  }
+
+  /* Coluna 4: Era Tipo -> Vira Patrimônio */
+  #cartuchos-table td:nth-child(4)::before {
+    content: "Patrimônio:";
+  }
+
+  /* Coluna 5: Era Série -> Vira Cor */
+  #cartuchos-table td:nth-child(5)::before {
+    content: "Cor:";
+  }
+
+  /* Coluna 6: Era Patrimônio -> Vira Status */
+  #cartuchos-table td:nth-child(6)::before {
+    content: "Status:";
+  }
+  
+  /* Coluna 7: Era Status -> Vira Vinculado */
+  #cartuchos-table td:nth-child(7)::before {
+    content: "Vinculado:";
+  }
+
+  /* --- CORREÇÃO ESPECÍFICA PARA ACESSÓRIOS (MOBILE) --- */
+
+  /* Coluna 3: Era Usuário -> Vira Categoria */
+  #acessorios-table td:nth-child(3)::before {
+    content: "Categoria:";
+  }
+
+  /* Coluna 4: Era Tipo -> Vira Modelo */
+  #acessorios-table td:nth-child(4)::before {
+    content: "Modelo:";
+  }
+
+  /* Coluna 5: Era Série -> Vira Tipo */
+  #acessorios-table td:nth-child(5)::before {
+    content: "Tipo:";
+  }
+
+  /* Coluna 6: Era Patrimônio -> Vira Patrimônio (reforçando) */
+  #acessorios-table td:nth-child(6)::before {
+    content: "Patrimônio:";
+  }
+  
+  /* Coluna 7: Era Status -> Vira Série */
+  #acessorios-table td:nth-child(7)::before {
+    content: "Série:";
+  }
+
+  /* Coluna 8: Era Depto -> Vira Disp. */
+  #acessorios-table td:nth-child(8)::before {
+    content: "Disp.:";
+  }
+
+  /* --- CORREÇÃO ESPECÍFICA PARA MANUTENÇÃO (MOBILE) --- */
+  /* Esta tabela NÃO tem checkbox, então os índices são diferentes */
+
+  /* 1. Garante que as colunas certas apareçam no card fechado */
+  #manutencao .equipment-table tr:not(.mobile-expanded) td:nth-child(1), /* ID */
+  #manutencao .equipment-table tr:not(.mobile-expanded) td:nth-child(2), /* Usuário */
+  #manutencao .equipment-table tr:not(.mobile-expanded) td:nth-child(3), /* Tipo */
+  #manutencao .equipment-table tr:not(.mobile-expanded) td:nth-child(6)  /* Data */
+  {
+      display: flex !important;
+  }
+
+  /* 2. Corrige os Rótulos (Labels) */
+  
+  /* Coluna 1: É o ID real */
+  #manutencao .equipment-table td:nth-child(1)::before {
+    content: "ID:";
+    /* Recriando estilo do label pois a col 1 geralmente não tem */
+    font-weight: bold;
+    color: var(--color-text-secondary);
+    margin-right: 10px;
+    display: inline-block; 
+  }
+
+  /* Coluna 2: Usuário */
+  #manutencao .equipment-table td:nth-child(2)::before {
+    content: "Usuário:";
+  }
+
+  /* Coluna 3: Tipo */
+  #manutencao .equipment-table td:nth-child(3)::before {
+    content: "Tipo:";
+  }
+
+  /* Coluna 4: Série */
+  #manutencao .equipment-table td:nth-child(4)::before {
+    content: "Série:";
+  }
+
+  /* Coluna 5: Patrimônio */
+  #manutencao .equipment-table td:nth-child(5)::before {
+    content: "Patrimônio:";
+  }
+
+  /* Coluna 6: Data Entrada */
+  #manutencao .equipment-table td:nth-child(6)::before {
+    content: "Data Ent.:";
+  }
+
+  /* Coluna 7: Motivo */
+  #manutencao .equipment-table td:nth-child(7)::before {
+    content: "Motivo:";
+  }
+
+  /* ==========================================
+     CORREÇÃO DOS CARDS DE ARQUIVADOS (MOBILE)
+     ========================================== */
+
+  /* --- GRUPO 1: COMPUTADORES E INFRA (Id: #archived-equipment-table) --- */
+  /* Colunas: ID, Usuário, Tipo, Série, Patrimônio, Status, Data, Motivo */
+  
+  #archived-equipment-table tr:not(.mobile-expanded) td:nth-child(3), /* Tipo */
+  #archived-equipment-table tr:not(.mobile-expanded) td:nth-child(7)  /* Data */
+  { display: flex !important; }
+
+  #archived-equipment-table td:nth-child(1)::before { content: "ID:"; font-weight: bold; margin-right: 10px; }
+  #archived-equipment-table td:nth-child(2)::before { content: "Usuário:"; }
+  #archived-equipment-table td:nth-child(3)::before { content: "Tipo:"; }
+  #archived-equipment-table td:nth-child(4)::before { content: "Série:"; }
+  #archived-equipment-table td:nth-child(5)::before { content: "Patrimônio:"; }
+  #archived-equipment-table td:nth-child(6)::before { content: "Status:"; }
+  #archived-equipment-table td:nth-child(7)::before { content: "Data Arq.:"; }
+  #archived-equipment-table td:nth-child(8)::before { content: "Motivo:"; }
+
+
+  /* --- GRUPO 2: IMPRESSORAS (Id: #archived-printers-table) --- */
+  /* Suposição de Colunas: ID, Série, Patrimônio, Sala, IP, Data */
+  
+  #archived-printers-table tr:not(.mobile-expanded) td:nth-child(2), /* Série */
+  #archived-printers-table tr:not(.mobile-expanded) td:nth-child(4), /* Sala */
+  #archived-printers-table tr:not(.mobile-expanded) td:nth-child(6)  /* Data */
+  { display: flex !important; }
+
+  #archived-printers-table td:nth-child(1)::before { content: "ID:"; font-weight: bold; margin-right: 10px; }
+  #archived-printers-table td:nth-child(2)::before { content: "Série:"; }
+  #archived-printers-table td:nth-child(3)::before { content: "Patrimônio:"; }
+  #archived-printers-table td:nth-child(4)::before { content: "Sala:"; }
+  #archived-printers-table td:nth-child(5)::before { content: "IP:"; }
+  #archived-printers-table td:nth-child(6)::before { content: "Data Arq.:"; }
+
+
+  /* --- GRUPO 3: ACESSÓRIOS (Id: #archived-accessories-table) --- */
+  /* Suposição de Colunas: ID, Categoria, Modelo, Patrimônio, Série, Data */
+  
+  #archived-accessories-table tr:not(.mobile-expanded) td:nth-child(2), /* Categoria */
+  #archived-accessories-table tr:not(.mobile-expanded) td:nth-child(3), /* Modelo */
+  #archived-accessories-table tr:not(.mobile-expanded) td:nth-child(6)  /* Data */
+  { display: flex !important; }
+
+  #archived-accessories-table td:nth-child(1)::before { content: "ID:"; font-weight: bold; margin-right: 10px; }
+  #archived-accessories-table td:nth-child(2)::before { content: "Categoria:"; }
+  #archived-accessories-table td:nth-child(3)::before { content: "Modelo:"; }
+  #archived-accessories-table td:nth-child(4)::before { content: "Patrimônio:"; }
+  #archived-accessories-table td:nth-child(5)::before { content: "Série:"; }
+  #archived-accessories-table td:nth-child(6)::before { content: "Data Arq.:"; }
+
+
+  /* --- GRUPO 4: CARTUCHOS (Id: #archived-cartridges-table) --- */
+  /* Colunas: ID, Série, Cor, Status, Data, Vinculado */
+  
+  #archived-cartridges-table tr:not(.mobile-expanded) td:nth-child(3), /* Cor */
+  #archived-cartridges-table tr:not(.mobile-expanded) td:nth-child(5)  /* Data */
+  { display: flex !important; }
+
+  #archived-cartridges-table td:nth-child(1)::before { content: "ID:"; font-weight: bold; margin-right: 10px; }
+  #archived-cartridges-table td:nth-child(2)::before { content: "Série:"; }
+  #archived-cartridges-table td:nth-child(3)::before { content: "Cor:"; }
+  #archived-cartridges-table td:nth-child(4)::before { content: "Status:"; }
+  #archived-cartridges-table td:nth-child(5)::before { content: "Data Arq.:"; }
+  #archived-cartridges-table td:nth-child(6)::before { content: "Vinc. Antigo:"; }
 
   @keyframes popIn {
     from {
@@ -3415,7 +3687,7 @@ h3,
   padding: 5px 10px;
   border-radius: 4px;
   cursor: pointer;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -3440,4 +3712,69 @@ h3,
     justify-content: space-between;
     padding: 10px;
   }
+}
+
+/* --- TELA DE CONSTRUÇÃO (RELATÓRIOS) --- */
+.construction-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background-color: var(--color-surface);
+  border: 1px dashed var(--color-warning); /* Borda tracejada amarela */
+  border-radius: var(--radius-lg);
+  margin-top: 20px;
+  animation: fadeIn 0.5s ease;
+}
+
+.construction-state i {
+  font-size: 64px;
+  color: var(--color-warning);
+  margin-bottom: 24px;
+  /* Reutiliza a animação de pulso que já existe no seu CSS */
+  animation: pulse-warning 2s infinite; 
+}
+
+.construction-state h3 {
+  font-family: "Orbitron", sans-serif;
+  font-size: 24px;
+  color: var(--color-text);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.construction-state p {
+  color: var(--color-text-secondary);
+  font-size: 16px;
+  font-family: "Share Tech Mono", monospace;
+  max-width: 500px;
+}
+
+/* Barra de progresso fake decorativa */
+.construction-bar {
+  width: 200px;
+  height: 4px;
+  background: var(--color-border);
+  margin-top: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.construction-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 50%;
+  background: var(--color-warning);
+  animation: loadingBar 1.5s infinite ease-in-out;
+}
+
+@keyframes loadingBar {
+  0% { left: -50%; }
+  100% { left: 100%; }
 }
