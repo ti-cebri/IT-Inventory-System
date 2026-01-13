@@ -3916,3 +3916,31 @@ h3,
   }
 
 }
+
+/* --- OLHINHO DA SENHA --- */
+.password-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px; /* Mesmo espaçamento que seus inputs já devem ter */
+}
+
+/* Garante que o input ocupe todo o espaço da div */
+.password-wrapper input {
+  width: 100%;
+  padding-right: 40px; /* Espaço para o texto não bater no ícone */
+  margin-bottom: 0; /* Remove margem interna do input se houver, pois a div já tem */
+}
+
+#toggle-password {
+  position: absolute;
+  right: 15px;
+  cursor: pointer;
+  color: #888;
+  z-index: 10;
+}
+
+#toggle-password:hover {
+  color: #007bff; /* Ou a cor azul do seu tema */
+}
