@@ -3944,3 +3944,22 @@ h3,
 #toggle-password:hover {
   color: #007bff; /* Ou a cor azul do seu tema */
 }
+
+/* --- CORREÇÃO: Tooltips (Janelinhas) no Celular --- */
+@media (max-width: 768px) {
+  .custom-tooltip {
+    /* Ignora a posição esquerda (left) que o JS calculou e força o centro */
+    left: 50% !important;
+    
+    /* Traz a janela de volta 50% do tamanho dela para ficar exatamente no meio */
+    transform: translateX(-50%);
+    
+    /* Garante uma largura segura que não encosta nas bordas */
+    width: 90% !important;
+    max-width: 350px !important;
+    
+    /* (Opcional) Garante que o texto não fique espremido */
+    white-space: normal !important;
+    box-sizing: border-box;
+  }
+}
