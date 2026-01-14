@@ -3963,3 +3963,31 @@ h3,
     box-sizing: border-box;
   }
 }
+
+/* --- CORREÇÃO DEFINITIVA: INDICADOR DE DISPONIBILIDADE (BOLINHA AZUL) --- */
+@media (max-width: 768px) {
+  
+  /* 1. Garante que a linha (Card) seja a referência de posição */
+  .table-container tbody tr {
+    position: relative !important;
+    /* Garante que o CSS desenhe por cima de tudo */
+    z-index: 1; 
+  }
+
+  /* 2. Desenha a bolinha azul APENAS nas linhas com a classe 'row-disponivel' */
+  tr.row-disponivel::after {
+    content: ""; /* Cria o elemento visual */
+    display: block;
+    position: absolute;
+    top: 8px;      /* Distância do topo */
+    left: 8px;     /* Distância da esquerda */
+    width: 12px;   /* Tamanho da bolinha */
+    height: 12px;
+    background-color: #0d6efd; /* Azul do tema */
+    border-radius: 50%; /* Faz ficar redondo */
+    border: 2px solid #fff; /* Borda branca para destacar do fundo */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Sombra leve */
+    z-index: 999; /* Fica acima de tudo */
+    pointer-events: none; /* O clique passa através dela */
+  }
+}
