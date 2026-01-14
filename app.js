@@ -688,15 +688,26 @@ function atualizarListaAcessorios(
     );
   }
 
+  // --- TRECHO DE ORDENAÇÃO DENTRO DE atualizarListaAcessorios ---
+
   acessoriosFiltrados.sort((a, b) => {
+    // 1. PRIMEIRO CRITÉRIO: Categoria (Agrupa por Tipo: Headsets com Headsets, etc.)
     const catA = a.categoria || "";
     const catB = b.categoria || "";
     const categoriaCompare = catA.localeCompare(catB);
 
+    // Se as categorias forem diferentes, respeita a ordem alfabética das categorias
     if (categoriaCompare !== 0) {
       return categoriaCompare;
     }
 
+    // --- AGORA ESTAMOS DENTRO DA MESMA CATEGORIA ---
+
+    // 2. SEGUNDO CRITÉRIO: Disponibilidade (Disponível vem antes de Indisponível)
+    if (a.disponivel && !b.disponivel) return -1;
+    if (!a.disponivel && b.disponivel) return 1;
+
+    // 3. TERCEIRO CRITÉRIO: Patrimônio e Modelo (Desempate padrão)
     const pA = a.patrimonio;
     const pB = b.patrimonio;
     const pA_valido = pA && pA !== "N/A";
@@ -730,10 +741,20 @@ function atualizarListaAcessorios(
     itensPagina.length > 0
       ? itensPagina
           .map((acessorio) => {
+            // --- NOVA LINHA (Lógica diferente para Acessórios) ---
+            const dotHtml = acessorio.disponivel
+              ? '<div class="status-dot"></div>'
+              : "";
+
+            const classeDisponivel = acessorio.disponivel
+              ? "row-disponivel"
+              : "";
             const dispClass = acessorio.disponivel ? "sim" : "nao";
             const dispText = acessorio.disponivel ? "Sim" : "Não";
             return `
-        <tr onclick="toggleCard(this)"> <td class="checkbox-cell" onclick="event.stopPropagation()">
+        <tr class="${classeDisponivel}" onclick="toggleCard(this)"> 
+          ${dotHtml}
+          <td class="checkbox-cell" onclick="event.stopPropagation()">
             <input type="checkbox" class="checkbox-acessorios" value="${
               acessorio.id
             }" onclick="verificarSelecao('acessorios')">
@@ -1128,11 +1149,10 @@ function atualizarContagemCartuchosDisponiveis() {
 
 function atualizarListaCartuchos() {
   atualizarContagemCartuchosDisponiveis();
-  const termo = document
-    .getElementById("search-input-cartuchos")
-    .value.toLowerCase();
+  const termo = document.getElementById("search-input-cartuchos").value.toLowerCase();
   const tbody = document.getElementById("cartuchos-list");
   const emptyState = document.getElementById("cartuchos-empty-state");
+
   let cartuchosFiltrados = cartuchos.filter(
     (c) =>
       !c.isArchived &&
@@ -1148,6 +1168,7 @@ function atualizarListaCartuchos() {
   };
 
   cartuchosFiltrados.sort((a, b) => {
+    // 1. PRIMEIRO CRITÉRIO: Cor (Agrupa por cor)
     const orderA = colorOrder[a.cor] || 99;
     const orderB = colorOrder[b.cor] || 99;
 
@@ -1155,6 +1176,16 @@ function atualizarListaCartuchos() {
       return orderA - orderB;
     }
 
+    // --- AGORA DENTRO DA MESMA COR ---
+
+    // 2. SEGUNDO CRITÉRIO: Disponibilidade (Disponível vem antes)
+    const isDispA = a.status === "Disponível";
+    const isDispB = b.status === "Disponível";
+
+    if (isDispA && !isDispB) return -1; // A sobe (vem antes)
+    if (!isDispA && isDispB) return 1;  // B sobe
+
+    // 3. TERCEIRO CRITÉRIO: Patrimônio (Desempate)
     const patA = a.patrimonio === "N/A" ? "ZZZ" : a.patrimonio;
     const patB = b.patrimonio === "N/A" ? "ZZZ" : b.patrimonio;
     return patA.localeCompare(patB, undefined, {
@@ -1163,48 +1194,40 @@ function atualizarListaCartuchos() {
     });
   });
 
-  if (cartuchos.filter((c) => !c.isArchived && !c.isDeleted).length === 0) {
+  if (cartuchosFiltrados.length === 0) {
     tbody.innerHTML = "";
     tbody.closest(".table-container").style.display = "none";
     emptyState.style.display = "block";
   } else {
     tbody.closest(".table-container").style.display = "block";
     emptyState.style.display = "none";
+    
     tbody.innerHTML = cartuchosFiltrados
       .map((cartucho) => {
-        const corClasse = cartucho.cor
-          .split(" ")[0]
-          .toLowerCase()
-          .replace(/[()]/g, "");
-        const statusClasse =
-          cartucho.status === "Disponível" ? "disponivel" : "ativo";
+        // Classes para estilo visual (Bolinha azul e Badge de Status)
+        const classeDisponivel = cartucho.status === "Disponível" ? "row-disponivel" : "";
+        const statusClasse = cartucho.status === "Disponível" ? "disponivel" : "ativo";
+        const corClasse = cartucho.cor.split(" ")[0].toLowerCase().replace(/[()]/g, "");
+
         return `
-        <tr onclick="toggleCard(this)"> <td class="checkbox-cell" onclick="event.stopPropagation()">
-             <input type="checkbox" class="checkbox-cartuchos" value="${
-               cartucho.id
-             }" onclick="verificarSelecao('cartuchos')">
-          </td>
-          <td>${cartucho.id}</td>
-          <td>${cartucho.numeroSerie}</td>
-          <td>${cartucho.patrimonio}</td>
-          <td><span class="cor-badge ${corClasse}">${cartucho.cor}</span></td>
-          <td><span class="status-badge ${statusClasse}">${
-          cartucho.status
-        }</span></td>
-          <td>${cartucho.impressoraVinculada || "Nenhum"}</td>
-          <td onclick="event.stopPropagation()"> <div class="action-buttons">
-              <button class="btn-action btn-archive" onclick="arquivarCartucho('${
-                cartucho.id
-              }')" title="Arquivar"><i class="fas fa-archive"></i></button>
-              <button class="btn-action btn-edit" onclick="editarCartucho('${
-                cartucho.id
-              }')" title="Editar/Vincular"><i class="fas fa-edit"></i></button>
-              <button class="btn-action btn-delete" onclick="excluirCartucho('${
-                cartucho.id
-              }')" title="Excluir"><i class="fas fa-trash"></i></button>
+      <tr class="${classeDisponivel}" onclick="toggleCard(this)">
+        <td class="checkbox-cell" onclick="event.stopPropagation()">
+            <input type="checkbox" class="checkbox-cartuchos" value="${cartucho.id}" onclick="verificarSelecao('cartuchos')">
+        </td>
+        <td>${cartucho.id}</td>
+        <td>${cartucho.numeroSerie}</td>
+        <td>${cartucho.patrimonio}</td>
+        <td><span class="cor-badge ${corClasse}">${cartucho.cor}</span></td>
+        <td><span class="status-badge ${statusClasse}">${cartucho.status}</span></td>
+        <td>${cartucho.impressoraVinculada || "Nenhum"}</td>
+        <td onclick="event.stopPropagation()"> 
+            <div class="action-buttons">
+              <button class="btn-action btn-archive" onclick="arquivarCartucho('${cartucho.id}')" title="Arquivar"><i class="fas fa-archive"></i></button>
+              <button class="btn-action btn-edit" onclick="editarCartucho('${cartucho.id}')" title="Editar/Vincular"><i class="fas fa-edit"></i></button>
+              <button class="btn-action btn-delete" onclick="excluirCartucho('${cartucho.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
             </div>
-          </td>
-        </tr>`;
+        </td>
+      </tr>`;
       })
       .join("");
   }
@@ -3034,13 +3057,16 @@ function criarGrafico(
     },
     // Paleta mista para o gráfico de rosca
     doughnut: [
-      "rgb(8, 0, 46)", // Seu Azul Escuro (Fundo)
-      "rgb(2, 70, 36)", // Seu Verde Escuro
-      "#0d6efd", // Azul Brilhante
-      "#198754", // Verde Sucesso (Bootstrap)
-      "#0dcaf0", // Ciano (Ligação entre azul e verde)
-      "#20c997", // Teal
-      "#adb5bd", // Cinza
+      "#065ebb", // Azul
+      "#ffc107", // Amarelo (Contraste alto)
+      "#dc3545", // Vermelho
+      "#28a745", // Verde
+      "#6610f2", // Roxo
+      "#fd7e14", // Laranja
+      "#0dcaf0", // Ciano
+      "#e83e8c", // Rosa
+      "#20c997", // Verde Água
+      "#6c757d", // Cinza
     ],
     line: "rgb(2, 70, 36)", // Linha do gráfico agora será Verde para destacar
   };
@@ -3333,6 +3359,12 @@ function criarLinhaEquipamento(
     Disponível: "disponivel",
   };
 
+  // --- NOVA LÓGICA: Bolinha Azul para Disponíveis ---
+  const dotHtml =
+    eq.statusOperacional === "Disponível"
+      ? '<div class="status-dot"></div>'
+      : "";
+
   let colunasVariaveis = "";
 
   if (tipoTabela === "computing") {
@@ -3406,15 +3438,16 @@ function criarLinhaEquipamento(
   const isManutencaoTarget = ["Notebook", "Desktop"].includes(
     eq.tipoEquipamento
   );
-  // Adicionado stopPropagation nos botões
   const manutencaoBtn = isManutencaoTarget
     ? `<button class="btn-action" onclick="event.stopPropagation(); enviarParaManutencao('${eq.registro}')" title="Enviar para Manutenção"><i class="fas fa-tools"></i></button>`
     : "";
 
-  // === Renderização da Linha (COM ONCLICK) ===
+  // === Renderização da Linha (COM A BOLINHA INSERIDA) ===
+  const classeDisponivel =
+    eq.statusOperacional === "Disponível" ? "row-disponivel" : "";
   return `
-    <tr onclick="toggleCard(this)">
-      <td class="checkbox-cell" onclick="event.stopPropagation()">
+    <tr class="${classeDisponivel}" onclick="toggleCard(this)">
+      ${dotHtml} <td class="checkbox-cell" onclick="event.stopPropagation()">
         <input type="checkbox" class="checkbox-equipamentos ${checkboxClass}" value="${
     eq.registro
   }" onclick="verificarSelecao('equipamentos')">
@@ -3480,9 +3513,18 @@ function atualizarListaImpressoras() {
     tbody.closest(".table-container").style.display = "block";
     emptyState.style.display = "none";
     tbody.innerHTML = impressoras
-      .map(
-        (imp) => `
-      <tr onclick="toggleCard(this)"> <td class="checkbox-cell" onclick="event.stopPropagation()">
+      .map((imp) => {
+        // --- NOVA LINHA ---
+        const dotHtml =
+          imp.status === "Disponível" ? '<div class="status-dot"></div>' : "";
+
+        const classeDisponivel =
+          imp.statusOperacional === "Disponível" ? "row-disponivel" : "";
+
+        return `
+      <tr class="${classeDisponivel}" onclick="toggleCard(this)">
+        ${dotHtml}
+        <td class="checkbox-cell" onclick="event.stopPropagation()">
             <input type="checkbox" class="checkbox-impressoras" value="${
               imp.registro
             }" onclick="verificarSelecao('impressoras')">
@@ -3507,8 +3549,8 @@ function atualizarListaImpressoras() {
             }')" title="Mover para Lixeira"><i class="fas fa-trash"></i></button>
           </div>
         </td>
-      </tr>`
-      )
+      </tr>`;
+      })
       .join("");
   }
   verificarSelecao("impressoras");
