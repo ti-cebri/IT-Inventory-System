@@ -3891,10 +3891,8 @@ function atualizarListaCartuchosArquivados() {
     (c) =>
       c.isArchived &&
       !c.isDeleted &&
-      (c.numeroSerie.toLowerCase().includes(termo) ||
-        c.patrimonio.toLowerCase().includes(termo))
+      Object.values(c).some((val) => String(val).toLowerCase().includes(termo))
   );
-
   tratarExibicaoTabelaArquivados(
     tbody,
     emptyState,
