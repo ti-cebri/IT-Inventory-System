@@ -1519,16 +1519,10 @@ function aplicarFiltrosEquipamentos(resetarPagina = true) {
 
   // 1. Filtra a lista completa de equipamentos
   const filtrados = equipamentos.filter((eq) => {
-    const matchTermo =
-      String(eq.registro || "")
-        .toLowerCase()
-        .includes(termo) ||
-      String(eq.nomeUsuario || "")
-        .toLowerCase()
-        .includes(termo) ||
-      String(eq.numeroSerie || "")
-        .toLowerCase()
-        .includes(termo);
+    // BUSCA GLOBAL: Verifica se O TERMO existe em QUALQUER valor do objeto equipamento
+    const matchTermo = Object.values(eq).some((valor) =>
+      String(valor).toLowerCase().includes(termo)
+    );
 
     const matchTipo =
       filtroTipo === "todos" || eq.tipoEquipamento === filtroTipo;
