@@ -1149,7 +1149,9 @@ function atualizarContagemCartuchosDisponiveis() {
 
 function atualizarListaCartuchos() {
   atualizarContagemCartuchosDisponiveis();
-  const termo = document.getElementById("search-input-cartuchos").value.toLowerCase();
+  const termo = document
+    .getElementById("search-input-cartuchos")
+    .value.toLowerCase();
   const tbody = document.getElementById("cartuchos-list");
   const emptyState = document.getElementById("cartuchos-empty-state");
 
@@ -1183,7 +1185,7 @@ function atualizarListaCartuchos() {
     const isDispB = b.status === "Disponível";
 
     if (isDispA && !isDispB) return -1; // A sobe (vem antes)
-    if (!isDispA && isDispB) return 1;  // B sobe
+    if (!isDispA && isDispB) return 1; // B sobe
 
     // 3. TERCEIRO CRITÉRIO: Patrimônio (Desempate)
     const patA = a.patrimonio === "N/A" ? "ZZZ" : a.patrimonio;
@@ -1201,30 +1203,45 @@ function atualizarListaCartuchos() {
   } else {
     tbody.closest(".table-container").style.display = "block";
     emptyState.style.display = "none";
-    
+
     tbody.innerHTML = cartuchosFiltrados
       .map((cartucho) => {
         // Classes para estilo visual (Bolinha azul e Badge de Status)
-        const classeDisponivel = cartucho.status === "Disponível" ? "row-disponivel" : "";
-        const statusClasse = cartucho.status === "Disponível" ? "disponivel" : "ativo";
-        const corClasse = cartucho.cor.split(" ")[0].toLowerCase().replace(/[()]/g, "");
+        const classeDisponivel =
+          cartucho.status === "Disponível" ? "row-disponivel" : "";
+        const statusClasse =
+          cartucho.status === "Disponível" ? "disponivel" : "ativo";
+        const corClasse = cartucho.cor
+          .split(" ")[0]
+          .toLowerCase()
+          .replace(/[()]/g, "");
 
         return `
       <tr class="${classeDisponivel}" onclick="toggleCard(this)">
         <td class="checkbox-cell" onclick="event.stopPropagation()">
-            <input type="checkbox" class="checkbox-cartuchos" value="${cartucho.id}" onclick="verificarSelecao('cartuchos')">
+            <input type="checkbox" class="checkbox-cartuchos" value="${
+              cartucho.id
+            }" onclick="verificarSelecao('cartuchos')">
         </td>
         <td>${cartucho.id}</td>
         <td>${cartucho.numeroSerie}</td>
         <td>${cartucho.patrimonio}</td>
         <td><span class="cor-badge ${corClasse}">${cartucho.cor}</span></td>
-        <td><span class="status-badge ${statusClasse}">${cartucho.status}</span></td>
+        <td><span class="status-badge ${statusClasse}">${
+          cartucho.status
+        }</span></td>
         <td>${cartucho.impressoraVinculada || "Nenhum"}</td>
         <td onclick="event.stopPropagation()"> 
             <div class="action-buttons">
-              <button class="btn-action btn-archive" onclick="arquivarCartucho('${cartucho.id}')" title="Arquivar"><i class="fas fa-archive"></i></button>
-              <button class="btn-action btn-edit" onclick="editarCartucho('${cartucho.id}')" title="Editar/Vincular"><i class="fas fa-edit"></i></button>
-              <button class="btn-action btn-delete" onclick="excluirCartucho('${cartucho.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
+              <button class="btn-action btn-archive" onclick="arquivarCartucho('${
+                cartucho.id
+              }')" title="Arquivar"><i class="fas fa-archive"></i></button>
+              <button class="btn-action btn-edit" onclick="editarCartucho('${
+                cartucho.id
+              }')" title="Editar/Vincular"><i class="fas fa-edit"></i></button>
+              <button class="btn-action btn-delete" onclick="excluirCartucho('${
+                cartucho.id
+              }')" title="Excluir"><i class="fas fa-trash"></i></button>
             </div>
         </td>
       </tr>`;
@@ -1900,6 +1917,10 @@ function salvarEquipamento(e) {
   // *** INÍCIO DA MODIFICAÇÃO ***
   equipamento.mochila = form.has("mochila");
   equipamento.case = form.has("case");
+  // Nova lógica para Office (Checkboxes)
+  equipamento.officeStandard = form.has("officeStandard");
+  equipamento.officePremium = form.has("officePremium");
+  delete equipamento.pacoteOffice;
   // O campo 'pacoteOffice' (radio) já é pego pelo Object.fromEntries
   // *** FIM DA MODIFICAÇÃO ***
   equipamento.isArchived = false;
@@ -2211,26 +2232,20 @@ function criarFormularioEdicao(equipamento) {
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Pacote Office - 365</label>
-                <div class="radio-group">
-                    <label class="radio-label">
-                        <input type="radio" name="pacoteOffice" value="Standard" ${
-                          equipamento.pacoteOffice === "Standard"
-                            ? "checked"
-                            : ""
-                        } />
-                        <span class="radio-custom"></span>Standard
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="pacoteOffice" value="Premium" ${
-                          equipamento.pacoteOffice === "Premium"
-                            ? "checked"
-                            : ""
-                        } />
-                        <span class="radio-custom"></span>Premium
-                    </label>
-                </div>
-            </div>
+    <label class="form-label">Pacote Office - 365</label>
+    <div class="checkbox-item" style="margin-top: 8px">
+        <input type="checkbox" id="edit-officeStandard" name="officeStandard" ${
+          equipamento.officeStandard ? "checked" : ""
+        } />
+        <label for="edit-officeStandard">Standard</label>
+    </div>
+    <div class="checkbox-item">
+        <input type="checkbox" id="edit-officePremium" name="officePremium" ${
+          equipamento.officePremium ? "checked" : ""
+        } />
+        <label for="edit-officePremium">Premium</label>
+    </div>
+</div>
         </div>
         </fieldset>
       <fieldset id="fieldset-documentos-edit"><legend>Documentos</legend><div class="checkbox-item"><input type="checkbox" id="edit-termo-responsabilidade" name="termoResponsabilidade" ${
@@ -2300,7 +2315,11 @@ function salvarEdicao(event, registro) {
     // *** INÍCIO DA MODIFICAÇÃO ***
     mochila: form.has("mochila"),
     case: form.has("case"),
-    // 'pacoteOffice' já está em 'updatedData'
+    // *** ALTERAÇÃO ***
+    mochila: form.has("mochila"),
+    case: form.has("case"),
+    officeStandard: form.has("officeStandard"),
+    officePremium: form.has("officePremium")
     // *** FIM DA MODIFICAÇÃO ***
   };
 
@@ -2550,7 +2569,8 @@ const cabecalhoEquipamentosCSV = [
   "fotoNotebook",
   "mochila", // NOVO
   "case", // NOVO
-  "pacoteOffice", // NOVO
+  "officeStandard", // NOVO
+  "officePremium",  // NOVO
   "isArchived",
   "archiveDate",
   "motivoArquivamento",
@@ -2739,6 +2759,8 @@ function parseCsvData(csv, cabecalho) {
       "disponivel",
       "mochila",
       "case",
+      "officeStandard",
+      "officePremium"
     ].forEach((key) => {
       if (item[key] !== undefined) item[key] = item[key] === "true";
     });
@@ -3893,6 +3915,7 @@ function atualizarListaCartuchosArquivados() {
       !c.isDeleted &&
       Object.values(c).some((val) => String(val).toLowerCase().includes(termo))
   );
+
   tratarExibicaoTabelaArquivados(
     tbody,
     emptyState,
