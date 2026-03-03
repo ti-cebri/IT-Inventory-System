@@ -1950,9 +1950,10 @@ function editarEquipamento(registro) {
   const container = document.getElementById("edit-form-container");
   container.innerHTML = criarFormularioEdicao(equipamento);
   if (container.querySelector("#edit-cpf"))
+    // Antes: container.querySelector("#edit-cpf").addEventListener("input", aplicarMascaraCPF);
     container
       .querySelector("#edit-cpf")
-      .addEventListener("input", aplicarMascaraCPF);
+      .addEventListener("input", aplicarMascaraCpfCnpj);
   if (container.querySelector("#edit-valor"))
     container
       .querySelector("#edit-valor")
@@ -2125,10 +2126,10 @@ function criarFormularioEdicao(equipamento) {
             <div class="form-group" id="edit-cpf-group" style="display: ${
               isCebriUser ? "none" : "block"
             }">
-                <label class="form-label" for="edit-cpf">CPF</label>
+                <label class="form-label" for="edit-cpf">CPF / CNPJ</label>
                 <input type="text" id="edit-cpf" name="cpf" class="form-control" value="${safe(
                   equipamento.cpf
-                )}" placeholder="000.000.000-00" maxlength="14" />
+                )}" placeholder="000.000.000-00 ou 00.000.000/0000-00" maxlength="18" />
             </div>
             <div class="form-group" id="edit-cnpj-group" style="display: ${
               isCebriUser ? "block" : "none"
@@ -2319,7 +2320,7 @@ function salvarEdicao(event, registro) {
     mochila: form.has("mochila"),
     case: form.has("case"),
     officeStandard: form.has("officeStandard"),
-    officePremium: form.has("officePremium")
+    officePremium: form.has("officePremium"),
     // *** FIM DA MODIFICAÇÃO ***
   };
 
@@ -2570,7 +2571,7 @@ const cabecalhoEquipamentosCSV = [
   "mochila", // NOVO
   "case", // NOVO
   "officeStandard", // NOVO
-  "officePremium",  // NOVO
+  "officePremium", // NOVO
   "isArchived",
   "archiveDate",
   "motivoArquivamento",
@@ -2760,7 +2761,7 @@ function parseCsvData(csv, cabecalho) {
       "mochila",
       "case",
       "officeStandard",
-      "officePremium"
+      "officePremium",
     ].forEach((key) => {
       if (item[key] !== undefined) item[key] = item[key] === "true";
     });
@@ -2839,17 +2840,27 @@ function carregarDadosCompletos() {
 // ===========================================
 
 function configurarMascaras() {
-  document.getElementById("cpf").oninput = aplicarMascaraCPF;
+  document.getElementById("cpf").oninput = aplicarMascaraCpfCnpj;
   document.getElementById("valor").oninput = aplicarMascaraValor;
   document.getElementById("acessorio-valor-mensal").oninput =
     aplicarMascaraValor;
 }
-function aplicarMascaraCPF(e) {
+function aplicarMascaraCpfCnpj(e) {
   let v = e.target.value.replace(/\D/g, "");
-  v = v
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+
+  if (v.length <= 11) {
+    // Máscara de CPF
+    v = v.replace(/(\d{3})(\d)/, "$1.$2");
+    v = v.replace(/(\d{3})(\d)/, "$1.$2");
+    v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+  } else {
+    // Máscara de CNPJ
+    v = v.replace(/^(\d{2})(\d)/, "$1.$2");
+    v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+    v = v.replace(/\.(\d{3})(\d)/, ".$1/$2");
+    v = v.replace(/(\d{4})(\d)/, "$1-$2");
+  }
+
   e.target.value = v;
 }
 function aplicarMascaraValor(e) {
@@ -2895,7 +2906,7 @@ function validarCampo(id, registroExcluido = null) {
         erroMsg = "E-mail inválido";
       break;
     case "cpf":
-      if (valor && !validarCPF(valor)) erroMsg = "CPF inválido";
+      if (valor && !validarCpfCnpj(valor)) erroMsg = "CPF ou CNPJ inválido";
       break;
     case "tipoEquipamento":
     case "statusOperacional":
@@ -2935,6 +2946,44 @@ function validarCPF(cpf) {
   resto = (soma * 10) % 11;
   if (resto === 10 || resto === 11) resto = 0;
   return resto === parseInt(cpf.substring(10, 11));
+}
+
+function validarCpfCnpj(val) {
+  const limpo = val.replace(/\D/g, "");
+  if (limpo.length === 11) return validarCPF(limpo);
+  if (limpo.length === 14) return validarCNPJ(limpo);
+  return false;
+}
+
+function validarCNPJ(cnpj) {
+  cnpj = cnpj.replace(/\D/g, "");
+  if (cnpj.length !== 14 || /^(\d)\1{13}$/.test(cnpj)) return false;
+
+  let tamanho = cnpj.length - 2;
+  let numeros = cnpj.substring(0, tamanho);
+  let digitos = cnpj.substring(tamanho);
+  let soma = 0;
+  let pos = tamanho - 7;
+
+  for (let i = tamanho; i >= 1; i--) {
+    soma += numeros.charAt(tamanho - i) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+  if (resultado != digitos.charAt(0)) return false;
+
+  tamanho = tamanho + 1;
+  numeros = cnpj.substring(0, tamanho);
+  soma = 0;
+  pos = tamanho - 7;
+  for (let i = tamanho; i >= 1; i--) {
+    soma += numeros.charAt(tamanho - i) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+  if (resultado != digitos.charAt(1)) return false;
+
+  return true;
 }
 
 // ===========================================
