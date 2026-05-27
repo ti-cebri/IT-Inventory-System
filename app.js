@@ -49,7 +49,7 @@ async function salvarNoFirebase() {
     // Salva na coleção 'cebri_data', documento 'inventario_geral'
     await window.setDoc(
       window.doc(window.db, "cebri_data", "inventario_geral"),
-      dadosGerais
+      dadosGerais,
     );
 
     setEstadoAlteracao(false);
@@ -443,7 +443,7 @@ function handleTipoEquipamentoChange(selectElement) {
 
     // Define Aquisição como Patrimonial
     const radioPatrimonial = form.querySelector(
-      'input[name="tipoAquisicao"][value="Patrimonial"]'
+      'input[name="tipoAquisicao"][value="Patrimonial"]',
     );
     if (radioPatrimonial) {
       radioPatrimonial.checked = true;
@@ -509,10 +509,10 @@ function preencherPresetsFabricante(event) {
     const processador = form.querySelector("#processador");
     const versaoWindows = form.querySelector("#versaoWindows");
     const radioAlugado = form.querySelector(
-      'input[name="tipoAquisicao"][value="Alugado"]'
+      'input[name="tipoAquisicao"][value="Alugado"]',
     );
     const radioPatrimonial = form.querySelector(
-      'input[name="tipoAquisicao"][value="Patrimonial"]'
+      'input[name="tipoAquisicao"][value="Patrimonial"]',
     );
     const valor = form.querySelector("#valor");
 
@@ -549,10 +549,10 @@ function preencherPresetsFabricante(event) {
   } else if (tipoEquipamento === "Impressora") {
     const modelo = form.querySelector("#modelo");
     const radioAlugado = form.querySelector(
-      'input[name="tipoAquisicao"][value="Alugado"]'
+      'input[name="tipoAquisicao"][value="Alugado"]',
     );
     const radioPatrimonial = form.querySelector(
-      'input[name="tipoAquisicao"][value="Patrimonial"]'
+      'input[name="tipoAquisicao"][value="Patrimonial"]',
     );
     const valor = form.querySelector("#valor");
     const observacoes = form.querySelector("#observacoes");
@@ -607,13 +607,13 @@ function salvarAcessorio(e) {
   if (novoPatrimonio) {
     // Acessórios não têm 'isArchived', apenas 'isDeleted' (Lixeira)
     const matchPatrimonio = acessorios.find(
-      (ac) => ac.patrimonio === novoPatrimonio && !ac.isDeleted
+      (ac) => ac.patrimonio === novoPatrimonio && !ac.isDeleted,
     );
 
     if (matchPatrimonio) {
       mostrarMensagem(
         `Acessório já cadastrado com o Patrimônio: ${novoPatrimonio}.`,
-        "error"
+        "error",
       );
       return;
     }
@@ -622,13 +622,13 @@ function salvarAcessorio(e) {
   // 2. Verificar Número de Série (só se não achou por patrimônio)
   if (novoNumeroSerie) {
     const matchSerie = acessorios.find(
-      (ac) => ac.numeroSerie === novoNumeroSerie && !ac.isDeleted
+      (ac) => ac.numeroSerie === novoNumeroSerie && !ac.isDeleted,
     );
 
     if (matchSerie) {
       mostrarMensagem(
         `Acessório já cadastrado com o Número de Série: ${novoNumeroSerie}.`,
-        "error"
+        "error",
       );
       return;
     }
@@ -661,7 +661,7 @@ function salvarAcessorio(e) {
 function atualizarListaAcessorios(
   categoriaFiltro = "todos",
   termoBusca = "",
-  resetarPagina = true
+  resetarPagina = true,
 ) {
   atualizarContagemAcessoriosDisponiveis();
 
@@ -674,17 +674,19 @@ function atualizarListaAcessorios(
   const emptyState = document.getElementById("acessorios-empty-state");
 
   // 1. Filtragem e Ordenação
-  let acessoriosFiltrados = acessorios.filter((a) => !a.isDeleted);
+  let acessoriosFiltrados = acessorios.filter(
+    (a) => !a.isDeleted && !a.isArchived,
+  );
 
   if (categoriaFiltro !== "todos") {
     acessoriosFiltrados = acessoriosFiltrados.filter(
-      (a) => a.categoria === categoriaFiltro
+      (a) => a.categoria === categoriaFiltro,
     );
   }
   if (termoBusca) {
     const termo = termoBusca.toLowerCase();
     acessoriosFiltrados = acessoriosFiltrados.filter((a) =>
-      Object.values(a).some((val) => String(val).toLowerCase().includes(termo))
+      Object.values(a).some((val) => String(val).toLowerCase().includes(termo)),
     );
   }
 
@@ -766,17 +768,14 @@ function atualizarListaAcessorios(
           <td>${acessorio.patrimonio || "N/A"}</td>
           <td>${acessorio.numeroSerie || "N/A"}</td>
           <td><span class="disponibilidade-${dispClass}" ${
-              !acessorio.disponivel
-                ? `onclick="event.stopPropagation(); mostrarTooltipUsuario(event, '${acessorio.id}')"`
-                : ""
-            }>${dispText}</span></td>
+            !acessorio.disponivel
+              ? `onclick="event.stopPropagation(); mostrarTooltipUsuario(event, '${acessorio.id}')"`
+              : ""
+          }>${dispText}</span></td>
           <td onclick="event.stopPropagation()"> <div class="action-buttons">
-              <button class="btn-action btn-edit" onclick="editarAcessorio('${
-                acessorio.id
-              }')" title="Editar"><i class="fas fa-edit"></i></button>
-              <button class="btn-action btn-delete" onclick="excluirAcessorio('${
-                acessorio.id
-              }')" title="Excluir"><i class="fas fa-trash"></i></button>
+              <button class="btn-action btn-archive" onclick="arquivarAcessorio('${acessorio.id}')" title="Arquivar"><i class="fas fa-archive"></i></button>
+              <button class="btn-action btn-edit" onclick="editarAcessorio('${acessorio.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+              <button class="btn-action btn-delete" onclick="excluirAcessorio('${acessorio.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
             </div>
           </td>
         </tr>`;
@@ -828,7 +827,7 @@ function atualizarListaAcessorios(
 
 function atualizarContagemAcessoriosDisponiveis() {
   const summaryElement = document.getElementById(
-    "acessorios-disponiveis-summary"
+    "acessorios-disponiveis-summary",
   );
   if (!summaryElement) return;
 
@@ -883,8 +882,57 @@ function excluirAcessorio(id) {
         aplicarFiltrosAcessorios(); // Atualiza a lista de acessórios
         mostrarMensagem("Acessório movido para a lixeira.", "success");
       }
-    }
+    },
   );
+}
+
+function arquivarAcessorio(id) {
+  const acessorio = acessorios.find((a) => String(a.id) === String(id));
+  if (!acessorio) return;
+
+  // Gera o HTML do campo de texto idêntico ao de equipamentos
+  const motivoHtml = `<div class="form-group" style="margin-top: 16px; text-align: left;"><label class="form-label">Motivo do Arquivamento (Opcional):</label><textarea id="motivo-arquivamento" class="form-control" rows="3" placeholder="Ex: Equipamento obsoleto, devolução, etc."></textarea></div>`;
+
+  abrirModalConfirmacao(
+    "Tem certeza que deseja arquivar este acessório?",
+    (motivo) => {
+      // O callback recebe o motivo digitado no textarea
+      acessorio.motivoArquivamento = motivo || ""; 
+      acessorio.isArchived = true;
+      acessorio.disponivel = false; // Fica indisponível para novos vínculos
+      acessorio.archiveDate = new Date().toISOString();
+
+      salvarAcessoriosParaLocalStorage();
+      setEstadoAlteracao(true);
+      
+      // Atualiza as listas na tela
+      aplicarFiltrosAcessorios();
+      atualizarListaAcessoriosArquivados();
+      
+      mostrarMensagem("Acessório arquivado com sucesso!", "success");
+    },
+    motivoHtml // Passa o HTML do campo para o modal
+  );
+}
+
+function desarquivarAcessorio(id) {
+  const acessorio = acessorios.find((a) => String(a.id) === String(id));
+  if (acessorio) {
+    acessorio.isArchived = false;
+
+    // Verifica se ele deve voltar disponível ou não (baseado se está em uso por algum equipamento ativo)
+    const vinculadoEquipamentoAtivo = equipamentos.some(
+      (eq) =>
+        !eq.isDeleted && !eq.isArchived && eq.acessorios?.includes(String(id)),
+    );
+    acessorio.disponivel = !vinculadoEquipamentoAtivo;
+
+    salvarAcessoriosParaLocalStorage();
+    setEstadoAlteracao(true);
+    atualizarListaAcessoriosArquivados();
+    aplicarFiltrosAcessorios();
+    mostrarMensagem("Acessório restaurado com sucesso!", "success");
+  }
 }
 
 function editarAcessorio(id) {
@@ -915,7 +963,7 @@ function criarFormularioEdicaoAcessorio(acessorio) {
     arr
       .map(
         (i) =>
-          `<option value="${i}" ${sel === i ? "selected" : ""}>${i}</option>`
+          `<option value="${i}" ${sel === i ? "selected" : ""}>${i}</option>`,
       )
       .join("");
   return `
@@ -927,10 +975,10 @@ function criarFormularioEdicaoAcessorio(acessorio) {
         <div class="form-row">
           <div class="form-group"><label>Categoria</label><select id="edit-categoria" name="categoria" class="form-control" onchange="handleCategoriaAcessorioChange('edit')">${opts(
             categorias,
-            acessorio.categoria
+            acessorio.categoria,
           )}</select></div>
           <div class="form-group"><label>Modelo</label><input type="text" name="modelo" class="form-control" value="${safe(
-            acessorio.modelo
+            acessorio.modelo,
           )}"></div>
         </div>
 
@@ -940,40 +988,40 @@ function criarFormularioEdicaoAcessorio(acessorio) {
           <div class="form-group full-width">
             <label>Polegadas</label>
             <input type="text" id="edit-acessorio-polegadas" name="polegadas" class="form-control" value="${safe(
-              acessorio.polegadas || ""
+              acessorio.polegadas || "",
             )}">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>Fabricante</label><input type="text" name="fabricante" class="form-control" value="${safe(
-            acessorio.fabricante
+            acessorio.fabricante,
           )}"></div>
           <div class="form-group"><label>Patrimônio</label><input type="text" name="patrimonio" class="form-control" value="${safe(
-            acessorio.patrimonio
+            acessorio.patrimonio,
           )}"></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>Número de Série</label><input type="text" name="numeroSerie" class="form-control" value="${safe(
-            acessorio.numeroSerie
+            acessorio.numeroSerie,
           )}"></div>
           <div class="form-group"><label>Tipo</label><select id="edit-tipo" name="tipo" class="form-control" onchange="handleTipoAcessorioChange('edit')">${opts(
             tipos,
-            acessorio.tipo
+            acessorio.tipo,
           )}</select></div>
         </div>
         <div class="form-row">
           <div id="campo-edit-fornecedor" class="form-group" style="display:${
             isLocacao ? "block" : "none"
           };"><label>Fornecedor</label><input type="text" id="edit-fornecedor" name="fornecedor" class="form-control" readonly value="${safe(
-    acessorio.fornecedor
-  )}"></div>
+            acessorio.fornecedor,
+          )}"></div>
           <div id="campo-edit-valor-mensal" class="form-group" style="display:${
             isLocacao ? "block" : "none"
           };"><label>Valor Mensal (R$)</label><input type="text" id="edit-acessorio-valor-mensal" name="valorMensal" class="form-control" value="${(
-    acessorio.valorMensal || 0
-  )
-    .toFixed(2)
-    .replace(".", ",")}"></div>
+            acessorio.valorMensal || 0
+          )
+            .toFixed(2)
+            .replace(".", ",")}"></div>
         </div>
       </fieldset>
       <div class="modal-actions">
@@ -1017,7 +1065,7 @@ function popularImpressorasNoCadastroCartucho() {
   const select = document.getElementById("cartucho-impressora-vinculo");
   const impressoras = equipamentos.filter(
     (eq) =>
-      eq.tipoEquipamento === "Impressora" && !eq.isArchived && !eq.isDeleted
+      eq.tipoEquipamento === "Impressora" && !eq.isArchived && !eq.isDeleted,
   );
 
   while (select.options.length > 1) {
@@ -1057,13 +1105,13 @@ function salvarCartucho(e) {
   if (patrimonio) {
     // Verifica se patrimonio não é nulo ou vazio
     const matchPatrimonio = cartuchos.find(
-      (c) => c.patrimonio === patrimonio && !c.isArchived && !c.isDeleted
+      (c) => c.patrimonio === patrimonio && !c.isArchived && !c.isDeleted,
     );
 
     if (matchPatrimonio) {
       mostrarMensagem(
         `Cartucho já cadastrado com o Patrimônio: ${patrimonio}.`,
-        "error"
+        "error",
       );
       return;
     }
@@ -1072,13 +1120,13 @@ function salvarCartucho(e) {
   // 2. Verificar Número de Série (só se não achou por patrimônio)
   if (numeroSerie) {
     const matchSerie = cartuchos.find(
-      (c) => c.numeroSerie === numeroSerie && !c.isArchived && !c.isDeleted
+      (c) => c.numeroSerie === numeroSerie && !c.isArchived && !c.isDeleted,
     );
 
     if (matchSerie) {
       mostrarMensagem(
         `Cartucho já cadastrado com o Número de Série: ${numeroSerie}.`,
-        "error"
+        "error",
       );
       return;
     }
@@ -1110,12 +1158,12 @@ function limparFormularioCartucho() {
 
 function atualizarContagemCartuchosDisponiveis() {
   const summaryElement = document.getElementById(
-    "cartuchos-disponiveis-summary"
+    "cartuchos-disponiveis-summary",
   );
   if (!summaryElement) return;
 
   const disponiveis = cartuchos.filter(
-    (c) => c.status === "Disponível" && !c.isArchived && !c.isDeleted
+    (c) => c.status === "Disponível" && !c.isArchived && !c.isDeleted,
   );
 
   const contagemPorCor = disponiveis.reduce((acc, cartucho) => {
@@ -1159,7 +1207,7 @@ function atualizarListaCartuchos() {
     (c) =>
       !c.isArchived &&
       !c.isDeleted &&
-      Object.values(c).some((val) => String(val).toLowerCase().includes(termo))
+      Object.values(c).some((val) => String(val).toLowerCase().includes(termo)),
   );
 
   const colorOrder = {
@@ -1276,7 +1324,7 @@ function editarCartucho(id) {
 function criarFormularioEdicaoCartucho(cartucho) {
   const impressoras = equipamentos.filter(
     (eq) =>
-      eq.tipoEquipamento === "Impressora" && !eq.isArchived && !eq.isDeleted
+      eq.tipoEquipamento === "Impressora" && !eq.isArchived && !eq.isDeleted,
   );
   const impressoraOptions = impressoras
     .map((imp) => {
@@ -1293,7 +1341,7 @@ function criarFormularioEdicaoCartucho(cartucho) {
       (cor) =>
         `<option value="${cor}" ${
           cartucho.cor === cor ? "selected" : ""
-        }>${cor}</option>`
+        }>${cor}</option>`,
     )
     .join("");
 
@@ -1422,7 +1470,7 @@ function excluirCartucho(id) {
 
         mostrarMensagem("Cartucho movido para a lixeira.", "success");
       }
-    }
+    },
   );
 }
 
@@ -1445,7 +1493,7 @@ function arquivarCartucho(id) {
         atualizarListaCartuchosArquivados();
         mostrarMensagem("Cartucho arquivado com sucesso!", "success");
       }
-    }
+    },
   );
 }
 
@@ -1474,7 +1522,7 @@ function atualizarListaCartuchosArquivados() {
       c.isArchived &&
       !c.isDeleted &&
       (c.numeroSerie.toLowerCase().includes(termo) ||
-        c.patrimonio.toLowerCase().includes(termo))
+        c.patrimonio.toLowerCase().includes(termo)),
   );
 
   if (cartuchos.filter((c) => c.isArchived && !c.isDeleted).length === 0) {
@@ -1497,8 +1545,8 @@ function atualizarListaCartuchosArquivados() {
           <td>${cartucho.numeroSerie}</td>
           <td><span class="cor-badge ${corClasse}">${cartucho.cor}</span></td>
           <td><span class="status-badge ${statusClasse}">${
-          cartucho.status
-        }</span></td>
+            cartucho.status
+          }</span></td>
           <td>${formatarData(cartucho.archiveDate)}</td>
           <td>${cartucho.impressoraVinculada || "Nenhum"}</td>
           <td>
@@ -1538,7 +1586,7 @@ function aplicarFiltrosEquipamentos(resetarPagina = true) {
   const filtrados = equipamentos.filter((eq) => {
     // BUSCA GLOBAL: Verifica se O TERMO existe em QUALQUER valor do objeto equipamento
     const matchTermo = Object.values(eq).some((valor) =>
-      String(valor).toLowerCase().includes(termo)
+      String(valor).toLowerCase().includes(termo),
     );
 
     const matchTipo =
@@ -1600,7 +1648,7 @@ function aplicarFiltrosEquipamentos(resetarPagina = true) {
 
   // (Opcional) Ordenação para Infra: Por Tipo também
   grupos.infra.sort((a, b) =>
-    (a.tipoEquipamento || "").localeCompare(b.tipoEquipamento || "")
+    (a.tipoEquipamento || "").localeCompare(b.tipoEquipamento || ""),
   );
 
   // 3. Renderiza cada seção separadamente com sua paginação
@@ -1608,14 +1656,14 @@ function aplicarFiltrosEquipamentos(resetarPagina = true) {
     grupos.computing,
     "list-computing",
     "section-computing",
-    "computing"
+    "computing",
   );
   renderizarSecaoPaginada(grupos.infra, "list-infra", "section-infra", "infra");
   renderizarSecaoPaginada(
     grupos.others,
     "list-others",
     "section-others",
-    "others"
+    "others",
   );
 
   // 4. Se não sobrou nada, mostra o desenho de "Vazio"
@@ -1667,7 +1715,7 @@ function renderizarSecaoPaginada(lista, tbodyId, sectionId, categoriaKey) {
     tbody.innerHTML += criarLinhaEquipamento(
       eq,
       `checkbox-${categoriaKey}`,
-      tipoTabela
+      tipoTabela,
     );
   });
 
@@ -1686,13 +1734,13 @@ function renderizarSecaoPaginada(lista, tbodyId, sectionId, categoriaKey) {
     <span>Pág ${paginasAtuais[categoriaKey]} de ${totalPaginas}</span>
     <div style="display:flex; gap:5px;">
       <button class="btn-page" onclick="mudarPagina('${categoriaKey}', -1)" ${
-    paginasAtuais[categoriaKey] === 1 ? "disabled" : ""
-  }>
+        paginasAtuais[categoriaKey] === 1 ? "disabled" : ""
+      }>
         <i class="fas fa-chevron-left"></i>
       </button>
       <button class="btn-page" onclick="mudarPagina('${categoriaKey}', 1)" ${
-    paginasAtuais[categoriaKey] >= totalPaginas ? "disabled" : ""
-  }>
+        paginasAtuais[categoriaKey] >= totalPaginas ? "disabled" : ""
+      }>
         <i class="fas fa-chevron-right"></i>
       </button>
     </div>
@@ -1739,8 +1787,8 @@ function inicializarBuscaAcessorios(prefix = "") {
   input.addEventListener("input", (e) =>
     renderizarResultadosBuscaAcessorios(
       e.target.value.toLowerCase().trim(),
-      prefix
-    )
+      prefix,
+    ),
   );
   document.addEventListener("click", (e) => {
     if (!e.target.closest(".acessorio-search-component")) {
@@ -1766,7 +1814,7 @@ function renderizarResultadosBuscaAcessorios(termo, prefix = "") {
       !acessoriosSelecionadosTemporariamente.includes(String(a.id)) &&
       (a.categoria.toLowerCase().includes(termo) ||
         a.modelo.toLowerCase().includes(termo) ||
-        (a.patrimonio && a.patrimonio.toLowerCase().includes(termo)))
+        (a.patrimonio && a.patrimonio.toLowerCase().includes(termo))),
   );
   if (disponiveis.length) {
     disponiveis.forEach((acessorio) => {
@@ -1803,7 +1851,7 @@ function deselecionarAcessorio(id, prefix = "") {
 
 function renderizarAcessoriosSelecionados(prefix = "") {
   const container = document.getElementById(
-    `${prefix}acessorios-selecionados-container`
+    `${prefix}acessorios-selecionados-container`,
   );
   if (!container) return;
   const emptyText = container.querySelector(".empty-selection-text");
@@ -1860,17 +1908,17 @@ function salvarEquipamento(e) {
       (eq) =>
         eq.numeroPatrimonio === novoPatrimonio &&
         !eq.isArchived &&
-        !eq.isDeleted
+        !eq.isDeleted,
     );
 
     if (matchPatrimonio) {
       mostrarMensagem(
         `Equipamento já cadastrado com o Patrimônio: ${novoPatrimonio}.`,
-        "error"
+        "error",
       );
       mostrarErro(
         "numeroPatrimonio",
-        "Patrimônio já cadastrado em um item ativo."
+        "Patrimônio já cadastrado em um item ativo.",
       );
       return; // Para a execução
     }
@@ -1971,7 +2019,7 @@ function criarFormularioEdicao(equipamento) {
     arr
       .map(
         (i) =>
-          `<option value="${i}" ${sel === i ? "selected" : ""}>${i}</option>`
+          `<option value="${i}" ${sel === i ? "selected" : ""}>${i}</option>`,
       )
       .join("");
   const radios = (name, opts, sel, fn) =>
@@ -1982,7 +2030,7 @@ function criarFormularioEdicao(equipamento) {
             sel === o ? "checked" : ""
           } onchange="${
             fn || ""
-          }"><span class="radio-custom"></span>${o}</label>`
+          }"><span class="radio-custom"></span>${o}</label>`,
       )
       .join("");
 
@@ -2053,10 +2101,10 @@ function criarFormularioEdicao(equipamento) {
         <div class="form-row">
           <div class="form-group"><label>Tipo</label><select id="edit-tipoEquipamento" name="tipoEquipamento" class="form-control" onchange="handleTipoEquipamentoChange(this)">${opts(
             [...tiposPadrao, "Outro"],
-            tipoSelecionado
+            tipoSelecionado,
           )}</select></div>
           <div class="form-group"><label>Nº Série</label><input type="text" name="numeroSerie" class="form-control" value="${safe(
-            equipamento.numeroSerie
+            equipamento.numeroSerie,
           )}"></div>
         </div>
         <div class="form-row" id="outroTipoEquipamentoGroup" style="display: ${
@@ -2065,61 +2113,61 @@ function criarFormularioEdicao(equipamento) {
             <div class="form-group full-width">
                 <label class="form-label" for="edit-outroTipoEquipamento">Especifique o Tipo</label>
                 <input type="text" id="edit-outroTipoEquipamento" name="outroTipoEquipamento" class="form-control" placeholder="Ex: Scanner, Projetor..." value="${safe(
-                  valorOutro
+                  valorOutro,
                 )}">
             </div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>Fabricante</label><input type="text" name="fabricante" class="form-control" value="${safe(
-            equipamento.fabricante
+            equipamento.fabricante,
           )}"></div>
           <div class="form-group"><label>Modelo</label><input type="text" name="modelo" class="form-control" value="${safe(
-            equipamento.modelo
+            equipamento.modelo,
           )}"></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>Patrimônio</label><input type="text" name="numeroPatrimonio" class="form-control" value="${safe(
-            equipamento.numeroPatrimonio
+            equipamento.numeroPatrimonio,
           )}"></div>
           <div class="form-group"><label>Status</label><select name="statusOperacional" class="form-control">${opts(
             ["Disponível", "Ativo", "Inativo", "Em manutenção", "Arquivado"],
-            equipamento.statusOperacional
+            equipamento.statusOperacional,
           )}</select></div>
         </div>
       </fieldset>
       <fieldset id="fieldset-specs-edit"><legend>Especificações</legend>
         <div class="form-row" id="specs-polegadas-group-edit"><div class="form-group"><label>Polegadas</label><input type="text" name="polegadas" class="form-control" value="${safe(
-          equipamento.polegadas
+          equipamento.polegadas,
         )}"></div></div>
         <div class="form-row">
           <div class="form-group"><label>RAM</label><input type="text" name="memoriaRam" class="form-control" value="${safe(
-            equipamento.memoriaRam
+            equipamento.memoriaRam,
           )}"></div>
           <div class="form-group"><label>HD/SSD (GB)</label><input type="text" name="armazenamento" class="form-control" value="${safe(
-            equipamento.armazenamento
+            equipamento.armazenamento,
           )}"></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>Processador</label><input type="text" name="processador" class="form-control" value="${safe(
-            equipamento.processador
+            equipamento.processador,
           )}"></div>
           <div class="form-group"><label>Windows</label><input type="text" name="versaoWindows" class="form-control" value="${safe(
-            equipamento.versaoWindows
+            equipamento.versaoWindows,
           )}"></div>
         </div>
         <div class="form-group"><label>Placa de Vídeo dedicada?</label><div class="radio-group">${radios(
           "placaVideoDedicada",
           ["Sim", "Não"],
-          equipamento.placaVideoDedicada || "Não"
+          equipamento.placaVideoDedicada || "Não",
         )}</div></div>
       </fieldset>
       <fieldset id="fieldset-usuario-edit"><legend>Usuário</legend>
         <div class="form-row">
           <div class="form-group"><label>Nome</label><input type="text" name="nomeUsuario" class="form-control" oninput="handleNomeUsuarioChange(event)" value="${safe(
-            equipamento.nomeUsuario
+            equipamento.nomeUsuario,
           )}"></div>
           <div class="form-group"><label>Email</label><input type="email" name="email" class="form-control" value="${safe(
-            equipamento.email
+            equipamento.email,
           )}"></div>
         </div>
          <div class="form-row">
@@ -2128,7 +2176,7 @@ function criarFormularioEdicao(equipamento) {
             }">
                 <label class="form-label" for="edit-cpf">CPF / CNPJ</label>
                 <input type="text" id="edit-cpf" name="cpf" class="form-control" value="${safe(
-                  equipamento.cpf
+                  equipamento.cpf,
                 )}" placeholder="000.000.000-00 ou 00.000.000/0000-00" maxlength="18" />
             </div>
             <div class="form-group" id="edit-cnpj-group" style="display: ${
@@ -2142,36 +2190,36 @@ function criarFormularioEdicao(equipamento) {
       <fieldset id="fieldset-comercial-edit"><legend>Comercial</legend>
         <div class="form-row">
           <div class="form-group"><label>Aquisição / Instalação / Entrega</label><input type="date" name="dataAquisicao" class="form-control" value="${safe(
-            equipamento.dataAquisicao
+            equipamento.dataAquisicao,
           )}"></div>
           <div class="form-group"><label>Tipo</label><div class="radio-group">${radios(
             "tipoAquisicao",
             ["Patrimonial", "Alugado"],
             equipamento.tipoAquisicao,
-            "handleTipoAquisicaoChange(this)"
+            "handleTipoAquisicaoChange(this)",
           )}</div></div>
         </div>
         <div class="form-row">
           <div class="form-group" id="edit-valor-group" style="display:${
             equipamento.tipoAquisicao === "Patrimonial" ? "none" : "block"
           }"><label>Valor (R$)</label><input type="text" id="edit-valor" name="valor" class="form-control" value="${(
-    equipamento.valor || 0
-  )
-    .toFixed(2)
-    .replace(".", ",")}"></div>
+            equipamento.valor || 0
+          )
+            .toFixed(2)
+            .replace(".", ",")}"></div>
           <div class="form-group"><label>Fornecedor</label><input type="text" name="fornecedor" class="form-control" value="${safe(
-            equipamento.fornecedor
+            equipamento.fornecedor,
           )}"></div>
         </div>
         
         <div class="form-row" id="edit-departamento-group" style="display:${
           isImpressora ? "none" : "grid"
         }"><div class="form-group"><label>Departamento</label><select name="departamento" class="form-control"><option value="" ${
-    equipamento.departamento === "" ? "selected" : ""
-  }>Nenhum</option>${opts(
-    departamentos,
-    equipamento.departamento
-  )}</select></div></div>
+          equipamento.departamento === "" ? "selected" : ""
+        }>Nenhum</option>${opts(
+          departamentos,
+          equipamento.departamento,
+        )}</select></div></div>
         
         <div class="form-row" id="edit-sala-ip-group" style="display:${
           isImpressora ? "grid" : "none"
@@ -2199,7 +2247,7 @@ function criarFormularioEdicao(equipamento) {
             >
           </div>
           <div class="form-group"><label>IP</label><input type="text" name="ip" class="form-control" value="${safe(
-            equipamento.ip
+            equipamento.ip,
           )}"></div>
         </div>
       </fieldset>
@@ -2252,10 +2300,10 @@ function criarFormularioEdicao(equipamento) {
       <fieldset id="fieldset-documentos-edit"><legend>Documentos</legend><div class="checkbox-item"><input type="checkbox" id="edit-termo-responsabilidade" name="termoResponsabilidade" ${
         equipamento.termoResponsabilidade ? "checked" : ""
       }><label for="edit-termo-responsabilidade">Termo Assinado</label></div><div class="checkbox-item"><input type="checkbox" id="edit-foto-notebook" name="fotoNotebook" ${
-    equipamento.fotoNotebook ? "checked" : ""
-  }><label for="edit-foto-notebook">Foto do Notebook</label></div></fieldset>
+        equipamento.fotoNotebook ? "checked" : ""
+      }><label for="edit-foto-notebook">Foto do Notebook</label></div></fieldset>
       <fieldset><legend>Observações</legend><div class="form-group"><textarea name="observacoes" class="form-control" rows="3">${safe(
-        equipamento.observacoes
+        equipamento.observacoes,
       )}</textarea></div></fieldset>
       <div class="modal-actions"><button type="button" class="btn btn--secondary" onclick="fecharModal()">Cancelar</button><button type="submit" class="btn btn--primary">Salvar</button></div>
     </form>`;
@@ -2270,7 +2318,7 @@ function salvarEdicao(event, registro) {
   const equipamentoAntigo = equipamentos[index];
   const acessoriosAntigos = new Set(equipamentoAntigo.acessorios || []);
   const novosAcessorios = new Set(
-    acessoriosSelecionadosTemporariamente.map(String)
+    acessoriosSelecionadosTemporariamente.map(String),
   );
 
   acessoriosAntigos.forEach((id) => {
@@ -2359,7 +2407,7 @@ function excluirEquipamento(registro) {
         ) {
           eq.acessorios.forEach((acessorioId) => {
             const acessorio = acessorios.find(
-              (a) => String(a.id) === String(acessorioId)
+              (a) => String(a.id) === String(acessorioId),
             );
             // Verifica se o acessório existe e não está, ele mesmo, na lixeira
             if (acessorio && !acessorio.isDeleted) {
@@ -2392,7 +2440,7 @@ function excluirEquipamento(registro) {
 
         mostrarMensagem("Equipamento movido para a lixeira.", "success");
       }
-    }
+    },
   );
 }
 
@@ -2407,7 +2455,7 @@ function configurarEventListeners() {
   document
     .querySelectorAll(".tab-btn")
     .forEach(
-      (btn) => (btn.onclick = (e) => mostrarTab(e.currentTarget.dataset.tab))
+      (btn) => (btn.onclick = (e) => mostrarTab(e.currentTarget.dataset.tab)),
     );
 
   // Submissão de Formulários
@@ -2461,7 +2509,7 @@ function configurarEventListeners() {
     const tooltip = document.getElementById("acessorio-tooltip");
     if (tooltip.classList.contains("active")) {
       const clicouNoIcone = e.target.closest(
-        ".acessorio-badge, .disponibilidade-nao, .icon-doc-pending, .clickable-sala, .icon-kit, .icon-headsets, .icon-monitores, .icon-mouses, .icon-suportes, .icon-outros"
+        ".acessorio-badge, .disponibilidade-nao, .icon-doc-pending, .clickable-sala, .icon-kit, .icon-headsets, .icon-monitores, .icon-mouses, .icon-suportes, .icon-outros",
       );
       const clicouDentroDoTooltip = e.target.closest("#acessorio-tooltip");
 
@@ -2491,13 +2539,13 @@ function configurarEventListeners() {
       const termo = this.value.toLowerCase();
       // Seleciona as linhas de TODAS as tabelas da lixeira
       const linhasEquip = document.querySelectorAll(
-        "#lixeira-equipment-list tr"
+        "#lixeira-equipment-list tr",
       );
       const linhasAcess = document.querySelectorAll(
-        "#lixeira-acessorios-list tr"
+        "#lixeira-acessorios-list tr",
       );
       const linhasCart = document.querySelectorAll(
-        "#lixeira-cartuchos-list tr"
+        "#lixeira-cartuchos-list tr",
       );
 
       const filtrar = (lista) => {
@@ -2623,12 +2671,12 @@ function gerarCsv(dados, cabecalho) {
       const valor = item[key];
       if (Array.isArray(valor)) return valor.join(";");
       return valor !== undefined && valor !== null ? valor : "";
-    })
+    }),
   );
   return [
     cabecalho.join(","),
     ...linhas.map((l) =>
-      l.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")
+      l.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","),
     ),
   ].join("\n");
 }
@@ -2644,15 +2692,15 @@ function salvarDadosCompletos() {
   }
 
   const equipamentosGerais = equipamentos.filter(
-    (eq) => eq.tipoEquipamento !== "Impressora"
+    (eq) => eq.tipoEquipamento !== "Impressora",
   );
   const impressoras = equipamentos.filter(
-    (eq) => eq.tipoEquipamento === "Impressora"
+    (eq) => eq.tipoEquipamento === "Impressora",
   );
 
   const csvEquipamentos = gerarCsv(
     equipamentosGerais,
-    cabecalhoEquipamentosCSV
+    cabecalhoEquipamentosCSV,
   );
   const csvImpressoras = gerarCsv(impressoras, cabecalhoEquipamentosCSV);
   const csvAcessorios = gerarCsv(acessorios, cabecalhoAcessoriosCSV);
@@ -2796,7 +2844,7 @@ function carregarDadosCompletos() {
         const text = event.target.result;
 
         const sections = text.split(
-          /###IMPRESSORAS###|###ACESSORIOS###|###CARTUCHOS###/
+          /###IMPRESSORAS###|###ACESSORIOS###|###CARTUCHOS###/,
         );
 
         const eqCsv = sections[0]
@@ -2808,7 +2856,7 @@ function carregarDadosCompletos() {
 
         const equipamentosGerais = parseCsvData(
           eqCsv,
-          cabecalhoEquipamentosCSV
+          cabecalhoEquipamentosCSV,
         );
         const impressoras = parseCsvData(impCsv, cabecalhoEquipamentosCSV);
 
@@ -2876,7 +2924,7 @@ function parseMoeda(valor) {
     parseFloat(
       String(valor || "")
         .replace(/\./g, "")
-        .replace(",", ".")
+        .replace(",", "."),
     ) || 0
   );
 }
@@ -2921,7 +2969,7 @@ function validarCampo(id, registroExcluido = null) {
             !eq.isDeleted &&
             !eq.isArchived && // <-- ADICIONE ESTA LINHA
             eq.numeroSerie.toLowerCase() === valor.toLowerCase() &&
-            eq.registro !== registroExcluido
+            eq.registro !== registroExcluido,
         )
       )
         erroMsg = "Número de série já cadastrado";
@@ -3014,7 +3062,7 @@ function calcularMetricas() {
   // --- ALTERAÇÃO PEDIDO 1: Contar Total da Lista de Equipamentos ---
   // Filtra: Não arquivado, Não deletado e NÃO Impressora (pois impressora tem lista separada)
   const totalEquipamentos = equipamentos.filter(
-    (e) => !e.isArchived && !e.isDeleted && e.tipoEquipamento !== "Impressora"
+    (e) => !e.isArchived && !e.isDeleted && e.tipoEquipamento !== "Impressora",
   ).length;
 
   document.getElementById("equipamentos-ativos").textContent =
@@ -3026,7 +3074,8 @@ function calcularMetricas() {
   document.getElementById("notebooks-disponiveis").textContent =
     eqAtivos.filter(
       (e) =>
-        e.tipoEquipamento === "Notebook" && e.statusOperacional === "Disponível"
+        e.tipoEquipamento === "Notebook" &&
+        e.statusOperacional === "Disponível",
     ).length;
 
   document.getElementById("equipamentos-manutencao").textContent =
@@ -3043,7 +3092,7 @@ function criarGraficos() {
     "doughnut",
     equipamentos.filter((e) => !e.isArchived && !e.isDeleted),
     "tipoEquipamento",
-    "Distribuição por Tipo"
+    "Distribuição por Tipo",
   );
   criarGrafico(
     statusChart,
@@ -3052,7 +3101,7 @@ function criarGraficos() {
     equipamentos.filter((e) => !e.isDeleted),
     "statusOperacional",
     "Status Operacional",
-    ["Ativo", "Disponível", "Inativo", "Em manutenção", "Arquivado"]
+    ["Ativo", "Disponível", "Inativo", "Em manutenção", "Arquivado"],
   );
   criarGrafico(
     departamentoChart,
@@ -3060,10 +3109,11 @@ function criarGraficos() {
     "line",
     // *** CORREÇÃO DASHBOARD ***
     equipamentos.filter(
-      (e) => !e.isArchived && !e.isDeleted && e.tipoEquipamento !== "Impressora"
+      (e) =>
+        !e.isArchived && !e.isDeleted && e.tipoEquipamento !== "Impressora",
     ),
     "departamento",
-    "Equipamentos por Departamento"
+    "Equipamentos por Departamento",
   );
 }
 
@@ -3074,7 +3124,7 @@ function criarGrafico(
   data,
   groupBy,
   label,
-  order
+  order,
 ) {
   const ctx = document.getElementById(canvasId).getContext("2d");
   if (chartInstance) chartInstance.destroy();
@@ -3148,14 +3198,14 @@ function criarGrafico(
             type === "bar"
               ? labels.map((l) => colors.bar[l] || "#cccccc")
               : type === "doughnut"
-              ? colors.doughnut
-              : "transparent", // Sem fundo para linha
+                ? colors.doughnut
+                : "transparent", // Sem fundo para linha
           borderColor:
             type === "line"
               ? colors.line
               : type === "bar"
-              ? labels.map((l) => colors.bar[l] || "#cccccc") // Borda da mesma cor da barra
-              : "#ffffff", // Borda branca para doughnut
+                ? labels.map((l) => colors.bar[l] || "#cccccc") // Borda da mesma cor da barra
+                : "#ffffff", // Borda branca para doughnut
           borderWidth: type === "doughnut" ? 2 : 1,
           fill:
             type === "line"
@@ -3191,7 +3241,7 @@ function abrirModalConfirmacao(mensagem, callback, dynamicHtml = "") {
 
   novoBtn.onclick = () => {
     const motivoArquivamentoInput = document.getElementById(
-      "motivo-arquivamento"
+      "motivo-arquivamento",
     );
     const motivoManutencaoInput = document.getElementById("motivo-manutencao");
 
@@ -3288,7 +3338,7 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
       !eq.isDeleted &&
       eq.tipoEquipamento !== "Impressora" &&
       !eq.isArchived &&
-      eq.statusOperacional !== "Em manutenção"
+      eq.statusOperacional !== "Em manutenção",
   );
 
   // Filtro de Tipo
@@ -3303,11 +3353,11 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
     ];
     if (tipoFiltro === "Outro") {
       dadosFiltrados = dadosFiltrados.filter(
-        (eq) => !tiposPadrao.includes(eq.tipoEquipamento)
+        (eq) => !tiposPadrao.includes(eq.tipoEquipamento),
       );
     } else {
       dadosFiltrados = dadosFiltrados.filter(
-        (eq) => eq.tipoEquipamento === tipoFiltro
+        (eq) => eq.tipoEquipamento === tipoFiltro,
       );
     }
   }
@@ -3316,7 +3366,9 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
   if (termoBusca) {
     const termo = termoBusca.toLowerCase();
     dadosFiltrados = dadosFiltrados.filter((eq) =>
-      Object.values(eq).some((val) => String(val).toLowerCase().includes(termo))
+      Object.values(eq).some((val) =>
+        String(val).toLowerCase().includes(termo),
+      ),
     );
   }
 
@@ -3345,7 +3397,7 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
       )
         return 1;
       const tipoCompare = (a.tipoEquipamento || "").localeCompare(
-        b.tipoEquipamento || ""
+        b.tipoEquipamento || "",
       );
       if (tipoCompare !== 0) return tipoCompare;
       return (a.nomeUsuario || "").localeCompare(b.nomeUsuario || "");
@@ -3357,15 +3409,15 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
   const tiposInfra = ["Servidor", "Roteador", "Switch"];
 
   let listComp = dadosFiltrados.filter((eq) =>
-    tiposComputing.includes(eq.tipoEquipamento)
+    tiposComputing.includes(eq.tipoEquipamento),
   );
   let listInfra = dadosFiltrados.filter((eq) =>
-    tiposInfra.includes(eq.tipoEquipamento)
+    tiposInfra.includes(eq.tipoEquipamento),
   );
   let listOthers = dadosFiltrados.filter(
     (eq) =>
       !tiposComputing.includes(eq.tipoEquipamento) &&
-      !tiposInfra.includes(eq.tipoEquipamento)
+      !tiposInfra.includes(eq.tipoEquipamento),
   );
 
   ordenar(listComp);
@@ -3391,7 +3443,7 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
     tbodyComp,
     sectionComp,
     "checkbox-computing",
-    "computing"
+    "computing",
   );
   renderTabela(listInfra, tbodyInfra, sectionInfra, "checkbox-infra", "infra");
   renderTabela(
@@ -3399,7 +3451,7 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
     tbodyOthers,
     sectionOthers,
     "checkbox-others",
-    "others"
+    "others",
   );
 
   const totalVisivel = listComp.length + listInfra.length + listOthers.length;
@@ -3414,7 +3466,7 @@ function atualizarLista(tipoFiltro = "todos", termoBusca = "") {
 function criarLinhaEquipamento(
   eq,
   checkboxClass = "checkbox-equipamentos",
-  tipoTabela = "computing"
+  tipoTabela = "computing",
 ) {
   const statusClasses = {
     Ativo: "ativo",
@@ -3501,7 +3553,7 @@ function criarLinhaEquipamento(
   }
 
   const isManutencaoTarget = ["Notebook", "Desktop"].includes(
-    eq.tipoEquipamento
+    eq.tipoEquipamento,
   );
   const manutencaoBtn = isManutencaoTarget
     ? `<button class="btn-action" onclick="event.stopPropagation(); enviarParaManutencao('${eq.registro}')" title="Enviar para Manutenção"><i class="fas fa-tools"></i></button>`
@@ -3514,8 +3566,8 @@ function criarLinhaEquipamento(
     <tr class="${classeDisponivel}" onclick="toggleCard(this)">
       ${dotHtml} <td class="checkbox-cell" onclick="event.stopPropagation()">
         <input type="checkbox" class="checkbox-equipamentos ${checkboxClass}" value="${
-    eq.registro
-  }" onclick="verificarSelecao('equipamentos')">
+          eq.registro
+        }" onclick="verificarSelecao('equipamentos')">
       </td>
       <td>${eq.registro}</td>
       <td>${eq.nomeUsuario || "Nenhum"}</td>
@@ -3554,7 +3606,7 @@ function atualizarListaImpressoras() {
   // 1. Filtra as impressoras ativas
   const impressoras = equipamentos.filter(
     (eq) =>
-      eq.tipoEquipamento === "Impressora" && !eq.isArchived && !eq.isDeleted
+      eq.tipoEquipamento === "Impressora" && !eq.isArchived && !eq.isDeleted,
   );
 
   // 2. ORDENAÇÃO POR IP (Nova lógica)
@@ -3658,13 +3710,13 @@ function enviarParaManutencao(registro) {
         atualizarDashboard();
         mostrarMensagem(
           "Equipamento enviado para manutenção com sucesso.",
-          "success"
+          "success",
         );
       } else {
         mostrarMensagem("O motivo da manutenção é obrigatório.", "error"); // Mensagem de erro se motivo estiver vazio
       }
     },
-    motivoHtml
+    motivoHtml,
   );
 }
 
@@ -3685,7 +3737,7 @@ function concluirManutencao(registro) {
         atualizarDashboard();
         mostrarMensagem("Manutenção concluída com sucesso.", "success");
       }
-    }
+    },
   );
 }
 
@@ -3693,7 +3745,7 @@ function atualizarListaManutencao() {
   const tbody = document.getElementById("manutencao-list");
   const emptyState = document.getElementById("manutencao-empty-state");
   const emManutencao = equipamentos.filter(
-    (eq) => eq.statusOperacional === "Em manutenção" && !eq.isDeleted
+    (eq) => eq.statusOperacional === "Em manutenção" && !eq.isDeleted,
   );
 
   emptyState.style.display = emManutencao.length === 0 ? "block" : "none";
@@ -3719,7 +3771,7 @@ function atualizarListaManutencao() {
           }')" title="Editar"><i class="fas fa-edit"></i></button>
         </div>
       </td>
-    </tr>`
+    </tr>`,
     )
     .join("");
 }
@@ -3747,7 +3799,7 @@ function arquivarEquipamento(registro) {
       ) {
         eq.acessorios.forEach((acessorioId) => {
           const acessorio = acessorios.find(
-            (a) => String(a.id) === String(acessorioId)
+            (a) => String(a.id) === String(acessorioId),
           );
           if (acessorio) {
             acessorio.disponivel = true;
@@ -3776,7 +3828,7 @@ function arquivarEquipamento(registro) {
 
       mostrarMensagem("Equipamento arquivado com sucesso.", "success");
     },
-    motivoHtml // Passa o HTML do campo de motivo para o modal
+    motivoHtml, // Passa o HTML do campo de motivo para o modal
   );
 }
 
@@ -3805,7 +3857,7 @@ function desarquivarEquipamento(registro) {
 function confirmarExclusaoEquipamento(registro) {
   abrirModalConfirmacao(
     "Tem certeza que deseja mover este item para a lixeira?",
-    () => excluirEquipamento(registro)
+    () => excluirEquipamento(registro),
   );
 }
 
@@ -3830,7 +3882,9 @@ function atualizarListaGeralArquivados() {
       eq.isArchived &&
       !eq.isDeleted &&
       eq.tipoEquipamento !== "Impressora" &&
-      Object.values(eq).some((val) => String(val).toLowerCase().includes(termo))
+      Object.values(eq).some((val) =>
+        String(val).toLowerCase().includes(termo),
+      ),
   );
 
   tratarExibicaoTabelaArquivados(
@@ -3861,7 +3915,7 @@ function atualizarListaGeralArquivados() {
         </div>
       </td>
     </tr>
-  `
+  `,
   );
 }
 
@@ -3878,7 +3932,9 @@ function atualizarListaImpressorasArquivadas() {
       eq.isArchived &&
       !eq.isDeleted &&
       eq.tipoEquipamento === "Impressora" &&
-      Object.values(eq).some((val) => String(val).toLowerCase().includes(termo))
+      Object.values(eq).some((val) =>
+        String(val).toLowerCase().includes(termo),
+      ),
   );
 
   tratarExibicaoTabelaArquivados(
@@ -3903,7 +3959,7 @@ function atualizarListaImpressorasArquivadas() {
         </div>
       </td>
     </tr>
-  `
+  `,
   );
 }
 
@@ -3914,7 +3970,7 @@ function atualizarListaAcessoriosArquivados() {
     .value.toLowerCase();
   const tbody = document.getElementById("archived-accessories-list");
   const emptyState = document.getElementById(
-    "archived-accessories-empty-state"
+    "archived-accessories-empty-state",
   );
 
   // Nota: Verifique se seus objetos acessórios possuem o campo 'isArchived'
@@ -3922,7 +3978,7 @@ function atualizarListaAcessoriosArquivados() {
     (a) =>
       a.isArchived &&
       !a.isDeleted &&
-      Object.values(a).some((val) => String(val).toLowerCase().includes(termo))
+      Object.values(a).some((val) => String(val).toLowerCase().includes(termo)),
   );
 
   tratarExibicaoTabelaArquivados(
@@ -3936,7 +3992,7 @@ function atualizarListaAcessoriosArquivados() {
       <td>${a.patrimonio || "N/A"}</td>
       <td>${a.numeroSerie || "N/A"}</td>
       <td>${formatarData(a.archiveDate)}</td>
-      <td onclick="event.stopPropagation()"> <div class="action-buttons">
+      <td>${a.motivoArquivamento || "N/A"}</td> <td onclick="event.stopPropagation()"> <div class="action-buttons">
           <button class="btn-action btn-restore" onclick="desarquivarAcessorio('${
             a.id
           }')" title="Restaurar"><i class="fas fa-box-open"></i></button>
@@ -3962,7 +4018,7 @@ function atualizarListaCartuchosArquivados() {
     (c) =>
       c.isArchived &&
       !c.isDeleted &&
-      Object.values(c).some((val) => String(val).toLowerCase().includes(termo))
+      Object.values(c).some((val) => String(val).toLowerCase().includes(termo)),
   );
 
   tratarExibicaoTabelaArquivados(
@@ -3987,7 +4043,7 @@ function atualizarListaCartuchosArquivados() {
         </div>
       </td>
     </tr>
-  `
+  `,
   );
 }
 
@@ -3996,7 +4052,7 @@ function tratarExibicaoTabelaArquivados(
   tbody,
   emptyState,
   lista,
-  renderRowFunction
+  renderRowFunction,
 ) {
   if (lista.length === 0) {
     tbody.innerHTML = "";
@@ -4022,7 +4078,7 @@ function atualizarLixeira() {
 function atualizarLixeiraEquipamentos() {
   const tbody = document.getElementById("lixeira-equipment-list");
   const emptyState = document.getElementById(
-    "lixeira-equipamentos-empty-state"
+    "lixeira-equipamentos-empty-state",
   );
   const deletados = equipamentos.filter((eq) => eq.isDeleted);
 
@@ -4056,7 +4112,7 @@ function atualizarLixeiraEquipamentos() {
                     </div>
                 </td>
             </tr>
-        `
+        `,
       )
       .join("");
     tbody.closest(".table-container").style.display = "block";
@@ -4081,7 +4137,7 @@ function restaurarEquipamento(registro) {
         if (eq.acessorios && eq.acessorios.length > 0) {
           eq.acessorios.forEach((acessorioId) => {
             const acessorio = acessorios.find(
-              (a) => String(a.id) === String(acessorioId)
+              (a) => String(a.id) === String(acessorioId),
             );
             // Só marca como 'Não disponível' se o acessório ainda existir E não estiver na lixeira
             if (acessorio && !acessorio.isDeleted) {
@@ -4117,7 +4173,7 @@ function restaurarEquipamento(registro) {
         atualizarDashboard();
         mostrarMensagem("Equipamento restaurado.", "success");
       }
-    }
+    },
   );
 }
 
@@ -4149,7 +4205,7 @@ function excluirPermanenteEquipamento(registro) {
       atualizarLixeira();
       atualizarDashboard(); // Atualiza contagens do dashboard
       mostrarMensagem("Equipamento excluído permanentemente.", "success");
-    }
+    },
   );
 }
 
@@ -4187,7 +4243,7 @@ function atualizarLixeiraAcessorios() {
                     </div>
                 </td>
             </tr>
-        `
+        `,
       )
       .join("");
     tbody.closest(".table-container").style.display = "block";
@@ -4213,7 +4269,7 @@ function restaurarAcessorio(id) {
           (eq) =>
             !eq.isDeleted && // Não está na lixeira
             !eq.isArchived && // Não está no arquivo
-            eq.acessorios?.includes(String(id)) // E está vinculado a este acessório
+            eq.acessorios?.includes(String(id)), // E está vinculado a este acessório
         );
 
         // Se estiver vinculado a um equipamento ativo, 'disponivel' é false (Não)
@@ -4232,7 +4288,7 @@ function restaurarAcessorio(id) {
 
         mostrarMensagem("Acessório restaurado.", "success");
       }
-    }
+    },
   );
 }
 
@@ -4257,7 +4313,7 @@ function excluirPermanenteAcessorio(id) {
         aplicarFiltrosEquipamentos();
       }
       mostrarMensagem("Acessório excluído permanentemente.", "success");
-    }
+    },
   );
 }
 
@@ -4295,7 +4351,7 @@ function atualizarLixeiraCartuchos() {
                     </div>
                 </td>
             </tr>
-        `
+        `,
       )
       .join("");
     tbody.closest(".table-container").style.display = "block";
@@ -4326,7 +4382,7 @@ function restaurarCartucho(id) {
         }
         mostrarMensagem("Cartucho restaurado.", "success");
       }
-    }
+    },
   );
 }
 
@@ -4343,7 +4399,7 @@ function excluirPermanenteCartucho(id) {
         atualizarContagemCartuchosDisponiveis();
       }
       mostrarMensagem("Cartucho excluído permanentemente.", "success");
-    }
+    },
   );
 }
 
@@ -4353,7 +4409,7 @@ function excluirPermanenteCartucho(id) {
 
 function excluirEquipamentosSelecionadosLixeira() {
   const idsParaExcluir = Array.from(
-    document.querySelectorAll(".checkbox-lixeira-equipamentos:checked")
+    document.querySelectorAll(".checkbox-lixeira-equipamentos:checked"),
   ).map((cb) => cb.value);
 
   if (idsParaExcluir.length === 0) return;
@@ -4377,7 +4433,7 @@ function excluirEquipamentosSelecionadosLixeira() {
 
       // Filtra e remove os equipamentos
       equipamentos = equipamentos.filter(
-        (e) => !idsParaExcluir.includes(e.registro)
+        (e) => !idsParaExcluir.includes(e.registro),
       );
       salvarParaLocalStorage();
       setEstadoAlteracao(true);
@@ -4385,15 +4441,15 @@ function excluirEquipamentosSelecionadosLixeira() {
       atualizarDashboard();
       mostrarMensagem(
         `${idsParaExcluir.length} equipamento(s) excluído(s) permanentemente.`,
-        "success"
+        "success",
       );
-    }
+    },
   );
 }
 
 function excluirAcessoriosSelecionadosLixeira() {
   const idsParaExcluir = Array.from(
-    document.querySelectorAll(".checkbox-lixeira-acessorios:checked")
+    document.querySelectorAll(".checkbox-lixeira-acessorios:checked"),
   ).map((cb) => cb.value);
 
   if (idsParaExcluir.length === 0) return;
@@ -4405,7 +4461,7 @@ function excluirAcessoriosSelecionadosLixeira() {
       equipamentos.forEach((eq) => {
         if (eq.acessorios?.length) {
           eq.acessorios = eq.acessorios.filter(
-            (accId) => !idsParaExcluir.includes(String(accId))
+            (accId) => !idsParaExcluir.includes(String(accId)),
           );
         }
       });
@@ -4413,22 +4469,22 @@ function excluirAcessoriosSelecionadosLixeira() {
 
       // Filtra e remove os acessórios
       acessorios = acessorios.filter(
-        (a) => !idsParaExcluir.includes(String(a.id))
+        (a) => !idsParaExcluir.includes(String(a.id)),
       );
       salvarAcessoriosParaLocalStorage();
       setEstadoAlteracao(true);
       atualizarLixeira();
       mostrarMensagem(
         `${idsParaExcluir.length} acessório(s) excluído(s) permanentemente.`,
-        "success"
+        "success",
       );
-    }
+    },
   );
 }
 
 function excluirCartuchosSelecionadosLixeira() {
   const idsParaExcluir = Array.from(
-    document.querySelectorAll(".checkbox-lixeira-cartuchos:checked")
+    document.querySelectorAll(".checkbox-lixeira-cartuchos:checked"),
   ).map((cb) => cb.value);
 
   if (idsParaExcluir.length === 0) return;
@@ -4443,9 +4499,9 @@ function excluirCartuchosSelecionadosLixeira() {
       atualizarLixeira();
       mostrarMensagem(
         `${idsParaExcluir.length} cartucho(s) excluído(s) permanentemente.`,
-        "success"
+        "success",
       );
-    }
+    },
   );
 }
 
@@ -4475,7 +4531,7 @@ function mostrarTooltipUsuario(event, acessorioId) {
       !e.isDeleted &&
       !e.isArchived &&
       e.acessorios &&
-      e.acessorios.includes(String(acessorioId))
+      e.acessorios.includes(String(acessorioId)),
   );
   tooltip.innerHTML = eq
     ? `<h4>Vinculado a</h4><p><strong>Usuário:</strong> ${
@@ -4504,7 +4560,7 @@ function mostrarTooltipCartuchos(event, sala) {
       !c.isDeleted &&
       !c.isArchived &&
       c.impressoraVinculada === sala &&
-      c.status === "Em uso"
+      c.status === "Em uso",
   );
 
   let tooltipContent;
@@ -4517,7 +4573,7 @@ function mostrarTooltipCartuchos(event, sala) {
       "Preto (BK)": 4,
     };
     cartuchosNaImpressora.sort(
-      (a, b) => (colorOrder[a.cor] || 99) - (colorOrder[b.cor] || 99)
+      (a, b) => (colorOrder[a.cor] || 99) - (colorOrder[b.cor] || 99),
     );
 
     tooltipContent += cartuchosNaImpressora
@@ -4606,7 +4662,7 @@ function verificarSelecao(tipo) {
 
 function excluirEquipamentosSelecionados() {
   const idsParaExcluir = Array.from(
-    document.querySelectorAll(".checkbox-equipamentos:checked")
+    document.querySelectorAll(".checkbox-equipamentos:checked"),
   ).map((cb) => cb.value);
   if (idsParaExcluir.length === 0) return;
   abrirModalConfirmacao(
@@ -4624,15 +4680,15 @@ function excluirEquipamentosSelecionados() {
       aplicarFiltrosEquipamentos();
       mostrarMensagem(
         `${idsParaExcluir.length} equipamentos movidos para a lixeira.`,
-        "success"
+        "success",
       );
-    }
+    },
   );
 }
 
 function excluirImpressorasSelecionadas() {
   const idsParaExcluir = Array.from(
-    document.querySelectorAll(".checkbox-impressoras:checked")
+    document.querySelectorAll(".checkbox-impressoras:checked"),
   ).map((cb) => cb.value);
   if (idsParaExcluir.length === 0) return;
   abrirModalConfirmacao(
@@ -4650,15 +4706,15 @@ function excluirImpressorasSelecionadas() {
       atualizarListaImpressoras();
       mostrarMensagem(
         `${idsParaExcluir.length} impressoras movidas para a lixeira.`,
-        "success"
+        "success",
       );
-    }
+    },
   );
 }
 
 function excluirAcessoriosSelecionados() {
   const idsParaExcluir = Array.from(
-    document.querySelectorAll(".checkbox-acessorios:checked")
+    document.querySelectorAll(".checkbox-acessorios:checked"),
   ).map((cb) => cb.value);
   if (idsParaExcluir.length === 0) return;
   abrirModalConfirmacao(
@@ -4676,16 +4732,16 @@ function excluirAcessoriosSelecionados() {
       aplicarFiltrosAcessorios();
       mostrarMensagem(
         `${idsParaExcluir.length} acessórios movidos para a lixeira.`,
-        "success"
+        "success",
       );
-    }
+    },
   );
 }
 
 // === NOVA FUNÇÃO ===
 function excluirCartuchosSelecionados() {
   const idsParaExcluir = Array.from(
-    document.querySelectorAll(".checkbox-cartuchos:checked")
+    document.querySelectorAll(".checkbox-cartuchos:checked"),
   ).map((cb) => cb.value);
 
   if (idsParaExcluir.length === 0) return;
@@ -4705,9 +4761,9 @@ function excluirCartuchosSelecionados() {
       atualizarListaCartuchos(); // Atualiza a lista visível
       mostrarMensagem(
         `${idsParaExcluir.length} cartuchos movidos para a lixeira.`,
-        "success"
+        "success",
       );
-    }
+    },
   );
 }
 
@@ -4774,7 +4830,7 @@ function confirmarLimpezaDados() {
 
       // Recarrega a página para limpar a memória e o estado da aplicação
       location.reload();
-    }
+    },
   );
 }
 
@@ -4799,7 +4855,7 @@ function toggleFiltroRelatorio(tipo) {
 
 function popularFiltrosAcessoriosRelatorio() {
   const container = document.getElementById(
-    "container-filtros-acessorios-dinamico"
+    "container-filtros-acessorios-dinamico",
   );
   // Pega categorias únicas dos acessórios existentes
   const categorias = [
@@ -4824,7 +4880,7 @@ function popularFiltrosAcessoriosRelatorio() {
       <input type="checkbox" class="sub-check-acc" value="${cat}" checked onchange="verificarEstadoBotaoRelatorio()"> 
       ${cat}
     </label>
-  `
+  `,
     )
     .join("");
 
@@ -4869,7 +4925,7 @@ function gerarRelatorioExcel() {
   // 1. PROCESSAR EQUIPAMENTOS
   if (document.getElementById("rep-check-equipamentos").checked) {
     const tiposSelecionados = Array.from(
-      document.querySelectorAll(".sub-check-equip:checked")
+      document.querySelectorAll(".sub-check-equip:checked"),
     ).map((cb) => cb.value);
 
     // Filtra equipamentos (excluindo impressoras que tem seção própria)
@@ -4887,7 +4943,7 @@ function gerarRelatorioExcel() {
               "Servidor",
               "Roteador",
               "Switch",
-            ].includes(eq.tipoEquipamento)))
+            ].includes(eq.tipoEquipamento))),
     );
 
     if (listaEquip.length > 0) {
@@ -4938,7 +4994,7 @@ function gerarRelatorioExcel() {
   if (document.getElementById("rep-check-impressoras").checked) {
     const listaPrint = equipamentos.filter(
       (eq) =>
-        !eq.isDeleted && !eq.isArchived && eq.tipoEquipamento === "Impressora"
+        !eq.isDeleted && !eq.isArchived && eq.tipoEquipamento === "Impressora",
     );
 
     if (listaPrint.length > 0) {
@@ -4995,11 +5051,11 @@ function gerarRelatorioExcel() {
   // 4. PROCESSAR ACESSÓRIOS
   if (document.getElementById("rep-check-acessorios").checked) {
     const catsSelecionadas = Array.from(
-      document.querySelectorAll(".sub-check-acc:checked")
+      document.querySelectorAll(".sub-check-acc:checked"),
     ).map((cb) => cb.value);
 
     const listaAcc = acessorios.filter(
-      (a) => !a.isDeleted && catsSelecionadas.includes(a.categoria)
+      (a) => !a.isDeleted && catsSelecionadas.includes(a.categoria),
     );
 
     if (listaAcc.length > 0) {
@@ -5028,7 +5084,7 @@ function gerarRelatorioExcel() {
   if (csvContent === "") {
     mostrarMensagem(
       "Nenhum dado encontrado para os filtros selecionados.",
-      "error"
+      "error",
     );
     return;
   }
