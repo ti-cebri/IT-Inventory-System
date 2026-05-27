@@ -3991,3 +3991,27 @@ h3,
     pointer-events: none; /* O clique passa através dela */
   }
 }
+
+/* ======================================================= */
+/* --- IMPLEMENTAÇÃO DO ARQUIVAMENTO DE ACESSÓRIOS ------- */
+/* ======================================================= */
+
+/* Força a coluna de Ações de Acessórios a não quebrar os 3 botões no Desktop */
+#acessorios-table td:nth-child(9) {
+  white-space: nowrap !important;
+}
+
+/* Garante a estilização do botão de arquivar quando usado na tabela de acessórios */
+#acessorios-table .btn-action.btn-archive:hover {
+  background-color: var(--color-info);
+  border-color: var(--color-info);
+  color: white;
+}
+
+/* Ajuste para o layout de cards no Mobile (Telas até 768px) */
+@media (max-width: 768px) {
+  /* Garante que o card de acessórios exiba o botão de arquivar no modo expandido */
+  #acessorios-table tr.mobile-expanded td:nth-child(9) {
+    display: flex !important;
+  }
+}
