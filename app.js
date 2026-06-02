@@ -2336,6 +2336,17 @@ function salvarEdicao(event, registro) {
 
   const updatedData = Object.fromEntries(form.entries());
 
+  // =========================================================
+  // CORREÇÃO DO BUG DA SALA "OUTRA" NA EDIÇÃO
+  // =========================================================
+  if (updatedData.sala === "Outra") {
+    const outraSalaValor = form.get("outraSala") ? form.get("outraSala").trim() : "";
+    if (outraSalaValor) {
+      updatedData.sala = outraSalaValor;
+    }
+  }
+  delete updatedData.outraSala;
+
   // *** CORREÇÃO DASHBOARD ***
   if (
     updatedData.statusOperacional === "Disponível" &&
