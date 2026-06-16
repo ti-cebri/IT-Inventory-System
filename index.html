@@ -1067,33 +1067,7 @@
                 <legend>Detalhes</legend>
                 <div class="form-row">
                   <div class="form-group">
-                    <label class="form-label" for="cartucho-nserie"
-                      >Série <span class="required">*</span></label
-                    >
-                    <input
-                      type="text"
-                      id="cartucho-nserie"
-                      name="numeroSerie"
-                      class="form-control"
-                    />
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label" for="cartucho-patrimonio"
-                      >Patrimônio</label
-                    >
-                    <input
-                      type="text"
-                      id="cartucho-patrimonio"
-                      name="patrimonio"
-                      class="form-control"
-                    />
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label class="form-label" for="cartucho-cor"
-                      >Cor <span class="required">*</span></label
-                    >
+                    <label class="form-label" for="cartucho-cor">Cor <span class="required">*</span></label>
                     <select id="cartucho-cor" name="cor" class="form-control">
                       <option value="">Selecione...</option>
                       <option value="Preto (BK)">Preto (BK)</option>
@@ -1103,14 +1077,21 @@
                     </select>
                   </div>
                   <div class="form-group">
-                    <label class="form-label" for="cartucho-impressora-vinculo"
-                      >Vincular Impressora</label
-                    >
-                    <select
-                      id="cartucho-impressora-vinculo"
-                      name="impressoraVinculada"
-                      class="form-control"
-                    >
+                    <label class="form-label" for="cartucho-nserie">Série <span class="required">*</span></label>
+                    <input type="text" id="cartucho-nserie" name="numeroSerie" class="form-control" />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group" style="position: relative;">
+                    <label class="form-label" for="cartucho-patrimonio">Patrimônio</label>
+                    <div style="display: flex; align-items: center; gap: 5px; width: 100%;">
+                      <input type="text" id="cartucho-patrimonio" name="patrimonio" class="form-control" style="flex: 1;" />
+                      <i class="fas fa-info-circle text-secondary" id="cartucho-patrimonio-info-icon" style="display: none; cursor: pointer; color: var(--color-warning);" title="Último sequencial de cartucho cadastrado"></i>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="cartucho-impressora-vinculo">Vincular Impressora</label>
+                    <select id="cartucho-impressora-vinculo" name="impressoraVinculada" class="form-control">
                       <option value="">Nenhuma</option>
                     </select>
                   </div>
