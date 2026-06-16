@@ -448,6 +448,8 @@ function handleTipoEquipamentoChange(selectElement) {
     if (radioPatrimonial) {
       radioPatrimonial.checked = true;
       handleTipoAquisicaoChange(radioPatrimonial);
+      // Chamada adicionada aqui:
+      gerenciarPreenchimentoPatrimonioAutomato();
     }
   }
 }
@@ -1886,6 +1888,69 @@ function gerarIdUnico() {
   return id;
 }
 
+// Função para calcular o próximo número sequencial (yyy) com base nos equipamentos ativos/arquivados
+function obterProximoSequencialPatrimonio() {
+  let maiorSequencial = 72; // Valor base padrão estipulado
+
+  equipamentos.forEach(eq => {
+    const pat = String(eq.numeroPatrimonio || "").toUpperCase();
+    // Regex para extrair o sufixo numérico final do padrão CEBRI-389xxx-yyy
+    const match = pat.match(/CEBRI-389\d{3}-(\d+)/);
+    if (match && match[1]) {
+      const seq = parseInt(match[1], 10);
+      if (seq > maiorSequencial) {
+        maiorSequencial = seq;
+      }
+    }
+  });
+
+  return maiorSequencial + 1;
+}
+
+function gerenciarPreenchimentoPatrimonioAutomato() {
+  const tipoEquipamento = document.getElementById("tipoEquipamento")?.value;
+  const numeroSerieInput = document.getElementById("numeroSerie");
+  const patrimonioInput = document.getElementById("numeroPatrimonio");
+  const infoIcon = document.getElementById("patrimonio-info-icon");
+  
+  const form = document.getElementById("equipamento-form");
+  if (!form || !patrimonioInput) return;
+
+  const radioPatrimonial = form.querySelector('input[name="tipoAquisicao"][value="Patrimonial"]');
+  const isPatrimonial = radioPatrimonial ? radioPatrimonial.checked : false;
+
+  // Só executa a automação se houver Tipo selecionado e a aquisição for "Patrimonial"
+  if (tipoEquipamento && isPatrimonial) {
+    const serie = (numeroSerieInput?.value || "").trim();
+    // Obtém os 3 últimos dígitos do número de série (completa com 0 se for menor)
+    const xxx = serie.length >= 3 ? serie.slice(-3) : serie.padStart(3, "0");
+    
+    const proximoSequencial = obterProximoSequencialPatrimonio();
+    const yyy = String(proximoSequencial).padStart(3, "0");
+
+    const patrimonioSugerido = `CEBRI-389${xxx}-${yyy}`.toUpperCase();
+
+    // Se o campo estiver vazio ou o usuário ainda estiver editando a Série e não alterou o padrão sequencial manualmente
+    if (!patrimonioInput.value || patrimonioInput.value.startsWith("CEBRI-389")) {
+      // Se o usuário mexer na parte do yyy, mostra o balão indicativo
+      const regexValidacao = new RegExp(`CEBRI-389.{3}-${yyy}`);
+      if (patrimonioInput.value && !regexValidacao.test(patrimonioInput.value.toUpperCase())) {
+        if (infoIcon) {
+          infoIcon.style.display = "inline-block";
+          infoIcon.onclick = (e) => {
+            mostrarTooltipDocumento(e, `O último sequencial utilizado foi o ${String(proximoSequencial - 1).padStart(3, "0")}. A sugestão atual é ${yyy}.`);
+          };
+        }
+      } else {
+        patrimonioInput.value = patrimonioSugerido;
+        if (infoIcon) infoIcon.style.display = "none";
+      }
+    }
+  } else {
+    if (infoIcon) infoIcon.style.display = "none";
+  }
+}
+
 function salvarEquipamento(e) {
   e.preventDefault();
   const form = new FormData(e.target);
@@ -2462,6 +2527,26 @@ function excluirEquipamento(registro) {
 // No arquivo app.js, substitua a função configurarEventListeners por esta:
 
 function configurarEventListeners() {
+  
+  const numSerieEl = document.getElementById("numeroSerie");
+  const numPatrimonioEl = document.getElementById("numeroPatrimonio");
+  
+  if (numSerieEl) {
+    numSerieEl.addEventListener("input", gerenciarPreenchimentoPatrimonioAutomato);
+  }
+  if (numPatrimonioEl) {
+    numPatrimonioEl.addEventListener("input", function(e) {
+      // Garante caixa alta em tempo real enquanto digita
+      e.target.value = e.target.value.toUpperCase();
+      gerenciarPreenchimentoPatrimonioAutomato();
+    });
+  }
+  
+  // Capturar mudanças nos Radios de tipo de Aquisição do cadastro principal
+  document.querySelectorAll('#equipamento-form input[name="tipoAquisicao"]').forEach(radio => {
+    radio.addEventListener("change", gerenciarPreenchimentoPatrimonioAutomato);
+  });
+  
   // Navegação entre abas
   document
     .querySelectorAll(".tab-btn")
