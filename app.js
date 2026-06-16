@@ -1091,6 +1091,7 @@ function gerarIdUnicoCartucho() {
 
 function salvarCartucho(e) {
   e.preventDefault();
+  if (e.target.patrimonio) e.target.patrimonio.value = e.target.patrimonio.value.toUpperCase();
   const form = new FormData(e.target);
   const numeroSerie = form.get("numeroSerie");
   const patrimonio = form.get("patrimonio"); // Adicionado para pegar patrimonio
@@ -1156,6 +1157,9 @@ function salvarCartucho(e) {
 
 function limparFormularioCartucho() {
   document.getElementById("cartucho-form").reset();
+
+  const infoIconCartucho = document.getElementById("cartucho-patrimonio-info-icon");
+  if (infoIconCartucho) infoIconCartucho.style.display = "none";
 }
 
 function atualizarContagemCartuchosDisponiveis() {
@@ -1415,6 +1419,7 @@ function criarFormularioEdicaoCartucho(cartucho) {
 
 function salvarEdicaoCartucho(event, id) {
   event.preventDefault();
+  if (event.target.patrimonio) event.target.patrimonio.value = event.target.patrimonio.value.toUpperCase();
   const index = cartuchos.findIndex((c) => c.id === id);
   if (index === -1) return;
 
@@ -1948,6 +1953,101 @@ function gerenciarPreenchimentoPatrimonioAutomato() {
     }
   } else {
     if (infoIcon) infoIcon.style.display = "none";
+  }
+}
+
+// Função para obter o próximo número sequencial (yyy) para os cartuchos com base na cor
+function obterProximoSequencialCartucho(corSelecionada) {
+  // Valores base estipulados por você se o banco estiver zerado
+  let maiorSequencial = 0;
+  let prefixoEsperado = "";
+
+  if (corSelecionada.includes("Preto")) {
+    maiorSequencial = 11;
+    prefixoEsperado = "T11B1-";
+  } else if (corSelecionada.includes("Ciano")) {
+    maiorSequencial = 24;
+    prefixoEsperado = "T11A2-";
+  } else if (corSelecionada.includes("Magenta")) {
+    maiorSequencial = 13;
+    prefixoEsperado = "T11A3-";
+  } else if (corSelecionada.includes("Amarelo")) {
+    maiorSequencial = 13;
+    prefixoEsperado = "T11A4-";
+  } else {
+    return null;
+  }
+
+  // Percorre os cartuchos cadastrados para ver se existe um sequencial maior na nuvem/local
+  cartuchos.forEach(c => {
+    if (!c.isDeleted && String(c.cor || "").toUpperCase() === corSelecionada.toUpperCase()) {
+      const pat = String(c.patrimonio || "").toUpperCase();
+      if (pat.startsWith(prefixoEsperado)) {
+        const parteNumerica = pat.replace(prefixoEsperado, "");
+        const seq = parseInt(parteNumerica, 10);
+        if (!isNaN(seq) && seq > maiorSequencial) {
+          maiorSequencial = seq;
+        }
+      }
+    }
+  });
+
+  return {
+    proximo: maiorSequencial + 1,
+    prefixo: prefixoEsperado
+  };
+}
+
+// Função de gatilho para preenchimento em tempo real e monitoramento do balão informativo do cartucho
+function gerenciarPreenchimentoCartuchoAutomato() {
+  const corSelect = document.getElementById("cartucho-cor");
+  const patrimonioInput = document.getElementById("cartucho-patrimonio");
+  const infoIcon = document.getElementById("cartucho-patrimonio-info-icon");
+
+  if (!corSelect || !patrimonioInput) return;
+
+  const corVal = corSelect.value;
+  if (!corVal) {
+    patrimonioInput.value = "";
+    if (infoIcon) infoIcon.style.display = "none";
+    return;
+  }
+
+  const dadosSequencial = obterProximoSequencialCartucho(corVal);
+  if (!dadosSequencial) return;
+
+  const yyy = String(dadosSequencial.proximo).padStart(3, "0");
+  const patrimonioSugerido = `${dadosSequencial.prefixo}${yyy}`.toUpperCase();
+
+  // --- CORREÇÃO AQUI ---
+  // Lista de todos os prefixos possíveis para monitorar a troca de cor
+  const prefixosExistentes = ["T11B1-", "T11A2-", "T11A3-", "T11A4-"];
+  const valorAtual = patrimonioInput.value.toUpperCase();
+  
+  // Se o valor atual do campo começar com o prefixo de OUTRA cor, nós limpamos para forçar a atualização
+  const começouComPrefixoDeOutraCor = prefixosExistentes.some(prefixo => 
+    prefixo !== dadosSequencial.prefixo && valorAtual.startsWith(prefixo)
+  );
+
+  if (começouComPrefixoDeOutraCor) {
+    patrimonioInput.value = ""; 
+  }
+  // ----------------------
+
+  // Agora a lógica segue normal, mas com o campo devidamente resetado se houve troca de cor
+  if (!patrimonioInput.value || patrimonioInput.value.startsWith(dadosSequencial.prefixo)) {
+    if (patrimonioInput.value && patrimonioInput.value.toUpperCase() !== patrimonioSugerido) {
+      if (infoIcon) {
+        infoIcon.style.display = "inline-block";
+        infoIcon.onclick = (e) => {
+          const ultimoCadastradoFormatado = String(dadosSequencial.proximo - 1).padStart(3, "0");
+          mostrarTooltipDocumento(e, `Último registro cadastrado para esta cor parou no número ${ultimoCadastradoFormatado}. A numeração atual sugerida é ${yyy}.`);
+        };
+      }
+    } else {
+      patrimonioInput.value = patrimonioSugerido;
+      if (infoIcon) infoIcon.style.display = "none";
+    }
   }
 }
 
@@ -2539,6 +2639,21 @@ function configurarEventListeners() {
       // Garante caixa alta em tempo real enquanto digita
       e.target.value = e.target.value.toUpperCase();
       gerenciarPreenchimentoPatrimonioAutomato();
+    });
+  }
+
+  // --- Ouvintes para Automação de Cartuchos ---
+  const cartuchoCorEl = document.getElementById("cartucho-cor");
+  const cartuchoPatrimonioEl = document.getElementById("cartucho-patrimonio");
+
+  if (cartuchoCorEl) {
+    cartuchoCorEl.addEventListener("change", gerenciarPreenchimentoCartuchoAutomato);
+  }
+  if (cartuchoPatrimonioEl) {
+    cartuchoPatrimonioEl.addEventListener("input", function(e) {
+      // Força letras maiúsculas automáticas em tempo real enquanto digita
+      e.target.value = e.target.value.toUpperCase();
+      gerenciarPreenchimentoCartuchoAutomato();
     });
   }
   
