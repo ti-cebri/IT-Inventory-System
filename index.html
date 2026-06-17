@@ -6,6 +6,8 @@
     <title>Sistema de Gestão de Inventário - TI</title>
     <link rel="icon" type="image/png" href="favicon2.png" />
     <link rel="stylesheet" href="style.css" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tsparticles-slim@2.0.6/tsparticles.slim.bundle.min.js"></script>
     <link
@@ -2282,5 +2284,14 @@
 
     <script src="app.js"></script>
     <div id="acessorio-tooltip"></div>
+      <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(reg => console.log('PWA Service Worker registrado com sucesso!', reg))
+          .catch(err => console.error('Erro ao registrar o Service Worker do PWA:', err));
+      });
+    }
+  </script>
   </body>
 </html>
