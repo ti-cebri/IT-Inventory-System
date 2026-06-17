@@ -1,0 +1,26 @@
+{
+  "short_name": "Inventário TI",
+  "name": "Sistema de Inventário de TI - CEBRI",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#020408",
+  "theme_color": "#01257D",
+  "display": "standalone",
+  "orientation": "portrait"
+}
