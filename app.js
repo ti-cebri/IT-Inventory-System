@@ -3410,30 +3410,46 @@ function criarGrafico(
               ? labels.map((l) => colors.bar[l] || "#cccccc")
               : type === "doughnut"
                 ? colors.doughnut
-                : "transparent", // Sem fundo para linha
+                : "transparent",
           borderColor:
             type === "line"
               ? colors.line
               : type === "bar"
-                ? labels.map((l) => colors.bar[l] || "#cccccc") // Borda da mesma cor da barra
-                : "#ffffff", // Borda branca para doughnut
+                ? labels.map((l) => colors.bar[l] || "#cccccc")
+                : "#ffffff",
           borderWidth: type === "doughnut" ? 2 : 1,
           fill:
             type === "line"
               ? { target: "origin", above: "rgba(13, 110, 253, 0.1)" }
-              : false, // Preenchimento suave para linha
-          tension: 0.1, // Suaviza a linha
+              : false,
+          tension: 0.1,
         },
       ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: type !== "bar", position: "bottom" } },
+      plugins: { 
+        legend: { 
+          // Oculta no gráfico de barras, ativa no restante
+          display: type !== "bar", 
+          // Se for Doughnut, joga para a direita. Caso contrário (Line), fica embaixo.
+          position: type === "doughnut" ? "right" : "bottom",
+          align: "center",
+          labels: {
+            // Se for Doughnut, força os itens a ficarem um embaixo do outro (vertical)
+            boxWidth: type === "doughnut" ? 12 : 40,
+            padding: type === "doughnut" ? 10 : 20,
+            font: {
+              size: 11 // Deixa o texto levemente mais compacto e elegante
+            }
+          }
+        } 
+      },
       scales:
         type === "bar" || type === "line"
           ? { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-          : {}, // Eixos apenas para bar/line
+          : {},
     },
   });
 }
