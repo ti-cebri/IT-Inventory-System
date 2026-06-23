@@ -1870,9 +1870,46 @@ function renderizarAcessoriosSelecionados(prefix = "") {
     acessoriosSelecionadosTemporariamente.forEach((id) => {
       const acessorio = acessorios.find((a) => String(a.id) === id);
       if (acessorio) {
+        // Mapeamento de ícones e classes de cor idêntico ao que você usa na tabela
+        const accessoryInfoMap = {
+          "Kit (teclado + mouse sem fio)": { icon: "fas fa-keyboard", styleClass: "icon-kit" },
+          Headsets: { icon: "fas fa-headphones", styleClass: "icon-headsets" },
+          Monitores: { icon: "fas fa-desktop", styleClass: "icon-monitores" },
+          Mouses: { icon: "fas fa-computer-mouse", styleClass: "icon-mouses" },
+          "Suportes com Cooler": { icon: "fas fa-fan", styleClass: "icon-suportes" },
+          Outros: { icon: "fas fa-puzzle-piece", styleClass: "icon-outros" },
+        };
+
+        const info = accessoryInfoMap[acessorio.categoria] || {
+          icon: "fas fa-question-circle",
+          styleClass: "icon-outros",
+        };
+
+        // Monta a exibição apenas com Patrimônio e Série (ou ID se não houver ambos)
+        let detalhesText = "";
+        if (acessorio.patrimonio && acessorio.patrimonio !== "N/A") {
+          detalhesText += `${acessorio.patrimonio}`;
+        }
+        if (acessorio.numeroSerie && acessorio.numeroSerie !== "N/A") {
+          detalhesText += detalhesText ? ` | ${acessorio.numeroSerie}` : `${acessorio.numeroSerie}`;
+        }
+        // Fallback: se por acaso o acessório não tiver nem patrimônio nem série, mostra o ID único
+        if (!detalhesText) {
+          detalhesText = acessorio.id;
+        }
+
         const pill = document.createElement("div");
         pill.className = "selected-item-pill";
-        pill.innerHTML = `<span>${acessorio.modelo}</span><button type="button" class="remove-pill-btn">&times;</button>`;
+        
+        // Injeta o ícone com a cor correta, o título (tooltip nativo) com o modelo, e os detalhes
+        pill.innerHTML = `
+          <span style="display: inline-flex; align-items: center; gap: 8px;">
+            <i class="${info.icon} ${info.styleClass}" title="${acessorio.categoria} - ${acessorio.modelo}" style="font-size: 14px;"></i>
+            <span>${detalhesText}</span>
+          </span>
+          <button type="button" class="remove-pill-btn">&times;</button>
+        `;
+        
         pill.querySelector("button").onclick = () =>
           deselecionarAcessorio(id, prefix);
         container.appendChild(pill);
@@ -1880,6 +1917,36 @@ function renderizarAcessoriosSelecionados(prefix = "") {
     });
   }
 }
+
+// function renderizarAcessoriosSelecionados(prefix = "") {
+//   const container = document.getElementById(
+//     `${prefix}acessorios-selecionados-container`,
+//   );
+//   if (!container) return;
+//   const emptyText = container.querySelector(".empty-selection-text");
+//   container.querySelectorAll(".selected-item-pill").forEach((p) => p.remove());
+//   if (acessoriosSelecionadosTemporariamente.length === 0) {
+//     emptyText.style.display = "block";
+//   } else {
+//     emptyText.style.display = "none";
+//     acessoriosSelecionadosTemporariamente.forEach((id) => {
+//       const acessorio = acessorios.find((a) => String(a.id) === id);
+//       if (acessorio) {
+//         // Formata as strings de patrimônio e série para exibição rápida
+//         const patText = acessorio.patrimonio ? ` | Pat: ${acessorio.patrimonio}` : "";
+//         const seqText = acessorio.numeroSerie ? ` | Serie: ${acessorio.numeroSerie}` : "";
+
+//         const pill = document.createElement("div");
+//         pill.className = "selected-item-pill";
+//         // Adiciona os detalhes textuais dentro da pílula visual
+//         pill.innerHTML = `<span>${acessorio.categoria}${patText}${seqText}</span><button type="button" class="remove-pill-btn">&times;</button>`;
+//         pill.querySelector("button").onclick = () =>
+//           deselecionarAcessorio(id, prefix);
+//         container.appendChild(pill);
+//       }
+//     });
+//   }
+// }
 
 // ===========================================
 // GERENCIAMENTO DE EQUIPAMENTOS
