@@ -2106,29 +2106,33 @@ button:disabled i,
   display: inline-flex;
   align-items: center;
   gap: var(--space-8);
-  background-color: var(--color-primary);
-  color: var(--color-btn-primary-text);
-  padding: var(--space-6) var(--space-12);
+  background-color: var(--color-surface); /* Usa branco no modo claro e grafite no escuro */
+  border: 1px solid var(--color-border);  /* Adiciona uma borda sutil técnica */
+  color: var(--color-text);               /* Texto se adapta automaticamente ao tema */
+  padding: 6px 12px;
   border-radius: var(--radius-full);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
+  box-shadow: var(--shadow-xs);           /* Um leve relevo visual */
 }
 
 .remove-pill-btn {
   background: none;
   border: none;
-  color: var(--color-btn-primary-text);
+  color: var(--color-text-secondary);     /* O 'X' acompanha a cor cinza neutra */
   cursor: pointer;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
   padding: 0;
   margin-left: var(--space-4);
-  opacity: 0.7;
-  transition: opacity var(--duration-fast);
+  opacity: 0.6;
+  transition: all var(--duration-fast);
 }
 
 .remove-pill-btn:hover {
   opacity: 1;
+  color: var(--color-error);              /* O 'X' fica vermelho técnico ao passar o mouse */
+  transform: scale(1.1);
 }
 
 /* --- Estilos para Badges de Cor do Cartucho --- */
